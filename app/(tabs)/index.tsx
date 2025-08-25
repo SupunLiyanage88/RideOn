@@ -1,14 +1,69 @@
-import { Link } from "expo-router";
-import { Text, View } from "react-native";
-import '../globals.css';
+// (auth)/login.tsx
+import { login } from "@/api/auth";
+import queryClient from "@/state/queryClient";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
+import { Controller, useForm } from "react-hook-form";
+import { Button, Text, TextInput, View } from "react-native";
+type FormData = {
+  email: string;
+  password: string;
+};
 
-export default function Index() {
+export default function index() {
+  const router = useRouter();
+  const { control, handleSubmit } = useForm<FormData>();
+
+  const { mutate: loginMutation, isPending } = useMutation({
+    mutationFn: login,
+    onSuccess: async (data) => {
+      queryClient.invalidateQueries({ queryKey: ["current-user"] });
+      await AsyncStorage.setItem("token", data?.token);
+      console.log("Login successful:", data);
+      alert("Login Successful");
+      router.push("/(tabs)/search");
+    },
+    onError: () => {
+      alert("Login Failed. Please check your credentials.");
+    },
+  });
+  const handleLogin = (data: { email: string; password: string }) => {
+    loginMutation(data);
+  };
+
   return (
-    <View className="flex-1 items-center justify-center bg-white">
-      <Text className="text-xl font-bold text-blue-500">
-        Welcome to RideOn!
-      </Text>
-      <Link href="/(tabs)/search" className="mt-4 text-blue-500">Search Button</Link>
+    <View style={{ flex: 1, justifyContent: "center", padding: 20 }}>
+      <Text style={{ fontSize: 24, marginBottom: 20 }}>Login</Text>
+      <Controller
+        control={control}
+        name="email"
+        rules={{ required: "Email is required" }}
+        render={({ field: { onChange, value } }) => (
+          <TextInput
+            placeholder="Email"
+            value={value}
+            onChangeText={onChange}
+            style={{ borderWidth: 1, marginBottom: 10, padding: 8 }}
+          />
+        )}
+      />
+      <Controller
+        control={control}
+        name="password"
+        rules={{ required: "Password is required" }}
+        render={({ field: { onChange, value } }) => (
+          <TextInput
+            placeholder="Password"
+            value={value}
+            onChangeText={onChange}
+            secureTextEntry
+            style={{ borderWidth: 1, marginBottom: 10, padding: 8 }}
+          />
+        )}
+      />
+
+      <Button title="Login" onPress={handleSubmit(handleLogin)} />
     </View>
   );
 }

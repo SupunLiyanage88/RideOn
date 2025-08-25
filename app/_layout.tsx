@@ -1,29 +1,17 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
-import { useEffect, useState } from "react";
 import "./globals.css";
 
+const queryClient = new QueryClient();
+
 export default function RootLayout() {
-
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const token = await AsyncStorage.getItem("token");
-      setIsLoggedIn(!!token); 
-    };
-    checkAuth();
-  }, []);
-
-  if (isLoggedIn === null) return null; 
-
   return (
-    <Stack>
-      {isLoggedIn ? (
-        <Stack.Screen name="(tabs)" />  
-      ) : (
-        <Stack.Screen name="(auth)" />  
-      )}
-    </Stack>
+    <QueryClientProvider client={queryClient}>
+      <Stack screenOptions={{ headerShown: false }}>
+        {/* This will automatically load the first group: auth */}
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(tabs)" />
+      </Stack>
+    </QueryClientProvider>
   );
 }
