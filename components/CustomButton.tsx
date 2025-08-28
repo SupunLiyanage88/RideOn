@@ -1,12 +1,12 @@
 import { View, Text } from 'react-native'
 import React from 'react'
 
-const MovieDetails = () => {
+const CustomButton = () => {
   return (
     <View>
-      <Text>MovieDetails</Text>
+      <Text>CustomButton</Text>
     </View>
   )
 }
 
-export default MovieDetails
+export default CustomButton

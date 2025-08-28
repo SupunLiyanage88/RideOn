@@ -1,69 +1,16 @@
-// (auth)/login.tsx
-import { login } from "@/api/auth";
-import queryClient from "@/state/queryClient";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "expo-router";
-import { Controller, useForm } from "react-hook-form";
-import { Button, Text, TextInput, View } from "react-native";
-type FormData = {
-  email: string;
-  password: string;
-};
+import { Ionicons } from "@expo/vector-icons"; // ✅ import the icon set you want
+import { Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function index() {
-  const router = useRouter();
-  const { control, handleSubmit } = useForm<FormData>();
-
-  const { mutate: loginMutation, isPending } = useMutation({
-    mutationFn: login,
-    onSuccess: async (data) => {
-      queryClient.invalidateQueries({ queryKey: ["current-user"] });
-      await AsyncStorage.setItem("token", data?.token);
-      console.log("Login successful:", data);
-      alert("Login Successful");
-      router.push("/(tabs)/search");
-    },
-    onError: () => {
-      alert("Login Failed. Please check your credentials.");
-    },
-  });
-  const handleLogin = (data: { email: string; password: string }) => {
-    loginMutation(data);
-  };
-
+export default function Index() {
   return (
-    <View style={{ flex: 1, justifyContent: "center", padding: 20 }}>
-      <Text style={{ fontSize: 24, marginBottom: 20 }}>Login</Text>
-      <Controller
-        control={control}
-        name="email"
-        rules={{ required: "Email is required" }}
-        render={({ field: { onChange, value } }) => (
-          <TextInput
-            placeholder="Email"
-            value={value}
-            onChangeText={onChange}
-            style={{ borderWidth: 1, marginBottom: 10, padding: 8 }}
-          />
-        )}
-      />
-      <Controller
-        control={control}
-        name="password"
-        rules={{ required: "Password is required" }}
-        render={({ field: { onChange, value } }) => (
-          <TextInput
-            placeholder="Password"
-            value={value}
-            onChangeText={onChange}
-            secureTextEntry
-            style={{ borderWidth: 1, marginBottom: 10, padding: 8 }}
-          />
-        )}
-      />
+    <View className="flex-1 bg-white">
+      <SafeAreaView className="flex-row items-center p-4">
+        
+        <Ionicons name="search" size={24} color="black" style={{ marginRight: 8 }} />
 
-      <Button title="Login" onPress={handleSubmit(handleLogin)} />
+        <Text className="text-lg font-medium">Search</Text>
+      </SafeAreaView>
     </View>
   );
 }
