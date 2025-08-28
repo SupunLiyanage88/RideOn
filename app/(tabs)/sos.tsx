@@ -1,12 +1,12 @@
 import React from 'react'
 import { Text, View } from 'react-native'
 
-const saved = () => {
+const sos = () => {
   return (
     <View>
-      <Text>saved</Text>
+      <Text>sos</Text>
     </View>
   )
 }
 
-export default saved;
+export default sos
