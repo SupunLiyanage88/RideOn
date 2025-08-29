@@ -1,11 +1,16 @@
 import CustomButton from "@/components/CustomButton";
 import { images } from "@/constants/images";
-import { Slot } from "expo-router";
+import useCurrentUser from "@/hooks/useCurrentUser";
+import { Redirect, Slot } from "expo-router";
 import React from "react";
 import { Dimensions, ImageBackground, KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 import LoginScreen from "./loginScreen";
 
 export default function _layout() {
+  const { user, status } = useCurrentUser();
+
+  const isAuthenticated = user;
+  if (isAuthenticated) return <Redirect href="/(tabs)/search" />;
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS == "ios" ? "padding" : "height"}
