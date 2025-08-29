@@ -26,7 +26,7 @@ export default function LoginScreen() {
       await AsyncStorage.setItem("token", data?.token);
       console.log("Login successful:", data);
       alert("Login Successful");
-      router.push("/(tabs)/search");
+      router.push("/(tabs)");
     },
     onError: (data) => {
       alert("Login Failed. Please check your credentials.");
