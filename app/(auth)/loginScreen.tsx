@@ -28,8 +28,9 @@ export default function LoginScreen() {
       alert("Login Successful");
       router.push("/(tabs)/search");
     },
-    onError: () => {
+    onError: (data) => {
       alert("Login Failed. Please check your credentials.");
+      console.log(data)
     },
   });
 
