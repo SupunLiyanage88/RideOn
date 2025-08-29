@@ -6,7 +6,7 @@ interface UseCurrentUserResult {
   status: "idle" | "loading" | "error" | "success" | "pending";
 }
 
-function useCurrentUser(): UseCurrentUserResult {
+function UseCurrentUser(): UseCurrentUserResult {
   const { data, status } = useQuery<User>({
     queryKey: ["current-user"],
     queryFn: validateUser,
@@ -16,4 +16,4 @@ function useCurrentUser(): UseCurrentUserResult {
   return { user: data, status };
 }
 
-export default useCurrentUser;
+export default UseCurrentUser;
