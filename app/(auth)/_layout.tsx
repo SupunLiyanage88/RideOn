@@ -4,14 +4,14 @@ import UseCurrentUser from "@/hooks/useCurrentUser";
 import { Redirect, Slot } from "expo-router";
 import React from "react";
 import {
+    ActivityIndicator,
     Dimensions,
     ImageBackground,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
-    View,
-    ActivityIndicator,
-    StyleSheet
+    StyleSheet,
+    View
 } from "react-native";
 import LoginScreen from "./loginScreen";
 
@@ -36,7 +36,7 @@ export default function _layout() {
     }
 
     const isAuthenticated = user;
-    if (isAuthenticated) return <Redirect href="/(tabs)/search" />;
+    if (isAuthenticated) return <Redirect href="/(tabs)" />;
 
     return (
         <KeyboardAvoidingView
