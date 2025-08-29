@@ -3,7 +3,8 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import cn from "clsx";
 import { Redirect, Tabs } from "expo-router";
 import React from "react";
-import { Text, View } from "react-native";
+import { Platform, Text, View } from "react-native";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type TabIconProps = {
   focused: boolean;
@@ -29,6 +30,7 @@ const TabIcon = ({ focused, icon, title }: TabIconProps) => {
 
 const _layout = () => {
   const { user, status } = UseCurrentUser();
+    const insets = useSafeAreaInsets();
 
   const isAuthenticated = user;
   if (!isAuthenticated) return <Redirect href="/loginScreen" />;
@@ -39,7 +41,8 @@ const _layout = () => {
         headerShown: false,
         tabBarShowLabel: false,
         tabBarStyle: {
-          height:90,
+          height: Platform.OS === "android" ? 110 : 90,
+          paddingBottom: Platform.OS === "android" ? insets.bottom :0 ,
           position: "absolute",
           left: 0,
           right: 0,
