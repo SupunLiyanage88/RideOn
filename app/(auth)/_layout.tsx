@@ -35,28 +35,24 @@ const Loader = () => (
 );
 
 export default function _layout() {
-  // Example for authentication flow
   const { user, status } = UseCurrentUser();
 
-  // Show loader while authentication status is pending
-  if (status === "pending") {
-    return <Loader />;
-  }
-
-  const isAuthenticated = user;
-  if (isAuthenticated) return <Redirect href="/(tabs)" />;
   const [clickedLogin, setClickedLogin] = useState(true);
   const offset = useSharedValue(0);
   const scrollViewRef = useRef(null);
-
+  const loginStyle = useSlideAnimation(offset, "btn1");
+  const registerStyle = useSlideAnimation(offset, "btn2");
+  
+  if (status === "pending") {
+    return <Loader />;
+  }
+  const isAuthenticated = user && status === "success";
+  if (isAuthenticated) return <Redirect href="/(tabs)" />;
   const handleToggle = (login: boolean) => {
     if (clickedLogin === login) return;
     setClickedLogin(login);
     offset.value = withTiming(login ? 0 : 1, { duration: 300 });
   };
-
-  const loginStyle = useSlideAnimation(offset, "btn1");
-  const registerStyle = useSlideAnimation(offset, "btn2");
 
   return (
     <KeyboardAwareScrollView

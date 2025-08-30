@@ -32,7 +32,7 @@ const _layout = () => {
   const { user, status } = UseCurrentUser();
   const insets = useSafeAreaInsets();
 
-  const isAuthenticated = user;
+  const isAuthenticated = user && status === "success";
   if (!isAuthenticated) return <Redirect href="/loginScreen" />;
 
   return (

@@ -34,3 +34,8 @@ export async function userRegister(data: User) {
   const res = await axios.post("/api/auth/register", data);
   return res.data;
 }
+
+export async function logout() {
+  const res = await axios.post("/api/auth/logout");
+  return res.data;
+}
