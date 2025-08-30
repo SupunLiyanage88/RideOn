@@ -1,4 +1,9 @@
-import { User } from "@/api/auth";
+import { User, userRegister } from "@/api/auth";
+import queryClient from "@/state/queryClient";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Pressable, Text, TextInput, View } from "react-native";
@@ -14,18 +19,34 @@ const RegisterScreen = () => {
   } = useForm<User>();
 
   const [hidePassword, setHidePassword] = useState(true);
+  const [password, setPassword] = useState(true);
   const userPassword = watch("password");
   console.log("User Password:", userPassword);
+  const router = useRouter();
+  
+  const { mutate: registerMutation, isPending } = useMutation({
+    mutationFn: userRegister,
+    onSuccess: async (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["current-user"] });
+      await AsyncStorage.setItem("token", data?.token);
+      console.log("Register successful:", data);
+      alert("Register Successful");
+      router.push("/(tabs)");
+    },
+    onError: (data) => {
+      alert("Register Failed. Please check your credentials.");
+      console.log(data);
+    },
+  });
 
   const handleRegister = (data: User) => {
     console.log(data);
-    // loginMutation(data);
+    registerMutation(data);
   };
 
   return (
     <View className="flex-1 items-center mt-10 px-5">
       <View className="w-full max-w-md rounded-2xl p-1">
-        {/* Email */}
         <Controller
           control={control}
           name="email"
@@ -67,7 +88,6 @@ const RegisterScreen = () => {
           )}
         />
 
-        {/* Mobile */}
         <Controller
           control={control}
           name="mobile"
@@ -105,7 +125,6 @@ const RegisterScreen = () => {
           )}
         />
 
-        {/* Password */}
         <Controller
           control={control}
           name="password"
@@ -116,7 +135,7 @@ const RegisterScreen = () => {
                   placeholder="Password"
                   value={value}
                   onChangeText={onChange}
-                  secureTextEntry={hidePassword}
+                  secureTextEntry={password}
                   className="flex-1 py-4 text-zinc-900"
                   placeholderTextColor="#9ca3af"
                   {...register("password", {
@@ -127,11 +146,6 @@ const RegisterScreen = () => {
                     minLength: { value: 6, message: "Min 6 characters" },
                   })}
                 />
-                <Pressable onPress={() => setHidePassword((v) => !v)}>
-                  <Text className="text-zinc-500">
-                    {hidePassword ? "Show" : "Hide"}
-                  </Text>
-                </Pressable>
               </View>
               <HelperText
                 visible={!!errors.password}
@@ -142,7 +156,6 @@ const RegisterScreen = () => {
           )}
         />
 
-        {/* Confirm Password */}
         <Controller
           control={control}
           name="confirmPassword"
@@ -169,7 +182,15 @@ const RegisterScreen = () => {
                 />
                 <Pressable onPress={() => setHidePassword((v) => !v)}>
                   <Text className="text-zinc-500">
-                    {hidePassword ? "Show" : "Hide"}
+                    {hidePassword ? (
+                      <Ionicons name="eye" size={24} color="black" />
+                    ) : (
+                      <Ionicons
+                        name="eye-off-outline"
+                        size={24}
+                        color="black"
+                      />
+                    )}
                   </Text>
                 </Pressable>
               </View>
@@ -182,7 +203,6 @@ const RegisterScreen = () => {
           )}
         />
 
-        {/* Submit */}
         <View className="flex-row justify-center">
           <Pressable
             onPress={handleSubmit(handleRegister)}
@@ -190,7 +210,7 @@ const RegisterScreen = () => {
           >
             <Text className="text-white text-center font-bold">Register</Text>
           </Pressable>
-        </View>    
+        </View>
       </View>
     </View>
   );

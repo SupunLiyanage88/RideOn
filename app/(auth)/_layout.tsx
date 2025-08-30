@@ -1,6 +1,9 @@
 import ToggleButton from "@/app/components/toggleButton";
 import { images } from "@/constants/images";
-import React, { useState } from "react";
+import UseCurrentUser from "@/hooks/useCurrentUser";
+import { useSlideAnimation } from "@/utils/animate.toggle.utils";
+import { Redirect } from "expo-router";
+import React, { useRef, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
@@ -10,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 import LoginScreen from "./loginScreen";
 import RegisterScreen from "./registerScreen";
 
@@ -32,29 +36,41 @@ const Loader = () => (
 
 export default function _layout() {
   // Example for authentication flow
-  // const { user, status } = UseCurrentUser();
+  const { user, status } = UseCurrentUser();
 
   // Show loader while authentication status is pending
-  // if (status === "pending") {
-  //   return <Loader />;
-  // }
+  if (status === "pending") {
+    return <Loader />;
+  }
 
-  // const isAuthenticated = user;
-  // if (isAuthenticated) return <Redirect href="/(tabs)" />;
+  const isAuthenticated = user;
+  if (isAuthenticated) return <Redirect href="/(tabs)" />;
   const [clickedLogin, setClickedLogin] = useState(true);
-  const [clickedRegister, setClickedRegister] = useState(false);
+  const offset = useSharedValue(0);
+  const scrollViewRef = useRef(null);
+
+  const handleToggle = (login: boolean) => {
+    if (clickedLogin === login) return;
+    setClickedLogin(login);
+    offset.value = withTiming(login ? 0 : 1, { duration: 300 });
+  };
+
+  const loginStyle = useSlideAnimation(offset, "btn1");
+  const registerStyle = useSlideAnimation(offset, "btn2");
 
   return (
     <KeyboardAwareScrollView
       style={{ flex: 1, backgroundColor: "#fff" }}
       contentContainerStyle={{ flexGrow: 1 }}
       enableOnAndroid={true}
-      extraScrollHeight={20}
       keyboardShouldPersistTaps="handled"
     >
       <ScrollView
-        keyboardShouldPersistTaps="handled"
+        ref={scrollViewRef}
+        style={{ flex: 1 }}
         contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+        bounces={false}
       >
         <View
           className="w-full relative"
@@ -66,26 +82,33 @@ export default function _layout() {
             className="w-full h-full"
           />
         </View>
+
         <View
-          className={`flex-1 bg-white rounded-t-[4rem] px-6 ${
-            clickedLogin ? "-mt-14" : "-mt-24"
-          }`}
+          className={`flex-1 bg-white rounded-t-[4rem] px-6 ${clickedLogin ? "-mt-14" : "-mt-24"}`}
         >
           <View className="mt-10 justify-center items-center">
             <ToggleButton
               leftLabel="Login"
               rightLabel="Register"
               click01={clickedLogin}
-              click02={clickedRegister}
-              onToggle={(login, register) => {
-                setClickedLogin(login);
-                setClickedRegister(register);
-                console.log("Login:", login, "Register:", register);
-              }}
+              click02={!clickedLogin}
+              onToggle={(login) => handleToggle(login)}
             />
           </View>
 
-          {clickedLogin ? <LoginScreen /> : <RegisterScreen />}
+          <View
+            style={{
+              height: clickedLogin ? 250 : 400,
+              position: "relative",
+            }}
+          >
+            <Animated.View style={loginStyle}>
+              <LoginScreen />
+            </Animated.View>
+            <Animated.View style={registerStyle}>
+              <RegisterScreen />
+            </Animated.View>
+          </View>
         </View>
       </ScrollView>
     </KeyboardAwareScrollView>

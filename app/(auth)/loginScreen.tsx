@@ -1,5 +1,6 @@
 import { login } from "@/api/auth";
 import queryClient from "@/state/queryClient";
+import Ionicons from '@expo/vector-icons/Ionicons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
@@ -12,7 +13,6 @@ import {
   TextInput,
   View
 } from "react-native";
-
 type FormData = {
   email: string;
   password: string;
@@ -99,7 +99,7 @@ export default function LoginScreen() {
                 />
                 <Pressable onPress={() => setHidePassword((v) => !v)}>
                   <Text className="text-zinc-500">
-                    {hidePassword ? "Show" : "Hide"}
+                    {hidePassword ? <Ionicons name="eye" size={24} color="black" /> : <Ionicons name="eye-off-outline" size={24} color="black" />}
                   </Text>
                 </Pressable>
               </View>
