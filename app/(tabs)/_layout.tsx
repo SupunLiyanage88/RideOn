@@ -1,4 +1,3 @@
-import UseCurrentUser from "@/hooks/useCurrentUser";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import cn from "clsx";
 import { Redirect, Tabs } from "expo-router";
@@ -29,10 +28,10 @@ const TabIcon = ({ focused, icon, title }: TabIconProps) => {
 };
 
 const _layout = () => {
-  const { user, status } = UseCurrentUser();
+  // const { user, status } = UseCurrentUser();
     const insets = useSafeAreaInsets();
 
-  const isAuthenticated = user;
+  const isAuthenticated = false;
   if (!isAuthenticated) return <Redirect href="/loginScreen" />;
 
   return (

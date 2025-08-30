@@ -1,76 +1,93 @@
-import CustomButton from "@/components/CustomButton";
+import ToggleButton from "@/app/components/toggleButton";
 import { images } from "@/constants/images";
-import UseCurrentUser from "@/hooks/useCurrentUser";
-import { Redirect, Slot } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
-    ActivityIndicator,
-    Dimensions,
-    ImageBackground,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    View
+  ActivityIndicator,
+  Dimensions,
+  ImageBackground,
+  Platform,
+  ScrollView,
+  View,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import LoginScreen from "./loginScreen";
+import RegisterScreen from "./registerScreen";
 
-// Loader Component for both Android and iOS
 const Loader = () => (
-    <View style={styles.loaderContainer}>
-        <View style={styles.loader}>
-            <ActivityIndicator
-                size={Platform.OS === 'ios' ? 'large' : 50}
-                color={Platform.OS === 'ios' ? '#000' : '#3b82f6'}
-            />
-        </View>
+  <View className="flex-1 justify-center items-center bg-white">
+    <View
+      className="p-5 rounded-lg"
+      style={{
+        backgroundColor:
+          Platform.OS === "ios" ? "rgba(0,0,0,0.1)" : "transparent",
+      }}
+    >
+      <ActivityIndicator
+        size={Platform.OS === "ios" ? "large" : 50}
+        color={Platform.OS === "ios" ? "#000" : "#3b82f6"}
+      />
     </View>
+  </View>
 );
 
 export default function _layout() {
-    const { user, status } = UseCurrentUser();
+  // Example for authentication flow
+  // const { user, status } = UseCurrentUser();
 
-    // Show loader while authentication status is pending
-    if (status === 'pending') {
-        return <Loader />;
-    }
+  // Show loader while authentication status is pending
+  // if (status === "pending") {
+  //   return <Loader />;
+  // }
 
-    const isAuthenticated = user;
-    if (isAuthenticated) return <Redirect href="/(tabs)" />;
+  // const isAuthenticated = user;
+  // if (isAuthenticated) return <Redirect href="/(tabs)" />;
+  const [clickedLogin, setClickedLogin] = useState(true);
+  const [clickedRegister, setClickedRegister] = useState(false);
 
-    return (
-        <KeyboardAvoidingView
-            behavior={Platform.OS == "ios" ? "padding" : "height"}
-            style={styles.container}
+  return (
+    <KeyboardAwareScrollView
+      style={{ flex: 1, backgroundColor: "#fff" }}
+      contentContainerStyle={{ flexGrow: 1 }}
+      enableOnAndroid={true}
+      extraScrollHeight={20}
+      keyboardShouldPersistTaps="handled"
+    >
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ flexGrow: 1 }}
+      >
+        <View
+          className="w-full relative"
+          style={{ height: Dimensions.get("screen").height / 2.25 }}
         >
-            <ScrollView
-                className="bg-white h-full"
-                keyboardShouldPersistTaps="handled"
-            >
-                <View className="w-full relative" style={{ height: Dimensions.get('screen').height/ 2.25 }}>
-                    <ImageBackground source={images.loginbg} className="size-full rounded-b-lg" resizeMode="repeat" />
-                </View>
-                <LoginScreen />
-                <CustomButton />
-            </ScrollView>
-            <Slot />
-        </KeyboardAvoidingView>
-    );
-}
+          <ImageBackground
+            source={images.loginbg}
+            resizeMode="cover"
+            className="w-full h-full"
+          />
+        </View>
+        <View
+          className={`flex-1 bg-white rounded-t-[4rem] px-6 ${
+            clickedLogin ? "-mt-14" : "-mt-24"
+          }`}
+        >
+          <View className="mt-10 justify-center items-center">
+            <ToggleButton
+              leftLabel="Login"
+              rightLabel="Register"
+              click01={clickedLogin}
+              click02={clickedRegister}
+              onToggle={(login, register) => {
+                setClickedLogin(login);
+                setClickedRegister(register);
+                console.log("Login:", login, "Register:", register);
+              }}
+            />
+          </View>
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    loaderContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#fff',
-    },
-    loader: {
-        padding: 20,
-        borderRadius: 10,
-        backgroundColor: Platform.OS === 'ios' ? 'rgba(0,0,0,0.1)' : 'transparent',
-    }
-});
+          {clickedLogin ? <LoginScreen /> : <RegisterScreen />}
+        </View>
+      </ScrollView>
+    </KeyboardAwareScrollView>
+  );
+}
