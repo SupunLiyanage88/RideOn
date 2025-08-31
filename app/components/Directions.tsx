@@ -1,44 +1,34 @@
-// Directions.tsx
+import { StationData } from "@/api/sampleData";
+import { images } from "@/constants/images";
+import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { StyleSheet, View } from "react-native";
-import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import { Image, Text, View } from "react-native";
 
-export default function Directions() {
+export default function DirectionsComponent() {
+  const station = StationData[0]; // since it's an array
+
   return (
-    <View style={styles.mapContainer}>
-      <MapView
-        provider={PROVIDER_GOOGLE}
-        style={styles.map}
-        initialRegion={{
-          latitude: 6.9271,
-          longitude: 79.8612,
-          latitudeDelta: 0.05,
-          longitudeDelta: 0.05,
-        }}
-        zoomEnabled={true}
-        scrollEnabled={true}
-        rotateEnabled={true}
-        pitchEnabled={true}
+    <View className="w-full h-44 rounded-2xl overflow-hidden shadow-lg">
+      <LinearGradient
+        colors={["#737373", "#37A77D"]}
+        start={{ x: 0.5, y: 1 }}
+        end={{ x: 0.5, y: 0 }}
+        className="w-full h-full"
       >
-        <Marker
-          coordinate={{ latitude: 6.9271, longitude: 79.8612 }}
-          title="Colombo"
-          description="Capital City of Sri Lanka"
-        />
-      </MapView>
+        <View className="flex flex-row items-center p-4 space-x-4">
+          {/* Icon Circle */}
+          <View className="rounded-full bg-white justify-center items-center w-16 h-16 shadow-md">
+            <Image source={images.parkBike} className="w-10 h-10" resizeMode="contain" />
+          </View>
+
+          {/* Station Info */}
+          <View className="flex-1">
+            <Text className="text-white font-bold text-lg">{station.stationName}</Text>
+            <Text className="text-gray-200 text-sm">{station.location}</Text>
+            <Text className="text-xs text-gray-300 mt-1">Type: {station.availability}</Text>
+          </View>
+        </View>
+      </LinearGradient>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  mapContainer: {
-    width: "100%",
-    height: 300, // fixed height for ScrollView
-    borderRadius: 10,
-    overflow: "hidden",
-    marginTop: 16,
-  },
-  map: {
-    flex: 1,
-  },
-});
