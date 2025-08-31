@@ -8,11 +8,11 @@ import line from "@/assets/images/line.png";
 import loginbg from "@/assets/images/login-bg.jpg";
 import mist from "@/assets/images/mist.png";
 import moderaterain from "@/assets/images/moderaterain.png";
+import parkBike from "@/assets/images/parkBike.png";
 import partycloudy from "@/assets/images/partlycloudy.png";
 import rankingGradient from "@/assets/images/rankingGradient.png";
+import rideBike from "@/assets/images/rideBike.png";
 import sun from "@/assets/images/sun.png";
-
-
 export const images = {
   bg,
   highlight,
@@ -27,5 +27,7 @@ export const images = {
   moderaterain,
   partycloudy,
   sun,
-  directionBg
+  directionBg,
+  parkBike,
+  rideBike
 };

@@ -33,7 +33,7 @@ const Weather: React.FC<WeatherProps> = ({ location, weatherData }) => {
   const windSpeed = weatherData ? weatherData.wind.speed : "";
 
   return (
-    <View className="menu-card mt-5 mb-4 px-5 pb-5 bg-[#D9D9D9] rounded-2xl shadow-sm">
+    <View className="menu-card mt-5 mb-4 px-5 pb-5 bg-[#D9D9D9] rounded-[2rem] shadow-sm">
       <View className="flex-row justify-between items-center">
         <Text className="text-2xl font-bold my-5">Good Afternoon, {name}</Text>
         <MaterialIcons name="open-in-new" size={20} color="black" />

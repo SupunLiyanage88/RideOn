@@ -1,17 +1,11 @@
 import "@/api/weather";
 import { WeatherData, fetchWeatherByCity } from "@/api/weather";
 import { useQuery } from "@tanstack/react-query";
-import {
-  ActivityIndicator,
-  ScrollView,
-  Text,
-  View
-} from "react-native";
+import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Directions from "../components/Directions";
 import Searchbar from "../components/Searchbar";
 import Weather from "../components/Weather";
-
 
 export default function Index() {
   const city = "Malabe";
@@ -57,7 +51,6 @@ export default function Index() {
 
           {/* Direction Component */}
           <Directions />
-
         </ScrollView>
       </SafeAreaView>
     </View>
