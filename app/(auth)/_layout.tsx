@@ -1,9 +1,8 @@
 import ToggleButton from "@/app/components/toggleButton";
 import { images } from "@/constants/images";
 import UseCurrentUser from "@/hooks/useCurrentUser";
-import { useSlideAnimation } from "@/utils/animate.toggle.utils";
 import { Redirect } from "expo-router";
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
@@ -13,7 +12,6 @@ import {
   View,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 import LoginScreen from "./loginScreen";
 import RegisterScreen from "./registerScreen";
 
@@ -38,21 +36,13 @@ export default function _layout() {
   const { user, status } = UseCurrentUser();
 
   const [clickedLogin, setClickedLogin] = useState(true);
-  const offset = useSharedValue(0);
-  const scrollViewRef = useRef(null);
-  const loginStyle = useSlideAnimation(offset, "btn1");
-  const registerStyle = useSlideAnimation(offset, "btn2");
-  
+  const [clickedRegister, setClickedRegister] = useState(false);
+
   if (status === "pending") {
     return <Loader />;
   }
   const isAuthenticated = user && status === "success";
   if (isAuthenticated) return <Redirect href="/(tabs)" />;
-  const handleToggle = (login: boolean) => {
-    if (clickedLogin === login) return;
-    setClickedLogin(login);
-    offset.value = withTiming(login ? 0 : 1, { duration: 300 });
-  };
 
   return (
     <KeyboardAwareScrollView
@@ -62,7 +52,6 @@ export default function _layout() {
       keyboardShouldPersistTaps="handled"
     >
       <ScrollView
-        ref={scrollViewRef}
         style={{ flex: 1 }}
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
@@ -87,8 +76,11 @@ export default function _layout() {
               leftLabel="Login"
               rightLabel="Register"
               click01={clickedLogin}
-              click02={!clickedLogin}
-              onToggle={(login) => handleToggle(login)}
+              click02={clickedRegister}
+              onToggle={(left, right) => {
+                setClickedLogin(left);
+                setClickedRegister(right);
+              }}
             />
           </View>
 
@@ -98,12 +90,7 @@ export default function _layout() {
               position: "relative",
             }}
           >
-            <Animated.View style={loginStyle}>
-              <LoginScreen />
-            </Animated.View>
-            <Animated.View style={registerStyle}>
-              <RegisterScreen />
-            </Animated.View>
+            {clickedLogin ? <LoginScreen /> : <RegisterScreen />}
           </View>
         </View>
       </ScrollView>

@@ -3,29 +3,11 @@ import { WeatherData, fetchWeatherByCity } from "@/api/weather";
 import { images } from "@/constants/images";
 import UseCurrentUser from "@/hooks/useCurrentUser";
 import { useQuery } from "@tanstack/react-query";
-import {
-  ActivityIndicator,
-  ImageBackground,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Directions from "../components/Directions";
 import Searchbar from "../components/Searchbar";
 import Weather from "../components/Weather";
-
-const Directions = () => {
-  return (
-    <View className="w-full h-full rounded-2xl overflow-hidden">
-      <ImageBackground
-        source={images.directionBg}
-        className="w-full h-full"
-      >
-        {/* children go here */}
-      </ImageBackground>
-    </View>
-  );
-};
 
 export default function Index() {
   const { user, status } = UseCurrentUser();
@@ -81,7 +63,6 @@ if (status === "loading") {
 
           {/* Direction Component */}
           <Directions />
-
         </ScrollView>
       </SafeAreaView>
     </View>
