@@ -1,15 +1,77 @@
-import { Ionicons } from "@expo/vector-icons"; // ✅ import the icon set you want
-import { Text, View } from "react-native";
+import "@/api/weather";
+import { WeatherData, fetchWeatherByCity } from "@/api/weather";
+import { images } from "@/constants/images";
+import { useQuery } from "@tanstack/react-query";
+import {
+  ActivityIndicator,
+  ImageBackground,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Searchbar from "../components/Searchbar";
+import Weather from "../components/Weather";
+
+const Directions = () => {
+  return (
+    <View className="w-full h-full rounded-2xl overflow-hidden">
+      <ImageBackground
+        source={images.directionBg}
+        className="w-full h-full"
+      >
+        {/* children go here */}
+      </ImageBackground>
+    </View>
+  );
+};
 
 export default function Index() {
+  const city = "Malabe";
+
+  const {
+    data: weatherData,
+    isLoading,
+    isError,
+    error,
+  } = useQuery<WeatherData, Error>({
+    queryKey: ["weather", city],
+    queryFn: () => fetchWeatherByCity(city),
+  });
+
+  const location =
+    weatherData && weatherData.sys
+      ? `${weatherData.name}, ${weatherData.sys.country}`
+      : "Unknown";
+
   return (
     <View className="flex-1 bg-white">
-      <SafeAreaView className="flex-row items-center p-4">
-        
-        <Ionicons name="search" size={24} color="black" style={{ marginRight: 8 }} />
+      <SafeAreaView className="p-4">
+        {/* Searchbar */}
+        <Searchbar />
 
-        <Text className="text-lg font-medium">Search</Text>
+        {/* Weather Component */}
+        <ScrollView className="h-full">
+          {isLoading ? (
+            <View className="flex-1 justify-center items-center mt-10">
+              <ActivityIndicator size="large" color="#3b82f6" />
+              <Text className="mt-2">Loading weather data...</Text>
+            </View>
+          ) : isError ? (
+            <View className="flex-1 justify-center items-center mt-10">
+              <Text className="text-red-500">
+                Error: {(error as Error).message}
+              </Text>
+              <Text className="mt-2">Please try another location</Text>
+            </View>
+          ) : (
+            <Weather location={location} weatherData={weatherData} />
+          )}
+
+          {/* Direction Component */}
+          <Directions />
+
+        </ScrollView>
       </SafeAreaView>
     </View>
   );

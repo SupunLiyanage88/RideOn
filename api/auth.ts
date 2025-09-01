@@ -1,6 +1,15 @@
 import axios from "axios";
+import { z } from "zod";
 
-const BASE_URL = "https://rideon-server.vercel.app";
+export const userSchema = z.object({
+  id: z.number(),
+  email: z.string(),
+  mobile: z.string(),
+  password: z.string(),
+  confirmPassword: z.string().optional(),
+});
+
+export type User = z.infer<typeof userSchema>;
 
 export async function login({
   email,
@@ -9,9 +18,24 @@ export async function login({
   email: string;
   password: string;
 }) {
-  const res = await axios.post(`${BASE_URL}/api/auth/login`, {
+  const res = await axios.post(`/api/auth/login`, {
     email,
     password,
   });
+  return res.data;
+}
+
+export async function validateUser() {
+  const res = await axios.get("/api/auth/user");
+  return res.data;
+}
+
+export async function userRegister(data: User) {
+  const res = await axios.post("/api/auth/register", data);
+  return res.data;
+}
+
+export async function logout() {
+  const res = await axios.post("/api/auth/logout");
   return res.data;
 }
