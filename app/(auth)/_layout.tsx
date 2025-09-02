@@ -62,14 +62,14 @@ export default function _layout() {
           style={{ height: Dimensions.get("screen").height / 2.25 }}
         >
           <ImageBackground
-            source={images.loginbg}
+            source={images.patternBg}
             resizeMode="cover"
             className="w-full h-full"
           />
         </View>
 
         <View
-          className={`flex-1 bg-white rounded-t-[4rem] px-6 ${clickedLogin ? "-mt-14" : "-mt-24"}`}
+          className={`flex-1 bg-white rounded-t-[4rem] px-6 ${clickedLogin ? "-mt-14" : "-mt-36"}`}
         >
           <View className="mt-10 justify-center items-center">
             <ToggleButton
