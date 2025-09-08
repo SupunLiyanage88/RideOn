@@ -33,6 +33,7 @@ const _layout = () => {
   const insets = useSafeAreaInsets();
 
   const isAuthenticated = user && status === "success";
+  const isAdmin = user?.role === "Admin";
   if (!isAuthenticated) return <Redirect href="/loginScreen" />;
 
   return (
@@ -110,6 +111,25 @@ const _layout = () => {
           headerShown: false,
           tabBarIcon: ({ focused }) => (
             <TabIcon title="Me" icon="person-outline" focused={focused} />
+          ),
+        }}
+      />
+      {/* <Tabs.Screen
+        name="admin"
+        options={{
+          href: null, // 👈 hides it from the tab bar
+        }}
+      /> */}
+
+      {/* Me */}
+      <Tabs.Screen
+        name="admin"
+        options={{
+          title: "Admin",
+          href: isAdmin ? "/admin" : null,
+          headerShown: false,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon title="Admin" icon="person-outline" focused={focused} />
           ),
         }}
       />
