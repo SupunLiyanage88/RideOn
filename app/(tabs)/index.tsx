@@ -1,6 +1,5 @@
 import "@/api/weather";
 import { WeatherData, fetchWeatherByCity } from "@/api/weather";
-import { images } from "@/constants/images";
 import UseCurrentUser from "@/hooks/useCurrentUser";
 import { useQuery } from "@tanstack/react-query";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
@@ -46,12 +45,12 @@ if (status === "loading") {
         {/* Weather Component */}
         <ScrollView className="h-full">
           {isLoading ? (
-            <View className="flex-1 justify-center items-center mt-10">
+            <View className=" menu-card flex-1 justify-center items-center mt-10">
               <ActivityIndicator size="large" color="#3b82f6" />
               <Text className="mt-2">Loading weather data...</Text>
             </View>
           ) : isError ? (
-            <View className="flex-1 justify-center items-center mt-10">
+            <View className="menu-card flex-1 justify-center items-center mt-10">
               <Text className="text-red-500">
                 Error: {(error as Error).message}
               </Text>
