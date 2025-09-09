@@ -3,12 +3,12 @@ import queryClient from "@/state/queryClient";
 import { useMutation } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
 import {
-  ActivityIndicator,
-  Modal,
-  Pressable,
-  Text,
-  TextInput,
-  View,
+    ActivityIndicator,
+    Modal,
+    Pressable,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 import DialogHeader from "../components/DialogHeader";
 import HelperText from "../components/HelperText";

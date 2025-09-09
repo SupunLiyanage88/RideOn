@@ -10,7 +10,7 @@ function UseCurrentUser(): UseCurrentUserResult {
   const { data, status, error } = useQuery<User, Error>({
     queryKey: ["current-user"],
     queryFn: validateUser,
-    retry: false, 
+    retry: false,
   });
 
   if (error?.message?.includes("No token, authorization denied")) {
