@@ -2,42 +2,13 @@ import { BikeStation } from "@/api/bikeStation";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Modal, Text, TextInput, TouchableOpacity, View } from "react-native";
-import MapView, { MapPressEvent, Marker } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
 import DialogHeader from "../components/DialogHeader";
 import HelperText from "../components/HelperText";
-
+import MapPicker from "../components/MapPicker";
 type DialogProps = {
   visible: boolean;
   onClose: () => void;
-};
-
-const MapPicker = ({
-  value,
-  onChange,
-}: {
-  value?: { latitude: number; longitude: number };
-  onChange: (coords: { latitude: number; longitude: number }) => void;
-}) => {
-  const handlePress = (e: MapPressEvent) => {
-    const { latitude, longitude } = e.nativeEvent.coordinate;
-    onChange({ latitude, longitude });
-  };
-
-  return (
-    <MapView
-      style={{ height: 200, borderRadius: 12 }}
-      initialRegion={{
-        latitude: value?.latitude || 6.9271, // default Colombo
-        longitude: value?.longitude || 79.8612,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      }}
-      onPress={handlePress}
-    >
-      {value && <Marker coordinate={value} />}
-    </MapView>
-  );
 };
 
 const AddOrEditBikeStationDialog = ({ visible, onClose }: DialogProps) => {

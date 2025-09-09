@@ -10,8 +10,8 @@ export const bikeStationSchema = z.object({
 
 export type BikeStation = z.infer<typeof bikeStationSchema>;
 
-
 export async function validateUser() {
   const res = await axios.get("/api/auth/user");
   return res.data;
 }
+
