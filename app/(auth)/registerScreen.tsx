@@ -23,7 +23,7 @@ const RegisterScreen = () => {
   const userPassword = watch("password");
   console.log("User Password:", userPassword);
   const router = useRouter();
-  
+
   const { mutate: registerMutation, isPending } = useMutation({
     mutationFn: userRegister,
     onSuccess: async (data: any) => {
@@ -47,6 +47,37 @@ const RegisterScreen = () => {
   return (
     <View className="flex-1 items-center mt-10 px-5">
       <View className="w-full max-w-md rounded-2xl p-1">
+        <Controller
+          control={control}
+          name="userName"
+          render={({ field: { onChange, value } }) => (
+            <View className="mb-6">
+              <TextInput
+                placeholder="User Name"
+                value={value}
+                onChangeText={onChange}
+                autoCapitalize="none"
+                className="w-full rounded-xl border border-zinc-200 px-4 py-4 text-zinc-900"
+                placeholderTextColor="#9ca3af"
+                {...register("mobile", {
+                  required: {
+                    value: true,
+                    message: "User Name is required",
+                  },
+                  maxLength: {
+                    value: 4,
+                    message: "User Name must be at least 4 digits",
+                  },
+                })}
+              />
+              <HelperText
+                visible={!!errors.userName}
+                message={errors.userName?.message}
+                type="error"
+              />
+            </View>
+          )}
+        />
         <Controller
           control={control}
           name="email"
