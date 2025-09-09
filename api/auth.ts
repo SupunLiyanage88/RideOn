@@ -1,6 +1,11 @@
 import axios from "axios";
 import { z } from "zod";
 
+export enum Role {
+  ADMIN = "Admin",
+  USER = "User",
+}
+
 export const userSchema = z.object({
   id: z.number(),
   userName: z.string(),
@@ -8,6 +13,7 @@ export const userSchema = z.object({
   mobile: z.string(),
   password: z.string(),
   confirmPassword: z.string().optional(),
+  role: z.enum(Role)
 });
 
 export type User = z.infer<typeof userSchema>;

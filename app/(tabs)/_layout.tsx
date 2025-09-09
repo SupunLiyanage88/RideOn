@@ -5,7 +5,6 @@ import { Redirect, Tabs } from "expo-router";
 import React from "react";
 import { Platform, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
 type TabIconProps = {
   focused: boolean;
   icon: any;
@@ -33,6 +32,7 @@ const _layout = () => {
   const insets = useSafeAreaInsets();
 
   const isAuthenticated = user && status === "success";
+  const isAdmin = user?.role === "Admin";
   if (!isAuthenticated) return <Redirect href="/loginScreen" />;
 
   return (
@@ -110,6 +110,25 @@ const _layout = () => {
           headerShown: false,
           tabBarIcon: ({ focused }) => (
             <TabIcon title="Me" icon="person-outline" focused={focused} />
+          ),
+        }}
+      />
+      {/* <Tabs.Screen
+        name="admin"
+        options={{
+          href: null, // 👈 hides it from the tab bar
+        }}
+      /> */}
+
+      {/* Me */}
+      <Tabs.Screen
+        name="admin"
+        options={{
+          title: "Admin",
+          href: isAdmin ? "/admin" : null,
+          headerShown: false,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon title="Admin" icon="settings-outline" focused={focused} />
           ),
         }}
       />
