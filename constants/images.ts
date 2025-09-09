@@ -10,10 +10,12 @@ import mist from "@/assets/images/mist.png";
 import moderaterain from "@/assets/images/moderaterain.png";
 import parkBike from "@/assets/images/parkBike.png";
 import partycloudy from "@/assets/images/partlycloudy.png";
+import patternBg from "@/assets/images/patternBg.png";
 import rankingGradient from "@/assets/images/rankingGradient.png";
 import rideBike from "@/assets/images/rideBike.png";
 import sun from "@/assets/images/sun.png";
 export const images = {
+
   bg,
   highlight,
   rankingGradient,
@@ -29,5 +31,6 @@ export const images = {
   sun,
   directionBg,
   parkBike,
-  rideBike
+  rideBike,
+  patternBg
 };
