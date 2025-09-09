@@ -11,6 +11,6 @@ export const bikeStationSchema = z.object({
 export type BikeStation = z.infer<typeof bikeStationSchema>;
 
 export async function saveBikeStation(data: BikeStation) {
-  const res = await axios.post("/api/bike",data);
+  const res = await axios.post("/api/bike-station",data);
   return res.data;
 }

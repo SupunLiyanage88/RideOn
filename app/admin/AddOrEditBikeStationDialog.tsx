@@ -2,7 +2,14 @@ import { BikeStation, saveBikeStation } from "@/api/bikeStation";
 import queryClient from "@/state/queryClient";
 import { useMutation } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
-import { Modal, Pressable, Text, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import DialogHeader from "../components/DialogHeader";
 import HelperText from "../components/HelperText";
 import MapPicker from "../components/MapPicker";
@@ -163,11 +170,16 @@ const AddOrEditBikeStationDialog = ({
           <View className="flex-row justify-center">
             <Pressable
               onPress={handleSubmit(handleSaveStation)}
+              disabled={isPending}
               className="w-full rounded-full py-3 items-center justify-center bg-[#0B4057]"
             >
-              <Text className="text-white text-center font-bold">
-                Save Station
-              </Text>
+              {isPending ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text className="text-white text-center font-bold">
+                  Save Station
+                </Text>
+              )}
             </Pressable>
           </View>
         </View>
