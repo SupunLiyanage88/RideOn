@@ -16,7 +16,7 @@ function UseCurrentUser(): UseCurrentUserResult {
   if (error?.message?.includes("No token, authorization denied")) {
     return { user: undefined, status: "loading" };
   }
-
+  console.log("Current User:", data);
   return { user: data, status };
 }
 
