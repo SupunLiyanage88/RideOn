@@ -1,6 +1,8 @@
 import { useRef, useState } from "react";
 import { View } from "react-native";
-import GooglePlacesTextInput from "react-native-google-places-textinput";
+import GooglePlacesTextInput, {
+  GooglePlacesTextInputStyles,
+} from "react-native-google-places-textinput";
 import MapView, { MapPressEvent, Marker } from "react-native-maps";
 
 const MapPicker = ({
@@ -49,6 +51,7 @@ const MapPicker = ({
     <View>
       <View className="mb-4">
         <GooglePlacesTextInput
+          style={styles}
           apiKey={apiKey}
           onPlaceSelect={handlePlaceSelect}
           placeHolderText="Search for a location"
@@ -70,6 +73,20 @@ const MapPicker = ({
       </MapView>
     </View>
   );
+};
+
+const styles: GooglePlacesTextInputStyles = {
+  input: {
+    height: 50,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#e4e4e7",
+    paddingHorizontal: 12,
+    fontSize: 14,
+  },
+  placeholder: {
+    color: "#a1a1aa",
+  },
 };
 
 export default MapPicker;
