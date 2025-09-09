@@ -31,7 +31,7 @@ const AddOrEditBikeStationDialog = ({
       queryClient.invalidateQueries({ queryKey: ["bike-station"] });
       console.log("Bike Save successful:", data);
       alert("Bike Save successful");
-      reset()
+      reset();
       onClose();
     },
     onError: (data) => {
@@ -151,7 +151,9 @@ const AddOrEditBikeStationDialog = ({
                       }
                       type="error"
                     />
-                    <Text>latitude</Text>
+                    <Text className="mt-2 text-s text-zinc-500 ">
+                      Lat: {value?.toFixed(5)}, Lng: {valueLong?.toFixed(5)}
+                    </Text>
                   </View>
                 )}
               />
