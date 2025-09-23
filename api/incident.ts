@@ -31,3 +31,11 @@ export async function saveIncident(data: Incident) {
   const res = await axios.post("/api/incident",data);
   return res.data;
 }
+export async function getUserIncident() {
+  const res = await axios.get("/api/incident/user-incidents");
+  return res.data;
+}
+export async function getAllIncident() {
+  const res = await axios.post("/api/incident");
+  return res.data;
+}

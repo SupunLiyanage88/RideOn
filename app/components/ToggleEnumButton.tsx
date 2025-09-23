@@ -22,7 +22,7 @@ const ToggleEnumButton = <T extends Record<string, string>>({
           <TouchableOpacity
             key={key as string}
             onPress={() => onChange(option)}
-            className={`px-6 py-2 rounded-full border mb-4 h-14 justify-center ${
+            className={`px-6 w-full py-2 rounded-full border mb-4 h-14 justify-center ${
               selected ? "bg-secondary border-secondary" : "bg-white border-gray-300"
             }`}
           >

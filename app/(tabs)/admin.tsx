@@ -7,6 +7,7 @@ import AddOrEditBikeStationDialog from "../admin/AddOrEditBikeStationDialog";
 
 const Admin = () => {
   const [modalVisible, setModalVisible] = useState(false);
+  const [IncidentScreen, setIncidentScreen] = useState(false);
 
   return (
     <SafeAreaView className="flex-1 items-center justify-center">
@@ -18,6 +19,15 @@ const Admin = () => {
       >
         <Text className="text-white font-semibold text-base">
           Add a Bike Station
+        </Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity
+        onPress={() => setIncidentScreen(false)}
+        className="bg-red-500 mt py-2 rounded-2xl"
+      >
+        <Text className="text-white font-semibold text-base">
+          All Incidents
         </Text>
       </TouchableOpacity>
 
