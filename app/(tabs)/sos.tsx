@@ -20,7 +20,7 @@ const SosScreen = () => {
       >
         <View className="flex-1 px-5 pt-5">
           {/* Toggle Button */}
-          <View className="items-center justify-center mb-6">
+          <View className="items-center justify-center ">
             <ToggleButton
               leftLabel="Incident"
               rightLabel="Accident"

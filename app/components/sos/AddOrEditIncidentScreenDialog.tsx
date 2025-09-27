@@ -35,12 +35,38 @@ const IncidentScreenDialog = ({
   const {
     control,
     handleSubmit,
-    register,
     reset,
     formState: { errors },
   } = useForm<Incident>({
-    defaultValues: defaultValues,
-  });
+  defaultValues: {
+    incidentType: undefined,
+    howSerious: undefined,
+    description: "",
+    date: undefined as any, 
+    time: "",              
+  },
+});
+
+  React.useEffect(() => {
+  if (defaultValues) {
+    reset({
+      _id: defaultValues._id,
+      incidentType: defaultValues.incidentType,
+      howSerious: defaultValues.howSerious,
+      description: defaultValues.description,
+      date: new Date(defaultValues.date),
+      time: defaultValues.time ? defaultValues.time.substring(0, 5) : "",
+    });
+  } else {
+    reset({
+      incidentType: undefined,
+      howSerious: undefined,
+      description: "",
+      date: undefined as any,
+      time: "",
+    });
+  }
+}, [defaultValues, reset]);
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -136,12 +162,12 @@ const IncidentScreenDialog = ({
                           onChangeText={onChange}
                           className="flex-1 py-4 text-zinc-900"
                           placeholderTextColor="#9ca3af"
-                          {...register("description", {
-                            required: {
-                              value: true,
-                              message: "Incident is required",
-                            },
-                          })}
+                          // {...register("description", {
+                          //   required: {
+                          //     value: true,
+                          //     message: "Incident is required",
+                          //   },
+                          // })}
                         />
                       </View>
                       <HelperText
@@ -196,40 +222,42 @@ const IncidentScreenDialog = ({
               <Controller
                 control={control}
                 name="time"
-                render={({ field: { value, onChange } }) => (
+                render={({ field: { value, onChange } }) => {
+                const pickerDate = value
+                  ? (() => {
+                      const [hours, minutes] = value.split(":").map(Number);
+                      const d = new Date();
+                      d.setHours(hours || 0, minutes || 0, 0, 0);
+                      return d;
+                    })()
+                  : new Date();
+                const displayTime = value || "Select Time";
+                return (
                   <View>
                     <TouchableOpacity
                       className="border rounded-xl px-4 py-3"
                       onPress={() => setShowTimePicker(true)}
                     >
-                      <Text>
-                        {value
-                          ? value.toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                          : "Select Time"}
-                      </Text>
+                      <Text>{displayTime}</Text>
                     </TouchableOpacity>
                     {showTimePicker && (
                       <DateTimePicker
-                        value={value || new Date()}
+                        value={pickerDate}
                         mode="time"
-                        onChange={(_, selectedTime) => {
+                        onChange={(_, selectedTime: Date | undefined) => {
                           setShowTimePicker(false);
                           if (selectedTime) {
-                            const newDate = new Date(value || new Date());
-                            newDate.setHours(
-                              selectedTime.getHours(),
-                              selectedTime.getMinutes()
-                            );
-                            onChange(newDate);
+                            const hours = String(selectedTime.getHours()).padStart(2, "0");
+                            const minutes = String(selectedTime.getMinutes()).padStart(2, "0");
+                            const timeString = `${hours}:${minutes}`; // always "HH:mm"
+                            onChange(timeString);
                           }
                         }}
                       />
                     )}
                   </View>
-                )}
+                );
+              }}
               />
             </View>
 

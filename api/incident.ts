@@ -22,7 +22,7 @@ export const incidentSchema = z.object({
   howSerious: z.enum(HowSerious),
   description: z.string(),
   date: z.date(),
-  time: z.date(),
+  time: z.string(),
 });
 
 export type Incident = z.infer<typeof incidentSchema>;
@@ -36,6 +36,11 @@ export async function getUserIncident() {
   return res.data;
 }
 export async function getAllIncident() {
-  const res = await axios.post("/api/incident");
+  const res = await axios.get("/api/incident");
+  return res.data;
+}
+
+export async function updateIncident(data: Incident) {
+  const res = await axios.put(`/api/incident/${data._id}`, data);
   return res.data;
 }
