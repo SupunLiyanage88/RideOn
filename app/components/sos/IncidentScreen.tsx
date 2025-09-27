@@ -1,6 +1,7 @@
 import { getUserIncident } from "@/api/incident";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
+import { format, parse } from "date-fns";
 import React from "react";
 import {
   ActivityIndicator,
@@ -11,7 +12,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import IncidentScreenDialog from "./AddOrEditIncidentScreenDialog";
-
 const IncidentScreen = () => {
   const [modalVisible, setModalVisible] = React.useState(false);
   const [editingIncident, setEditingIncident] = React.useState<any | null>(
@@ -20,14 +20,14 @@ const IncidentScreen = () => {
 
   const {
     data: incidentData,
-    isLoading,
+    isFetching: isIncidentDataFetching,
     error,
   } = useQuery({
     queryKey: ["incident-data"],
     queryFn: getUserIncident,
   });
-
-  if (isLoading) {
+  console.log("data", incidentData);
+  if (isIncidentDataFetching) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-white">
         <ActivityIndicator size="large" color="red" />
@@ -96,14 +96,25 @@ const IncidentScreen = () => {
               Description: {incident.description}
             </Text>
             <Text className="text-gray-600">
-              Date: {new Date(incident.date).toLocaleDateString()}
+              Date: {format(new Date(incident?.date), "yyyy-MM-dd")}
             </Text>
-            <Text className="text-gray-600">
-              Time:
-              {new Date(incident.time).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
+            <Text>
+              Time:{" "}
+              {incident?.time
+                ? (() => {
+                    try {
+                      let timeDate;
+                      if (incident.time.includes("T")) {
+                        timeDate = new Date(incident.time);
+                      } else {
+                        timeDate = parse(incident.time, "HH:mm", new Date());
+                      }
+                      return format(timeDate, "HH:mm");
+                    } catch (err) {
+                      return "Invalid time";
+                    }
+                  })()
+                : "N/A"}
             </Text>
           </View>
         ))}

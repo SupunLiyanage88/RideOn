@@ -4,9 +4,8 @@ import {
   IncidentType,
   saveIncident,
 } from "@/api/incident";
-import queryClient from "@/state/queryClient";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
@@ -72,17 +71,17 @@ const IncidentScreenDialog = ({
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const queryClient = useQueryClient();
+  
   const { mutate: saveIncidentMutation, isPending } = useMutation({
     mutationFn: saveIncident,
-    onSuccess: async (data: any) => {
-      await queryClient.invalidateQueries({
-        queryKey: ["incident-data"],
-        refetchType: "active",
-      });
-      console.log("Incident Save successful:", data);
+    onSuccess: () => {
       alert("Incident Save successful");
       reset();
       onClose();
+      queryClient.invalidateQueries({
+        queryKey: ["incident-data"],
+      });
     },
     onError: (data) => {
       alert("Incident Save failed");
