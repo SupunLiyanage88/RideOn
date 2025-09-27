@@ -1,59 +1,87 @@
+import { Ionicons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import React, { useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import AddOrEditBikeDialog from "../admin/AddOrEditBikeDialog";
-import AddOrEditBikeStationDialog from "../admin/AddOrEditBikeStationDialog";
-
+import ManagementCard from "../components/ManagementCard"; // adjust import path
 type StatCardProps = {
   title: string;
   value: string | number;
+};
+type ButtonProps = {
+  title: string;
+  icon: any;
+};
+const StatCard = ({ title, value }: StatCardProps) => {
+  return (
+    <View className="bg-gray-300 p-5 rounded-lg flex-1 m-3">
+      <Text className="text-start">{title}</Text>
+      <Text className="text-3xl text-start font-semibold mt-2">{value}</Text>
+    </View>
+  );
+};
+
+const ButtonCard = ({ icon, title }: ButtonProps) => {
+  return (
+    <View className="bg-gray-300 p-5 rounded-lg flex-1 m-3">
+      <Ionicons name={icon} size={28} />
+      <Text className="text-start">{title}</Text>
+      <MaterialCommunityIcons name="chevron-right" size={24} color="black" />
+    </View>
+  );
 };
 
 const Admin = () => {
   const [bikeStationModalVisible, setBikeStationModalVisible] = useState(false);
   const [bikeModalVisible, setBikeModalVisible] = useState(false);
 
-  const StatCard: React.FC<StatCardProps> = ({ title, value }) => {
-    return (
-      <View className="bg-gray-200 rounded-lg flex-1 m-2 p-4 h-24 items-center justify-center">
-        <Text className="text-sm font-medium text-gray-700">{title}</Text>
-        <Text className="text-2xl font-bold text-black mt-2">{value}</Text>
-      </View>
-    );
-  };
-
   return (
     <SafeAreaView>
       <Text className="text-xl font-bold my-4 mx-auto">Ride On Admin</Text>
-
-      <StatCard title={"Total Stations"} value={2}></StatCard>
-      <StatCard title={"Total Stations"} value={2}></StatCard>
-
-      <TouchableOpacity
-        onPress={() => setBikeStationModalVisible(true)}
-        className="bg-red-500 px-4 py-2 rounded-2xl"
-      >
-        <Text className="text-white font-semibold text-base">
-          Add a Bike Station
-        </Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={() => setBikeModalVisible(true)}
-        className="bg-red-500 px-4 py-2 rounded-2xl mt-5"
-      >
-        <Text className="text-white font-semibold text-base">Add a Bike</Text>
-      </TouchableOpacity>
-
-      <AddOrEditBikeStationDialog
-        visible={bikeStationModalVisible}
-        onClose={() => setBikeStationModalVisible(false)}
-      />
-
-      <AddOrEditBikeDialog
-        visible={bikeModalVisible}
-        onClose={() => setBikeModalVisible(false)}
-      />
+      <View className="p-3">
+        <View className="flex-row flex-wrap justify-center">
+          <StatCard title="Total Stations" value={5} />
+          <StatCard title="Total Bikes" value={12} />
+        </View>
+        <View className="flex-row flex-wrap justify-center">
+          <StatCard title="Ongoing Emergency" value={2} />
+          <StatCard title="Monthly Payments" value={13} />
+        </View>
+      </View>
+      <View className="px-5">
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <ManagementCard
+            title="Station Management"
+            icon="location"
+            color="#083A4C"
+            onPress={() => console.log("Station Management pressed")}
+          />
+          <ManagementCard
+            title="Bike Management"
+            icon="bike"
+            color="#37A77D"
+            onPress={() => console.log("Bike Management pressed")}
+          />
+          <ManagementCard
+            title="Emergency Management"
+            icon="alert"
+            color="#B83434"
+            onPress={() => console.log("Emergency Management pressed")}
+          />
+          <ManagementCard
+            title="Payment Management"
+            icon="cash"
+            color="#348AB8"
+            onPress={() => console.log("Payment Management pressed")}
+          />
+          <ManagementCard
+            title="Package Management"
+            icon="cube-outline"
+            color="#083A4C"
+            onPress={() => console.log("Package Management pressed")}
+          />
+        </ScrollView>
+      </View>
     </SafeAreaView>
   );
 };
