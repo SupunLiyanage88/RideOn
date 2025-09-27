@@ -2,18 +2,18 @@ import axios from "axios";
 import { z } from "zod";
 
 export enum IncidentType {
-    ACCIDENTS = "Accidents",
-    MECHANICAL = "Mechanical",
-    MEDICAL = "Medical",
-    THEFT = "Theft",
-    HAZARD = "Hazard",
+  ACCIDENTS = "Accidents",
+  MECHANICAL = "Mechanical",
+  MEDICAL = "Medical",
+  THEFT = "Theft",
+  HAZARD = "Hazard",
 }
 
 export enum HowSerious {
-    LOW = "Low",
-    MEDIUM = "Medium",
-    HIGH = "High",
-    CRITICAL = "Critical",
+  LOW = "Low",
+  MEDIUM = "Medium",
+  HIGH = "High",
+  CRITICAL = "Critical",
 }
 
 export const incidentSchema = z.object({
@@ -28,7 +28,7 @@ export const incidentSchema = z.object({
 export type Incident = z.infer<typeof incidentSchema>;
 
 export async function saveIncident(data: Incident) {
-  const res = await axios.post("/api/incident",data);
+  const res = await axios.post("/api/incident", data);
   return res.data;
 }
 export async function getUserIncident() {

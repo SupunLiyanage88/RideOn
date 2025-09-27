@@ -1,18 +1,27 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import React, { useEffect, useRef, useState } from "react";
 import {
-    Animated,
-    StyleSheet,
-    Text,
-    TouchableWithoutFeedback,
+  Animated,
+  StyleSheet,
+  Text,
+  TouchableWithoutFeedback,
 } from "react-native";
+type SOSButtonProps = {
+  isActive?: boolean;
+  onActivate?: () => void;
+  onCancel?: () => void;
+};
 
-const SOSButton = () => {
+const SOSButton: React.FC<SOSButtonProps> = ({
+  isActive,
+  onActivate,
+  onCancel,
+}) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const [isClicked, setIsClicked] = useState(false);
 
   useEffect(() => {
-    if (isClicked) {
+    if (isActive) {
       const loop = Animated.loop(
         Animated.sequence([
           Animated.timing(scaleAnim, {
@@ -29,15 +38,19 @@ const SOSButton = () => {
       );
       loop.start();
 
-      return () => loop.stop(); 
+      return () => loop.stop();
     } else {
       scaleAnim.stopAnimation();
       scaleAnim.setValue(1);
     }
-  }, [isClicked, scaleAnim]);
+  }, [isActive]);
 
   const handlePress = () => {
-    setIsClicked(true); 
+    if (!isActive) {
+      onActivate && onActivate();
+    } else {
+      onCancel && onCancel();
+    }
   };
 
   return (
@@ -69,8 +82,8 @@ const styles = StyleSheet.create({
   button: {
     justifyContent: "center",
     alignItems: "center",
-    width: 180,
-    height: 180,
+    width: 170,
+    height: 170,
     marginTop: 24,
     backgroundColor: "#dc2626",
     borderRadius: 90,

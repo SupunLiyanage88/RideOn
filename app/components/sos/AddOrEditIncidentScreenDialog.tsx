@@ -38,35 +38,37 @@ const IncidentScreenDialog = ({
     reset,
     formState: { errors },
   } = useForm<Incident>({
-  defaultValues: {
-    incidentType: undefined,
-    howSerious: undefined,
-    description: "",
-    date: undefined as any, 
-    time: "",              
-  },
-});
-
-  React.useEffect(() => {
-  if (defaultValues) {
-    reset({
-      _id: defaultValues._id,
-      incidentType: defaultValues.incidentType,
-      howSerious: defaultValues.howSerious,
-      description: defaultValues.description,
-      date: new Date(defaultValues.date),
-      time: defaultValues.time ? defaultValues.time.substring(0, 5) : "",
-    });
-  } else {
-    reset({
+    defaultValues: {
       incidentType: undefined,
       howSerious: undefined,
       description: "",
       date: undefined as any,
       time: "",
-    });
-  }
-}, [defaultValues, reset]);
+    },
+  });
+
+  React.useEffect(() => {
+    if (!visible) return;
+
+    if (defaultValues) {
+      reset({
+        _id: defaultValues._id,
+        incidentType: defaultValues.incidentType,
+        howSerious: defaultValues.howSerious,
+        description: defaultValues.description,
+        date: new Date(defaultValues.date),
+        time: defaultValues.time ? defaultValues.time.substring(0, 5) : "",
+      });
+    } else {
+      reset({
+        incidentType: undefined,
+        howSerious: undefined,
+        description: "",
+        date: undefined as any,
+        time: "",
+      });
+    }
+  }, [visible, defaultValues, reset]);
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -94,13 +96,24 @@ const IncidentScreenDialog = ({
     console.log("Incident data to be saved:", data);
   };
 
+  const handleClose = () => {
+    reset({
+      incidentType: undefined,
+      howSerious: undefined,
+      description: "",
+      date: undefined as any,
+      time: "",
+    });
+    onClose();
+  };
+
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View className="flex-1 items-center justify-center bg-black/50">
         <View className="bg-white rounded-2xl p-6 w-[90%] max-h-[90%]">
           <DialogHeader
             title={defaultValues ? "Edit Incident" : "Add Incident"}
-            onClose={onClose}
+            onClose={handleClose}
           />
 
           <ScrollView showsVerticalScrollIndicator={false}>
@@ -223,41 +236,45 @@ const IncidentScreenDialog = ({
                 control={control}
                 name="time"
                 render={({ field: { value, onChange } }) => {
-                const pickerDate = value
-                  ? (() => {
-                      const [hours, minutes] = value.split(":").map(Number);
-                      const d = new Date();
-                      d.setHours(hours || 0, minutes || 0, 0, 0);
-                      return d;
-                    })()
-                  : new Date();
-                const displayTime = value || "Select Time";
-                return (
-                  <View>
-                    <TouchableOpacity
-                      className="border rounded-xl px-4 py-3"
-                      onPress={() => setShowTimePicker(true)}
-                    >
-                      <Text>{displayTime}</Text>
-                    </TouchableOpacity>
-                    {showTimePicker && (
-                      <DateTimePicker
-                        value={pickerDate}
-                        mode="time"
-                        onChange={(_, selectedTime: Date | undefined) => {
-                          setShowTimePicker(false);
-                          if (selectedTime) {
-                            const hours = String(selectedTime.getHours()).padStart(2, "0");
-                            const minutes = String(selectedTime.getMinutes()).padStart(2, "0");
-                            const timeString = `${hours}:${minutes}`; // always "HH:mm"
-                            onChange(timeString);
-                          }
-                        }}
-                      />
-                    )}
-                  </View>
-                );
-              }}
+                  const pickerDate = value
+                    ? (() => {
+                        const [hours, minutes] = value.split(":").map(Number);
+                        const d = new Date();
+                        d.setHours(hours || 0, minutes || 0, 0, 0);
+                        return d;
+                      })()
+                    : new Date();
+                  const displayTime = value || "Select Time";
+                  return (
+                    <View>
+                      <TouchableOpacity
+                        className="border rounded-xl px-4 py-3"
+                        onPress={() => setShowTimePicker(true)}
+                      >
+                        <Text>{displayTime}</Text>
+                      </TouchableOpacity>
+                      {showTimePicker && (
+                        <DateTimePicker
+                          value={pickerDate}
+                          mode="time"
+                          onChange={(_, selectedTime: Date | undefined) => {
+                            setShowTimePicker(false);
+                            if (selectedTime) {
+                              const hours = String(
+                                selectedTime.getHours()
+                              ).padStart(2, "0");
+                              const minutes = String(
+                                selectedTime.getMinutes()
+                              ).padStart(2, "0");
+                              const timeString = `${hours}:${minutes}`; // always "HH:mm"
+                              onChange(timeString);
+                            }
+                          }}
+                        />
+                      )}
+                    </View>
+                  );
+                }}
               />
             </View>
 

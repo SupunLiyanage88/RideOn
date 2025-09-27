@@ -1,5 +1,5 @@
 import { getUserIncident } from "@/api/incident";
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import React from "react";
 import {
@@ -14,7 +14,9 @@ import IncidentScreenDialog from "./AddOrEditIncidentScreenDialog";
 
 const IncidentScreen = () => {
   const [modalVisible, setModalVisible] = React.useState(false);
-  const [editingIncident, setEditingIncident] = React.useState<any | null>(null);
+  const [editingIncident, setEditingIncident] = React.useState<any | null>(
+    null
+  );
 
   const {
     data: incidentData,
@@ -46,7 +48,7 @@ const IncidentScreen = () => {
   return (
     <SafeAreaView className="flex-1 bg-white ">
       {/* Header */}
-      <View >
+      <View>
         <Text className="text-2xl font-bold text-center text-gray-800">
           Incident Dashboard
         </Text>
@@ -73,10 +75,10 @@ const IncidentScreen = () => {
             key={incident._id}
             className="mb-4 p-4 rounded-2xl bg-white shadow"
           >
-          <View className="flex-row justify-between items-center mb-2">
-            <Text className="font-bold text-lg text-gray-800">
-              {incident.incidentType}
-            </Text>
+            <View className="flex-row justify-between items-center mb-2">
+              <Text className="font-bold text-lg text-gray-800">
+                {incident.incidentType}
+              </Text>
               <TouchableOpacity
                 onPress={() => {
                   setEditingIncident(incident);
@@ -87,7 +89,9 @@ const IncidentScreen = () => {
               </TouchableOpacity>
             </View>
 
-            <Text className="text-gray-600">How Serious: {incident.howSerious}</Text>
+            <Text className="text-gray-600">
+              How Serious: {incident.howSerious}
+            </Text>
             <Text className="text-gray-600">
               Description: {incident.description}
             </Text>
@@ -95,7 +99,11 @@ const IncidentScreen = () => {
               Date: {new Date(incident.date).toLocaleDateString()}
             </Text>
             <Text className="text-gray-600">
-              Time: {new Date(incident.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              Time:
+              {new Date(incident.time).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
             </Text>
           </View>
         ))}
@@ -107,10 +115,7 @@ const IncidentScreen = () => {
             setEditingIncident(null);
             setModalVisible(true);
           }}
-          className="bg-red-500 px-6 py-3 rounded-full shadow-lg"
-        >
-          <Text className="text-white font-semibold text-base">+ Add</Text>
-        </TouchableOpacity>
+        ></TouchableOpacity>
       </View>
 
       {/* Add Incident Dialog */}

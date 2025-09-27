@@ -1,4 +1,3 @@
-// StationMap.tsx
 import React from "react";
 import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
@@ -6,7 +5,7 @@ import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 type UserMapProps = {
   latitude: number;
   longitude: number;
-  style?: StyleProp<ViewStyle>; // optional style prop
+  style?: StyleProp<ViewStyle>;
 };
 
 const UserMap: React.FC<UserMapProps> = ({ latitude, longitude, style }) => {
@@ -21,10 +20,6 @@ const UserMap: React.FC<UserMapProps> = ({ latitude, longitude, style }) => {
           latitudeDelta: 0.01,
           longitudeDelta: 0.01,
         }}
-        zoomEnabled
-        scrollEnabled={false}
-        pitchEnabled={false}
-        rotateEnabled={false}
       >
         <Marker coordinate={{ latitude, longitude }} />
       </MapView>
@@ -34,7 +29,7 @@ const UserMap: React.FC<UserMapProps> = ({ latitude, longitude, style }) => {
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 32,
+    borderRadius: 16,
     overflow: "hidden",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
