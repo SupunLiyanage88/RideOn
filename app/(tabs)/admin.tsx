@@ -1,16 +1,33 @@
 import React, { useState } from "react";
-import { Text, TouchableOpacity } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AddOrEditBikeDialog from "../admin/AddOrEditBikeDialog";
 import AddOrEditBikeStationDialog from "../admin/AddOrEditBikeStationDialog";
+
+type StatCardProps = {
+  title: string;
+  value: string | number;
+};
 
 const Admin = () => {
   const [bikeStationModalVisible, setBikeStationModalVisible] = useState(false);
   const [bikeModalVisible, setBikeModalVisible] = useState(false);
 
+  const StatCard: React.FC<StatCardProps> = ({ title, value }) => {
+    return (
+      <View className="bg-gray-200 rounded-lg flex-1 m-2 p-4 h-24 items-center justify-center">
+        <Text className="text-sm font-medium text-gray-700">{title}</Text>
+        <Text className="text-2xl font-bold text-black mt-2">{value}</Text>
+      </View>
+    );
+  };
+
   return (
-    <SafeAreaView className="flex-1 items-center justify-center">
-      <Text className="text-xl font-bold mb-4">Admin</Text>
+    <SafeAreaView>
+      <Text className="text-xl font-bold my-4 mx-auto">Ride On Admin</Text>
+
+      <StatCard title={"Total Stations"} value={2}></StatCard>
+      <StatCard title={"Total Stations"} value={2}></StatCard>
 
       <TouchableOpacity
         onPress={() => setBikeStationModalVisible(true)}
