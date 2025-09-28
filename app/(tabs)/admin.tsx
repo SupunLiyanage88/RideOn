@@ -7,6 +7,7 @@ import AddOrEditSubscriptionPackageDialog from "../admin/AddOrEditSubscriptionPa
 
 const Admin = () => {
   const [modalVisible, setModalVisible] = useState(false);
+  const [modalSubscriptionVisible, setModalSubscriptionVisible] = useState(false);
 
   return (
     <SafeAreaView className="flex-1">
@@ -30,7 +31,7 @@ const Admin = () => {
   <View className="items-center justify-center">
     
     <TouchableOpacity
-      onPress={() => setModalVisible(true)}
+      onPress={() => setModalSubscriptionVisible(true)}
       className="bg-red-500 px-4 py-2 rounded-2xl"
     >
       <Text className="text-white font-semibold text-base">
@@ -39,8 +40,8 @@ const Admin = () => {
     </TouchableOpacity>
 
     <AddOrEditSubscriptionPackageDialog
-      visible={modalVisible}
-      onClose={() => setModalVisible(false)}
+      visible={modalSubscriptionVisible}
+      onClose={() => setModalSubscriptionVisible(false)}
     />
   </View>
 </SafeAreaView>

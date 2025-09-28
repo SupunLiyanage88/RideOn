@@ -1,6 +1,10 @@
 // src/api/package.ts
 import axios from "axios";
 import { z } from "zod";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const API = process.env.EXPO_PUBLIC_API_BASE_URL;
+
 
 // Schema of a Package (matches backend model)
 export const packageSchema = z.object({
@@ -27,31 +31,35 @@ export const packageInputSchema = z.object({
 export type Package = z.infer<typeof packageSchema>;
 export type PackageInput = z.infer<typeof packageInputSchema>;
 
-// Adjust baseURL to your backend (local emulator: http://10.0.2.2:5000)
-const API = axios.create({ baseURL: "http://10.0.2.2:5000/api" });
 
-// CRUD functions
-export async function getPackages(): Promise<Package[]> {
-  const res = await API.get("/packages");
+async function getAuthHeaders() {
+  const token = await AsyncStorage.getItem("token");
+  return {
+    Authorization: `Bearer ${token}`,
+  };
+}
+
+// ---- SAVE PACKAGE ----
+export async function savePackage(data: any) {
+  const headers = await getAuthHeaders();
+  return axios.post(`${API}/api/packages/add`, data, { headers });
+}
+
+// ---- UPDATE PACKAGE ----
+export async function updatePackage(id: string, data: any) {
+  const headers = await getAuthHeaders();
+  return axios.put(`${API}/api/packages/${id}`, data, { headers });
+}
+
+// ---- FETCH ALL PACKAGES ----
+export async function fetchPackages() {
+  const headers = await getAuthHeaders();
+  const res = await axios.get(`${API}/api/packages`, { headers });
   return res.data;
 }
 
-export async function getPackageById(id: string): Promise<Package> {
-  const res = await API.get(`/packages/${id}`);
-  return res.data;
-}
-
-export async function savePackage(data: PackageInput): Promise<Package> {
-  const res = await API.post("/packages", data);
-  return res.data;
-}
-
-export async function updatePackage(id: string, data: PackageInput): Promise<Package> {
-  const res = await API.put(`/packages/${id}`, data);
-  return res.data;
-}
-
-export async function deletePackage(id: string): Promise<{ message: string }> {
-  const res = await API.delete(`/packages/${id}`);
-  return res.data;
+// ---- DELETE PACKAGE ----
+export async function deletePackage(id: string) {
+  const headers = await getAuthHeaders();
+  return axios.delete(`${API}/api/packages/${id}`, { headers });
 }

@@ -1,6 +1,8 @@
 // api/subscription.ts
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from 'axios';
+const API = process.env.EXPO_PUBLIC_API_BASE_URL;
 
 // Define the type for a subscription package
 export interface SubscriptionPackage {
@@ -16,18 +18,11 @@ export interface SubscriptionPackage {
 
 
 
-// Fetch subscription packages
-export async function fetchSubscriptionPackages(token: string) {
-  try {
-    const response = await axios.get('https://rideon-server.vercel.app/api/packages', {
-      headers: {
-        Authorization: `Bearer ${token}`, // Attach the token in the Authorization header
-      },
-    });
-    return response.data;
-  } catch (err) {
-    console.error('Error fetching subscription packages:', err);
-    throw err; // Rethrow the error to be handled by the calling function
-  }
+export async function fetchSubscriptionPackages() {
+  const token = await AsyncStorage.getItem("token");
+  const res = await axios.get(`${API}/api/packages`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.data;
 }
 
