@@ -6,15 +6,33 @@ import MapView, { MapPressEvent, Marker } from "react-native-maps";
 const MapPicker = ({
   value,
   onChange,
+  defaultValues,
 }: {
   value?: { latitude: number; longitude: number };
   onChange: (coords: { latitude: number; longitude: number }) => void;
+  defaultValues?: { latitude: number; longitude: number };
 }) => {
-  const [coords, setCoords] = useState(value);
-  const [loading, setLoading] = useState(true);
+  const [coords, setCoords] = useState(value || defaultValues || null);
+  const [loading, setLoading] = useState(!coords); // only loading if coords not set
   const mapRef = useRef<MapView>(null);
 
   useEffect(() => {
+    if (coords) {
+      // If defaultValues exist, animate map to that region
+      mapRef.current?.animateToRegion(
+        {
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        },
+        1000
+      );
+      setLoading(false);
+      onChange(coords); // emit default coords
+      return;
+    }
+
     (async () => {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
@@ -71,7 +89,7 @@ const MapPicker = ({
               longitudeDelta: 0.01,
             }}
             onPress={handlePress}
-            showsUserLocation={true}
+            showsUserLocation={!defaultValues} // only show live location if no default
           >
             {coords && <Marker coordinate={coords} />}
           </MapView>

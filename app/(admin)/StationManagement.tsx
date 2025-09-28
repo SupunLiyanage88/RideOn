@@ -1,4 +1,5 @@
-import { fetchBikeStation } from "@/api/bikeStation";
+import { BikeStation, fetchBikeStation } from "@/api/bikeStation";
+import { MaterialIcons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import React, { useState } from "react";
 import {
@@ -14,6 +15,8 @@ import AddOrEditBikeStationDialog from "../admin/AddOrEditBikeStationDialog";
 
 const Me = () => {
   const [bikeStationModalVisible, setBikeStationModalVisible] = useState(false);
+  const [selectedData, setSelectedData] = useState<BikeStation | null>(null);
+
   const { data: bikeStationData, isFetching: isBikeStationLoading } = useQuery({
     queryKey: ["station-data"],
     queryFn: fetchBikeStation,
@@ -27,13 +30,13 @@ const Me = () => {
     );
   }
 
-  if (!bikeStationData || bikeStationData.length === 0) {
-    return (
-      <SafeAreaView className="flex-1 justify-center items-center">
-        <Text>No bike stations found</Text>
-      </SafeAreaView>
-    );
-  }
+  // if (!bikeStationData || bikeStationData.length === 0) {
+  //   return (
+  //     <SafeAreaView className="flex-1 justify-center items-center">
+  //       <Text>No bike stations found</Text>
+  //     </SafeAreaView>
+  //   );
+  // }
 
   return (
     <SafeAreaView className="flex-1">
@@ -48,7 +51,11 @@ const Me = () => {
 
       <AddOrEditBikeStationDialog
         visible={bikeStationModalVisible}
-        onClose={() => setBikeStationModalVisible(false)}
+        onClose={() => {
+          setBikeStationModalVisible(false);
+          setSelectedData(null);
+        }}
+        defaultValues={selectedData ?? undefined}
       />
 
       <ScrollView contentContainerStyle={{ padding: 16 }}>
@@ -60,9 +67,23 @@ const Me = () => {
             <Text className="text-lg font-bold text-gray-800">
               {station.stationName}
             </Text>
+            <Text className="text-lg font-bold text-gray-800">
+              {station.stationId}
+            </Text>
             <Text className="text-gray-600 mb-2">
               {station.stationLocation}
             </Text>
+
+            <View className="flex-row justify-between items-center mb-2">
+              <TouchableOpacity
+                onPress={() => {
+                  setSelectedData(station);
+                  setBikeStationModalVisible(true);
+                }}
+              >
+                <MaterialIcons name="edit" size={24} color="#4B5563" />
+              </TouchableOpacity>
+            </View>
 
             {/* Mini Map */}
             <MapView
