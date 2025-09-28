@@ -22,7 +22,7 @@ const ManagementCard = ({
       style={{ backgroundColor: color }}
     >
       <View className="flex-row items-center">
-        <View className="w-6 h-6 justify-center items-center">{icon}</View>
+        <View className="w-7 h-7 justify-center items-center">{icon}</View>
         <Text className="ml-3 text-white font-bold text-base">{title}</Text>
       </View>
       <Ionicons name="chevron-forward" size={22} color="#fff" />
