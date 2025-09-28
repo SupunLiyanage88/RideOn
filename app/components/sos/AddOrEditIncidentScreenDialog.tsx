@@ -292,9 +292,7 @@ const IncidentScreenDialog = ({
                   </Text>
                 )}
               </Pressable>
-            </View>
-
-            <View className="mb-32" />
+            </View>    
           </ScrollView>
         </View>
       </View>

@@ -10,12 +10,14 @@ type SOSButtonProps = {
   isActive?: boolean;
   onActivate?: () => void;
   onCancel?: () => void;
+  isLocationLoading?: boolean;
 };
 
 const SOSButton: React.FC<SOSButtonProps> = ({
   isActive,
   onActivate,
   onCancel,
+  isLocationLoading,
 }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const [isClicked, setIsClicked] = useState(false);
@@ -54,7 +56,10 @@ const SOSButton: React.FC<SOSButtonProps> = ({
   };
 
   return (
-    <TouchableWithoutFeedback onPress={handlePress}>
+    <TouchableWithoutFeedback
+      onPress={handlePress}
+      disabled={isLocationLoading}
+    >
       <Animated.View
         style={[
           styles.button,
@@ -66,6 +71,7 @@ const SOSButton: React.FC<SOSButtonProps> = ({
             shadowOffset: { width: 0, height: 6 },
             shadowOpacity: isClicked ? 0.3 : 0.6,
             shadowRadius: isClicked ? 4.65 : 10,
+            backgroundColor: isLocationLoading ? "gray" : "#dc2626",
             elevation: isClicked ? 8 : 12,
           },
         ]}

@@ -94,9 +94,7 @@ const AddOrEditBikeStationDialog = ({
       <View className="flex-1 items-center justify-center bg-black/50">
         <View className="bg-white rounded-2xl p-6 w-4/5">
           <DialogHeader
-            title={
-              defaultValues ? "Edit: ADD Bike Station" : "Add Bike Station"
-            }
+            title={defaultValues ? "Edit Bike Station" : "Add Bike Station"}
             onClose={onClose}
           />
 
@@ -113,12 +111,6 @@ const AddOrEditBikeStationDialog = ({
                     className="flex-1 py-4 text-zinc-900"
                     placeholderTextColor="#9ca3af"
                     defaultValue={defaultValues?.stationName}
-                    // {...register("stationName", {
-                    //   required: {
-                    //     value: true,
-                    //     message: "Station Name is required",
-                    //   },
-                    // })}
                   />
                 </View>
                 <HelperText
@@ -142,12 +134,6 @@ const AddOrEditBikeStationDialog = ({
                     className="flex-1 py-4 text-zinc-900"
                     placeholderTextColor="#9ca3af"
                     defaultValue={defaultValues?.stationLocation}
-                    // {...register("stationLocation", {
-                    //   required: {
-                    //     value: true,
-                    //     message: "Station Location is required",
-                    //   },
-                    // })}
                   />
                 </View>
                 <HelperText

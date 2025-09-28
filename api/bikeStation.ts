@@ -21,6 +21,11 @@ export async function updateBikeStation(data: BikeStation) {
   return res.data;
 }
 
+export async function deleteBikeStation(id?: string) {
+  const res = await axios.delete(`/api/bike-station/${id}`);
+  return res.data;
+}
+
 export async function fetchBikeStation() {
   const res = await axios.get("/api/bike-station");
   return res.data;
