@@ -47,7 +47,7 @@ const Admin = () => {
       <Text className="text-xl font-bold my-4 mx-auto">Ride On Admin</Text>
       <View className="p-3">
         <View className="flex-row flex-wrap justify-center">
-          <StatCard title="Total Stations" value={bikeStationData.length} />
+          <StatCard title="Total Stations" value={bikeStationData?.length} />
           <StatCard title="Total Bikes" value={12} />
         </View>
         <View className="flex-row flex-wrap justify-center">

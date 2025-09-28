@@ -5,10 +5,12 @@ import {
   ActivityIndicator,
   ScrollView,
   Text,
-  View
+  TouchableOpacity,
+  View,
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AddOrEditBikeStationDialog from "../admin/AddOrEditBikeStationDialog";
 
 const Me = () => {
   const [bikeStationModalVisible, setBikeStationModalVisible] = useState(false);
@@ -33,12 +35,21 @@ const Me = () => {
     );
   }
 
-  
-
   return (
     <SafeAreaView className="flex-1">
+      <TouchableOpacity
+        onPress={() => setBikeStationModalVisible(true)}
+        className="bg-red-500 px-4 py-2 rounded-2xl"
+      >
+        <Text className="text-white font-semibold text-base">
+          Add a Bike Station
+        </Text>
+      </TouchableOpacity>
 
-      
+      <AddOrEditBikeStationDialog
+        visible={bikeStationModalVisible}
+        onClose={() => setBikeStationModalVisible(false)}
+      />
 
       <ScrollView contentContainerStyle={{ padding: 16 }}>
         {bikeStationData.map((station: any) => (
