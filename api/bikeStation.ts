@@ -14,3 +14,8 @@ export async function saveBikeStation(data: BikeStation) {
   const res = await axios.post("/api/bike-station",data);
   return res.data;
 }
+
+export async function fetchBikeStation() {
+  const res = await axios.get("/api/bike-station");
+  return res.data;
+}
