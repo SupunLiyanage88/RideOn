@@ -1,9 +1,12 @@
+import { fetchBikeStation } from "@/api/bikeStation";
 import { Ionicons } from "@expo/vector-icons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import ManagementCard from "../components/ManagementCard"; // adjust import path
+import ManagementCard from "../components/ManagementCard";
 type StatCardProps = {
   title: string;
   value: string | number;
@@ -34,13 +37,17 @@ const ButtonCard = ({ icon, title }: ButtonProps) => {
 const Admin = () => {
   const [bikeStationModalVisible, setBikeStationModalVisible] = useState(false);
   const [bikeModalVisible, setBikeModalVisible] = useState(false);
-
+  const router = useRouter();
+  const { data: bikeStationData, isFetching: isBikeStationLoading } = useQuery({
+    queryKey: ["station-data"],
+    queryFn: fetchBikeStation,
+  });
   return (
     <SafeAreaView>
       <Text className="text-xl font-bold my-4 mx-auto">Ride On Admin</Text>
       <View className="p-3">
         <View className="flex-row flex-wrap justify-center">
-          <StatCard title="Total Stations" value={5} />
+          <StatCard title="Total Stations" value={bikeStationData.length} />
           <StatCard title="Total Bikes" value={12} />
         </View>
         <View className="flex-row flex-wrap justify-center">
@@ -54,7 +61,7 @@ const Admin = () => {
             title="Station Management"
             icon="location"
             color="#083A4C"
-            onPress={() => console.log("Station Management pressed")}
+            onPress={() => router.push("/(admin)/StationManagement")}
           />
           <ManagementCard
             title="Bike Management"
