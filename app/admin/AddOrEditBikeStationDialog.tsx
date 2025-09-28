@@ -1,14 +1,17 @@
-import { BikeStation, saveBikeStation } from "@/api/bikeStation";
-import queryClient from "@/state/queryClient";
-import { useMutation } from "@tanstack/react-query";
+import {
+  BikeStation,
+  saveBikeStation,
+  updateBikeStation,
+} from "@/api/bikeStation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
 import {
-    ActivityIndicator,
-    Modal,
-    Pressable,
-    Text,
-    TextInput,
-    View,
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 import DialogHeader from "../components/DialogHeader";
 import HelperText from "../components/HelperText";
@@ -31,21 +34,43 @@ const AddOrEditBikeStationDialog = ({
     formState: { errors },
   } = useForm<BikeStation>({
     defaultValues: defaultValues,
+    mode: "onChange",
   });
-  const { mutate: registerMutation, isPending } = useMutation({
-    mutationFn: saveBikeStation,
-    onSuccess: async (data: any) => {
-      queryClient.invalidateQueries({ queryKey: ["bike-station"] });
-      console.log("Bike Save successful:", data);
-      alert("Bike Save successful");
-      reset();
-      onClose();
-    },
-    onError: (data) => {
-      alert("Bike Save failed");
-      console.log(data);
-    },
-  });
+
+  const queryClient = useQueryClient();
+  const { mutate: createBikeStationMutation, isPending: isCreating } =
+    useMutation({
+      mutationFn: saveBikeStation,
+      onSuccess: () => {
+        alert("Bike Station Save Successful");
+        reset();
+        onClose();
+        queryClient.invalidateQueries({
+          queryKey: ["station-data"],
+        });
+      },
+      onError: (data) => {
+        alert("Bike Station Save Failed");
+        console.log(data);
+      },
+    });
+
+  const { mutate: updateBikeStationMutation, isPending: isUpdating } =
+    useMutation({
+      mutationFn: updateBikeStation,
+      onSuccess: () => {
+        alert("Bike Station Update Successful");
+        reset();
+        onClose();
+        queryClient.invalidateQueries({
+          queryKey: ["station-data"],
+        });
+      },
+      onError: (data) => {
+        alert("Bike Station Update Failed");
+        console.log(data);
+      },
+    });
 
   const handleSaveStation = (data: BikeStation) => {
     console.log(data);
@@ -53,16 +78,23 @@ const AddOrEditBikeStationDialog = ({
       alert("Please select a location on the map.");
       return;
     }
-    registerMutation(data);
+    if (defaultValues) {
+      const updatedData = { ...data, _id: defaultValues._id };
+      if (!updatedData._id) {
+        alert("Bike Station Id Missing");
+        return;
+      }
+      updateBikeStationMutation(updatedData);
+    } else {
+      createBikeStationMutation(data);
+    }
   };
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View className="flex-1 items-center justify-center bg-black/50">
         <View className="bg-white rounded-2xl p-6 w-4/5">
           <DialogHeader
-            title={
-              defaultValues ? "Edit: ADD Bike Station" : "Add Bike Station"
-            }
+            title={defaultValues ? "Edit Bike Station" : "Add Bike Station"}
             onClose={onClose}
           />
 
@@ -78,12 +110,7 @@ const AddOrEditBikeStationDialog = ({
                     onChangeText={onChange}
                     className="flex-1 py-4 text-zinc-900"
                     placeholderTextColor="#9ca3af"
-                    {...register("stationName", {
-                      required: {
-                        value: true,
-                        message: "Station Name is required",
-                      },
-                    })}
+                    defaultValue={defaultValues?.stationName}
                   />
                 </View>
                 <HelperText
@@ -106,12 +133,7 @@ const AddOrEditBikeStationDialog = ({
                     onChangeText={onChange}
                     className="flex-1 py-4 text-zinc-900"
                     placeholderTextColor="#9ca3af"
-                    {...register("stationLocation", {
-                      required: {
-                        value: true,
-                        message: "Station Location is required",
-                      },
-                    })}
+                    defaultValue={defaultValues?.stationLocation}
                   />
                 </View>
                 <HelperText
@@ -146,6 +168,7 @@ const AddOrEditBikeStationDialog = ({
                           ? { latitude: value, longitude: valueLong }
                           : undefined
                       }
+                      defaultValues={defaultValues}
                       onChange={({ latitude, longitude }) => {
                         onChange(latitude);
                         onChangeLong(longitude);
@@ -170,14 +193,14 @@ const AddOrEditBikeStationDialog = ({
           <View className="flex-row justify-center">
             <Pressable
               onPress={handleSubmit(handleSaveStation)}
-              disabled={isPending}
+              disabled={isCreating || isUpdating}
               className="w-full rounded-full py-3 items-center justify-center bg-[#0B4057]"
             >
-              {isPending ? (
+              {isCreating || isUpdating ? (
                 <ActivityIndicator color="#fff" />
               ) : (
                 <Text className="text-white text-center font-bold">
-                  Save Station
+                  {defaultValues ? "Update Station" : "Save Station"}
                 </Text>
               )}
             </Pressable>

@@ -3,7 +3,6 @@ import IncidentScreen from "@/app/components/sos/IncidentScreen";
 import ToggleButton from "@/app/components/toggleButton";
 import React, { useState } from "react";
 import { View } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const SosScreen = () => {
@@ -11,14 +10,14 @@ const SosScreen = () => {
   const [clickedAccident, setClickedAccident] = useState(false);
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <KeyboardAwareScrollView
+    <SafeAreaView className="flex-1">
+      {/* <KeyboardAwareScrollView
         className="flex-1"
         contentContainerStyle={{ flexGrow: 1 }}
         enableOnAndroid={true}
         keyboardShouldPersistTaps="handled"
-      >
-        <View className="flex-1 px-5 pt-5">
+      > */}
+        <View className="flex-grow px-5 pt-5">
           {/* Toggle Button */}
           <View className="items-center justify-center ">
             <ToggleButton
@@ -38,7 +37,7 @@ const SosScreen = () => {
             {clickedIncident ? <IncidentScreen /> : <AccidentScreen />}
           </View>
         </View>
-      </KeyboardAwareScrollView>
+      {/* </KeyboardAwareScrollView> */}
     </SafeAreaView>
   );
 };

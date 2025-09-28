@@ -1,21 +1,49 @@
+import { fetchBikeStation } from "@/api/bikeStation";
+import { Ionicons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import ManagementCard from "../components/ManagementCard";
 
-import AddOrEditBikeDialog from "../admin/AddOrEditBikeDialog";
-import AddOrEditBikeStationDialog from "../admin/AddOrEditBikeStationDialog";
-import AddOrEditSubscriptionPackageDialog from "../admin/AddOrEditSubscriptionPackageDialog";
-
+import AntDesign from '@expo/vector-icons/AntDesign';
+import Feather from '@expo/vector-icons/Feather';
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 type StatCardProps = {
   title: string;
   value: string | number;
+  isLoading: boolean;
+};
+type ButtonProps = {
+  title: string;
+  icon: any;
+};
+const StatCard = ({ title, value, isLoading }: StatCardProps) => {
+  return (
+    <View className="bg-gray-300 p-5 rounded-2xl flex-1 m-3 justify-center items-center">
+      {isLoading ? (
+        <ActivityIndicator />
+      ) : (
+        <>
+          <Text className="text-start">{title}</Text>
+          <Text className="text-3xl text-start font-semibold mt-2">
+            {value}
+          </Text>
+        </>
+      )}
+    </View>
+  );
 };
 
-const StatCard: React.FC<StatCardProps> = ({ title, value }) => {
+const ButtonCard = ({ icon, title }: ButtonProps) => {
   return (
-    <View className="bg-gray-200 rounded-lg flex-1 m-2 p-4 h-24 items-center justify-center">
-      <Text className="text-sm font-medium text-gray-700">{title}</Text>
-      <Text className="text-2xl font-bold text-black mt-2">{value}</Text>
+    <View className="bg-gray-300 p-5 rounded-lg flex-1 m-3">
+      <Ionicons name={icon} size={28} />
+      <Text className="text-start">{title}</Text>
+      <MaterialCommunityIcons name="chevron-right" size={24} color="black" />
     </View>
   );
 };
@@ -23,58 +51,76 @@ const StatCard: React.FC<StatCardProps> = ({ title, value }) => {
 const Admin = () => {
   const [bikeStationModalVisible, setBikeStationModalVisible] = useState(false);
   const [bikeModalVisible, setBikeModalVisible] = useState(false);
-  const [subscriptionModalVisible, setSubscriptionModalVisible] =
-    useState(false);
-
+  const router = useRouter();
+  const { data: bikeStationData, isFetching: isBikeStationLoading } = useQuery({
+    queryKey: ["station-data"],
+    queryFn: fetchBikeStation,
+  });
   return (
-    <SafeAreaView className="flex-1 p-4">
-      <Text className="text-xl font-bold my-4 text-center">Ride On Admin</Text>
-
-      {/* Example Stat Cards */}
-      <View className="flex-row">
-        <StatCard title="Total Stations" value={2} />
-        <StatCard title="Total Bikes" value={10} />
+    <SafeAreaView>
+      <Text className="text-xl font-bold my-4 mx-auto">Ride On Admin</Text>
+      <View className="p-3">
+        <View className="flex-row flex-wrap justify-center">
+          <StatCard
+            title="Total Stations"
+            value={bikeStationData?.length}
+            isLoading={isBikeStationLoading}
+          />
+          <StatCard
+            title="Total Bikes"
+            value={12}
+            isLoading={isBikeStationLoading}
+          />
+        </View>
+        <View className="flex-row flex-wrap justify-center">
+          <StatCard
+            title="Ongoing Emergency"
+            value={2}
+            isLoading={isBikeStationLoading}
+          />
+          <StatCard
+            title="Monthly Payments"
+            value={13}
+            isLoading={isBikeStationLoading}
+          />
+        </View>
       </View>
-
-      {/* Add Bike Station */}
-      <TouchableOpacity
-        onPress={() => setBikeStationModalVisible(true)}
-        className="bg-red-500 px-4 py-2 rounded-2xl mt-5"
-      >
-        <Text className="text-white font-semibold text-base">
-          Add a Bike Station
-        </Text>
-      </TouchableOpacity>
-      <AddOrEditBikeStationDialog
-        visible={bikeStationModalVisible}
-        onClose={() => setBikeStationModalVisible(false)}
-      />
-
-      {/* Add Bike */}
-      <TouchableOpacity
-        onPress={() => setBikeModalVisible(true)}
-        className="bg-red-500 px-4 py-2 rounded-2xl mt-5"
-      >
-        <Text className="text-white font-semibold text-base">Add a Bike</Text>
-      </TouchableOpacity>
-      <AddOrEditBikeDialog
-        visible={bikeModalVisible}
-        onClose={() => setBikeModalVisible(false)}
-      />
-
-      {/* Add Subscription Package */}
-      <TouchableOpacity
-        onPress={() => setSubscriptionModalVisible(true)}
-        className="bg-red-500 px-4 py-2 rounded-2xl mt-5"
-      >
-        <Text className="text-white font-semibold text-base">
-          Add a Subscription Package
-        </Text>
-      </TouchableOpacity>
-      <AddOrEditSubscriptionPackageDialog
-        visible={subscriptionModalVisible}
-        onClose={() => setSubscriptionModalVisible(false)}
-      />
+      <View className="px-5">
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <ManagementCard
+            title="Station Management"
+            icon={
+              <FontAwesome5 name="broadcast-tower" size={18} color="white" />
+            }
+            color="#083A4C"
+            onPress={() => router.push("/(admin)/StationManagement")}
+          />
+          <ManagementCard
+            title="Bike Management"
+            icon={<Ionicons name="bicycle" size={26} color="white" />}
+            color="#37A77D"
+            onPress={() => console.log("Bike Management pressed")}
+          />
+          <ManagementCard
+            title="Emergency Management"
+            icon={<AntDesign name="alert" size={24} color="white" />}
+            color="#B83434"
+            onPress={() => console.log("Emergency Management pressed")}
+          />
+          <ManagementCard
+            title="Payment Management"
+            icon={<MaterialIcons name="payment" size={24} color="white" />}
+            color="#348AB8"
+            onPress={() => console.log("Payment Management pressed")}
+          />
+          <ManagementCard
+            title="Package Management"
+            icon={<Feather name="package" size={24} color="white" />}
+            color="#083A4C"
+            onPress={() => console.log("Package Management pressed")}
+          />
+        </ScrollView>
+      </View>
     </SafeAreaView>
   );
 };

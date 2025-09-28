@@ -24,13 +24,11 @@ const AccidentScreen = () => {
   const [loading, setLoading] = useState(true);
   const [alertActive, setAlertActive] = useState(false);
 
-  // Fetch accidents
   const { isLoading } = useQuery({
     queryKey: ["accident-data"],
     queryFn: getAllAccident,
   });
 
-  // Mutation to save accident
   const { mutate: saveAccidentMutation, isPending } = useMutation({
     mutationFn: saveAccident,
     onSuccess: () => {
@@ -43,7 +41,6 @@ const AccidentScreen = () => {
     },
   });
 
-  // Get live location updates
   useEffect(() => {
     let subscriber: Location.LocationSubscription;
 
@@ -62,7 +59,6 @@ const AccidentScreen = () => {
       });
       setLoading(false);
 
-      // Subscribe to continuous updates
       subscriber = await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.High,
@@ -85,7 +81,6 @@ const AccidentScreen = () => {
     };
   }, []);
 
-  // When SOS is pressed
   const handleActivate = () => {
     if (!location) {
       alert("⚠️ Location not available yet");
@@ -95,10 +90,8 @@ const AccidentScreen = () => {
     setAlertActive(true);
     console.log(location.latitude, location.longitude);
     const payload = {
-      // data: {
       latitude: location.latitude,
       longitude: location.longitude,
-      // },
     };
     saveAccidentMutation(payload as Accident);
   };
@@ -110,26 +103,16 @@ const AccidentScreen = () => {
     ]);
   };
 
-  if (isLoading || loading || !location) {
-    return (
-      <SafeAreaView style={styles.center}>
-        <ActivityIndicator size="large" color="red" />
-        <Text>Fetching Live Location...</Text>
-      </SafeAreaView>
-    );
-  }
-
   return (
-    <ScrollView>
-      <SafeAreaView className="flex-1 bg-white px-4">
+    <SafeAreaView className="flex-1 px-2">
+      <ScrollView>
         <View className="mb-4">
           <Text className="text-2xl font-bold text-center text-red-600">
             SOS Emergency
           </Text>
         </View>
 
-        {/* Warning Box */}
-        <View className="bg-orange-100 w-full h-auto rounded-md p-3 border-orange-600 border-r-2">
+        <View className="bg-orange-100 w-full h-auto rounded-md p-3 border-orange-600 border">
           <View className="flex-row">
             <MaterialIcons name="warning-amber" size={20} color="orange" />
             <Text className="font-semibold ml-4">Safety First</Text>
@@ -140,12 +123,12 @@ const AccidentScreen = () => {
           </Text>
         </View>
 
-        {/* SOS Button */}
         <View className="justify-center items-center mt-2 px-4">
           <SOSButton
             isActive={alertActive}
             onActivate={handleActivate}
             onCancel={handleCancel}
+            isLocationLoading={!location}
           />
           <Text
             style={{ color: alertActive ? "green" : "#A1A1AA", marginTop: 28 }}
@@ -155,21 +138,25 @@ const AccidentScreen = () => {
               : "Tap to send emergency alert"}
           </Text>
         </View>
-
-        {/* Map Preview */}
         <View className="mt-4 p-3 rounded-lg">
           <View className="bg-gray-200 rounded-r-md mt-2">
             <View className="h-52 rounded-lg border-2 border-dashed border-muted-foreground/20 flex items-center justify-center">
-              <UserMap
-                latitude={location.latitude}
-                longitude={location.longitude}
-                style={{ width: "100%", height: "100%" }}
-              />
+              {location ? (
+                <UserMap
+                  latitude={location.latitude}
+                  longitude={location.longitude}
+                  style={{ width: "100%", height: "100%" }}
+                />
+              ) : (
+                <View className="m-2">
+                  <ActivityIndicator size="large" color="#0B4057" />
+                </View>
+              )}
             </View>
           </View>
         </View>
-      </SafeAreaView>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 

@@ -1,10 +1,11 @@
-import { getUserIncident } from "@/api/incident";
+import { getUserIncident, Incident } from "@/api/incident";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { format, parse } from "date-fns";
 import React from "react";
 import {
   ActivityIndicator,
+  Pressable,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -26,110 +27,121 @@ const IncidentScreen = () => {
     queryKey: ["incident-data"],
     queryFn: getUserIncident,
   });
-  console.log("data", incidentData);
-  if (isIncidentDataFetching) {
-    return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator size="large" color="red" />
-      </SafeAreaView>
-    );
-  }
-
-  if (error) {
-    return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-white">
-        <Text className="text-red-500 font-semibold">
-          Failed to load incidents
-        </Text>
-      </SafeAreaView>
-    );
-  }
 
   return (
-    <SafeAreaView className="flex-1 bg-white ">
-      {/* Header */}
-      <View>
-        <Text className="text-2xl font-bold text-center text-gray-800">
-          Incident Dashboard
-        </Text>
-      </View>
-      <TouchableOpacity
+    <SafeAreaView className="flex-1 px-2">
+      <Pressable
         onPress={() => {
           setEditingIncident(null);
           setModalVisible(true);
         }}
-        className="bg-red-500 px-6 py-2 rounded-xl my-4 w-auto self-end"
+        className="bg-[#0B4057] rounded-full px-7 py-3 mb-4 w-auto self-end"
       >
         <Text className="text-white font-extrabold text-base">
           + Add a Incident
         </Text>
-      </TouchableOpacity>
+      </Pressable>
 
-      {/* Incident list */}
-      <ScrollView
-        contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
-        showsVerticalScrollIndicator={false}
-      >
-        {incidentData?.map((incident: any) => (
+      {isIncidentDataFetching && (
+        <View className="m-2">
+          <ActivityIndicator size="large" color="#0B4057" />
+        </View>
+      )}
+
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {incidentData?.map((incident: Incident) => (
           <View
             key={incident._id}
-            className="mb-4 p-4 rounded-2xl bg-white shadow"
+            className="bg-white p-6 rounded-2xl mb-4 shadow-sm border border-gray-100"
           >
-            <View className="flex-row justify-between items-center mb-2">
-              <Text className="font-bold text-lg text-gray-800">
-                {incident.incidentType}
-              </Text>
+            <View className="flex-row justify-between items-center mb-4">
+              <View className="bg-[#0B4057] px-6 py-2 rounded-3xl">
+                <Text className="text-white font-semibold text-sm">
+                  {incident.incidentType}
+                </Text>
+              </View>
+
               <TouchableOpacity
+                className="p-2 rounded-full bg-gray-50 active:bg-gray-100"
                 onPress={() => {
                   setEditingIncident(incident);
                   setModalVisible(true);
                 }}
               >
-                <MaterialIcons name="edit" size={24} color="#4B5563" />
+                <MaterialIcons name="edit" size={20} color="#6B7280" />
               </TouchableOpacity>
             </View>
 
-            <Text className="text-gray-600">
-              How Serious: {incident.howSerious}
-            </Text>
-            <Text className="text-gray-600">
-              Description: {incident.description}
-            </Text>
-            <Text className="text-gray-600">
-              Date: {format(new Date(incident?.date), "yyyy-MM-dd")}
-            </Text>
-            <Text>
-              Time:{" "}
-              {incident?.time
-                ? (() => {
-                    try {
-                      let timeDate;
-                      if (incident.time.includes("T")) {
-                        timeDate = new Date(incident.time);
-                      } else {
-                        timeDate = parse(incident.time, "HH:mm", new Date());
-                      }
-                      return format(timeDate, "HH:mm");
-                    } catch (err) {
-                      return "Invalid time";
-                    }
-                  })()
-                : "N/A"}
-            </Text>
+            <View className="space-y-3">
+              <View className="flex-row items-center">
+                <View
+                  className={`w-3 h-3 rounded-full mr-2 ${
+                    incident.howSerious?.toLowerCase().includes("critical")
+                      ? "bg-red-500"
+                      : incident.howSerious?.toLowerCase().includes("high")
+                        ? "bg-orange-400"
+                        : incident.howSerious?.toLowerCase().includes("medium")
+                          ? "bg-yellow-500"
+                          : "bg-green-500"
+                  }`}
+                />
+
+                <Text className="text-gray-700">
+                  <Text className="font-semibold text-gray-900">
+                    Severity:{" "}
+                  </Text>
+                  {incident.howSerious}
+                </Text>
+              </View>
+
+              <View>
+                <Text className="text-gray-600 leading-5">
+                  {incident.description}
+                </Text>
+              </View>
+
+              <View className="flex-row justify-between bg-gray-50 rounded-lg p-3">
+                <View className="flex-row items-center">
+                  <MaterialIcons
+                    name="calendar-today"
+                    size={16}
+                    color="#6B7280"
+                  />
+                  <Text className="text-gray-700 ml-2 text-sm">
+                    {format(new Date(incident?.date), "MMM dd, yyyy")}
+                  </Text>
+                </View>
+
+                <View className="flex-row items-center">
+                  <MaterialIcons name="access-time" size={16} color="#6B7280" />
+                  <Text className="text-gray-700 ml-2 text-sm">
+                    {incident?.time
+                      ? (() => {
+                          try {
+                            let timeDate;
+                            if (incident.time.includes("T")) {
+                              timeDate = new Date(incident.time);
+                            } else {
+                              timeDate = parse(
+                                incident.time,
+                                "HH:mm",
+                                new Date()
+                              );
+                            }
+                            return format(timeDate, "hh:mm a");
+                          } catch (err) {
+                            return "Invalid time";
+                          }
+                        })()
+                      : "N/A"}
+                  </Text>
+                </View>
+              </View>
+            </View>
           </View>
         ))}
       </ScrollView>
-
-      <View className="absolute bottom-6 right-6 z-10">
-        <TouchableOpacity
-          onPress={() => {
-            setEditingIncident(null);
-            setModalVisible(true);
-          }}
-        ></TouchableOpacity>
-      </View>
-
-      {/* Add Incident Dialog */}
+      <View className="mb-32" />
       <IncidentScreenDialog
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
