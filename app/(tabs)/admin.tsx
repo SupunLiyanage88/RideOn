@@ -1,50 +1,81 @@
 import React, { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+import AddOrEditBikeDialog from "../admin/AddOrEditBikeDialog";
 import AddOrEditBikeStationDialog from "../admin/AddOrEditBikeStationDialog";
 import AddOrEditSubscriptionPackageDialog from "../admin/AddOrEditSubscriptionPackageDialog";
 
+type StatCardProps = {
+  title: string;
+  value: string | number;
+};
+
+const StatCard: React.FC<StatCardProps> = ({ title, value }) => {
+  return (
+    <View className="bg-gray-200 rounded-lg flex-1 m-2 p-4 h-24 items-center justify-center">
+      <Text className="text-sm font-medium text-gray-700">{title}</Text>
+      <Text className="text-2xl font-bold text-black mt-2">{value}</Text>
+    </View>
+  );
+};
 
 const Admin = () => {
-  const [modalVisible, setModalVisible] = useState(false);
-  const [modalSubscriptionVisible, setModalSubscriptionVisible] = useState(false);
+  const [bikeStationModalVisible, setBikeStationModalVisible] = useState(false);
+  const [bikeModalVisible, setBikeModalVisible] = useState(false);
+  const [subscriptionModalVisible, setSubscriptionModalVisible] =
+    useState(false);
 
   return (
-    <SafeAreaView className="flex-1">
-  <View className="items-center justify-center mb-4">
-    <Text className="text-xl font-bold mb-4">Admin</Text>
-    <TouchableOpacity
-      onPress={() => setModalVisible(true)}
-      className="bg-red-500 px-4 py-2 rounded-2xl"
-    >
-      <Text className="text-white font-semibold text-base">
-        Add a Bike Station
-      </Text>
-    </TouchableOpacity>
+    <SafeAreaView className="flex-1 p-4">
+      <Text className="text-xl font-bold my-4 text-center">Ride On Admin</Text>
 
-    <AddOrEditBikeStationDialog
-      visible={modalVisible}
-      onClose={() => setModalVisible(false)}
-    />
-  </View>
+      {/* Example Stat Cards */}
+      <View className="flex-row">
+        <StatCard title="Total Stations" value={2} />
+        <StatCard title="Total Bikes" value={10} />
+      </View>
 
-  <View className="items-center justify-center">
-    
-    <TouchableOpacity
-      onPress={() => setModalSubscriptionVisible(true)}
-      className="bg-red-500 px-4 py-2 rounded-2xl"
-    >
-      <Text className="text-white font-semibold text-base">
-        Add a Subscription Package
-      </Text>
-    </TouchableOpacity>
+      {/* Add Bike Station */}
+      <TouchableOpacity
+        onPress={() => setBikeStationModalVisible(true)}
+        className="bg-red-500 px-4 py-2 rounded-2xl mt-5"
+      >
+        <Text className="text-white font-semibold text-base">
+          Add a Bike Station
+        </Text>
+      </TouchableOpacity>
+      <AddOrEditBikeStationDialog
+        visible={bikeStationModalVisible}
+        onClose={() => setBikeStationModalVisible(false)}
+      />
 
-    <AddOrEditSubscriptionPackageDialog
-      visible={modalSubscriptionVisible}
-      onClose={() => setModalSubscriptionVisible(false)}
-    />
-  </View>
-</SafeAreaView>
+      {/* Add Bike */}
+      <TouchableOpacity
+        onPress={() => setBikeModalVisible(true)}
+        className="bg-red-500 px-4 py-2 rounded-2xl mt-5"
+      >
+        <Text className="text-white font-semibold text-base">Add a Bike</Text>
+      </TouchableOpacity>
+      <AddOrEditBikeDialog
+        visible={bikeModalVisible}
+        onClose={() => setBikeModalVisible(false)}
+      />
+
+      {/* Add Subscription Package */}
+      <TouchableOpacity
+        onPress={() => setSubscriptionModalVisible(true)}
+        className="bg-red-500 px-4 py-2 rounded-2xl mt-5"
+      >
+        <Text className="text-white font-semibold text-base">
+          Add a Subscription Package
+        </Text>
+      </TouchableOpacity>
+      <AddOrEditSubscriptionPackageDialog
+        visible={subscriptionModalVisible}
+        onClose={() => setSubscriptionModalVisible(false)}
+      />
+    </SafeAreaView>
   );
 };
 

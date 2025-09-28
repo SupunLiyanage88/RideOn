@@ -45,7 +45,7 @@ if (status === "loading") {
         {/* Weather Component */}
         <ScrollView className="h-full">
           {isLoading ? (
-            <View className=" menu-card flex-1 justify-center items-center mt-10">
+            <View className=" menu-card flex-1 justify-center h-20 items-center mt-10">
               <ActivityIndicator size="large" color="#3b82f6" />
               <Text className="mt-2">Loading weather data...</Text>
             </View>

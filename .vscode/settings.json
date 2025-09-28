@@ -8,6 +8,7 @@
   "java.compile.nullAnalysis.mode": "automatic",
   "cSpell.words": [
     "BDLI",
+    "datetimepicker",
     "Pressable",
     "Pshg",
     "textinput"
