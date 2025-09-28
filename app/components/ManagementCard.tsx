@@ -1,15 +1,20 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import React, { JSX } from "react";
+import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 
 type ManagementCardProps = {
   title: string;
-  icon: JSX.Element; // ✅ Correct type
-  color: string; // background color
+  icon: React.ReactNode;
+  color: string;
   onPress?: () => void;
 };
 
-const ManagementCard = ({ title, icon, color, onPress }: ManagementCardProps) => {
+const ManagementCard = ({
+  title,
+  icon,
+  color,
+  onPress,
+}: ManagementCardProps) => {
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -17,7 +22,7 @@ const ManagementCard = ({ title, icon, color, onPress }: ManagementCardProps) =>
       style={{ backgroundColor: color }}
     >
       <View className="flex-row items-center">
-        {icon} {/* ✅ fixed */}
+        <View className="w-6 h-6 justify-center items-center">{icon}</View>
         <Text className="ml-3 text-white font-bold text-base">{title}</Text>
       </View>
       <Ionicons name="chevron-forward" size={22} color="#fff" />

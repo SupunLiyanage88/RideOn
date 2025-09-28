@@ -1,6 +1,5 @@
 import { fetchBikeStation } from "@/api/bikeStation";
 import { Ionicons } from "@expo/vector-icons";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -17,33 +16,18 @@ type StatCardProps = {
   value: string | number;
   isLoading: boolean;
 };
-type ButtonProps = {
-  title: string;
-  icon: any;
-};
+
 const StatCard = ({ title, value, isLoading }: StatCardProps) => {
   return (
     <View className="bg-gray-300 p-5 rounded-2xl flex-1 m-3 justify-center items-center">
-      {isLoading ? (
-        <ActivityIndicator />
-      ) : (
-        <>
-          <Text className="text-start">{title}</Text>
-          <Text className="text-3xl text-start font-semibold mt-2">
-            {value}
-          </Text>
-        </>
-      )}
-    </View>
-  );
-};
-
-const ButtonCard = ({ icon, title }: ButtonProps) => {
-  return (
-    <View className="bg-gray-300 p-5 rounded-lg flex-1 m-3">
-      <Ionicons name={icon} size={28} />
       <Text className="text-start">{title}</Text>
-      <MaterialCommunityIcons name="chevron-right" size={24} color="black" />
+      {isLoading ? (
+        <ActivityIndicator size="small" className="mt-2" />
+      ) : (
+        <Text className="text-3xl text-start font-semibold mt-2">
+          {value ?? 0}
+        </Text>
+      )}
     </View>
   );
 };
