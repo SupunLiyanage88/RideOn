@@ -3,6 +3,7 @@ import {
   Incident,
   IncidentType,
   saveIncident,
+  updateIncident,
 } from "@/api/incident";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -89,10 +90,37 @@ const IncidentScreenDialog = ({
     },
   });
 
+  const { mutate: updateIncidentMutation, isPending: isUpdating } = useMutation(
+    {
+      mutationFn: updateIncident,
+      onSuccess: () => {
+        alert("Incident Updated Successful");
+        reset();
+        onClose();
+        queryClient.invalidateQueries({
+          queryKey: ["incident-data"],
+        });
+      },
+      onError: (data) => {
+        alert("Incident Update failed");
+        console.log(data);
+      },
+    }
+  );
+
   const handleSaveIncident = (data: Incident) => {
     console.log(data);
-    saveIncidentMutation(data);
-    console.log("Incident data to be saved:", data);
+    if (defaultValues) {
+      const updatedData = { ...data, _id: defaultValues._id };
+      if (!updatedData._id) {
+        alert("Incident Id Missing");
+        return;
+      }
+      updateIncidentMutation(updatedData);
+    } else {
+      saveIncidentMutation(data);
+      console.log("Incident data to be saved:", data);
+    }
   };
 
   const handleClose = () => {
@@ -292,7 +320,7 @@ const IncidentScreenDialog = ({
                   </Text>
                 )}
               </Pressable>
-            </View>    
+            </View>
           </ScrollView>
         </View>
       </View>

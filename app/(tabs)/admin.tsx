@@ -1,4 +1,5 @@
 import { fetchBikeStation } from "@/api/bikeStation";
+import { getAllIncident } from "@/api/incident";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
@@ -40,6 +41,10 @@ const Admin = () => {
     queryKey: ["station-data"],
     queryFn: fetchBikeStation,
   });
+  const { data: incidentData, isFetching: isIncidentLoading } = useQuery({
+    queryKey: ["incident-data"],
+    queryFn: getAllIncident,
+  });
   return (
     <SafeAreaView>
       <Text className="text-xl font-bold my-4 mx-auto">Ride On Admin</Text>
@@ -59,8 +64,8 @@ const Admin = () => {
         <View className="flex-row flex-wrap justify-center">
           <StatCard
             title="Ongoing Emergency"
-            value={2}
-            isLoading={isBikeStationLoading}
+            value={incidentData?.length}
+            isLoading={isIncidentLoading}
           />
           <StatCard
             title="Monthly Payments"
@@ -89,7 +94,7 @@ const Admin = () => {
             title="Emergency Management"
             icon={<AntDesign name="alert" size={24} color="white" />}
             color="#B83434"
-            onPress={() => console.log("Emergency Management pressed")}
+            onPress={() => router.push("/(admin)/EmergencyManagement")}
           />
           <ManagementCard
             title="Payment Management"
