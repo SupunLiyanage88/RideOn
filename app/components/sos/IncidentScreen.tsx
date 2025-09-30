@@ -49,7 +49,15 @@ const IncidentScreen = () => {
       )}
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        {incidentData?.map((incident: Incident) => (
+        {incidentData?.map((incident: Incident) => {
+        const canEdit = (() => {
+          if (!incident.createdAt) return false;
+          const createdAt = new Date(incident.createdAt).getTime();
+          const now = Date.now();
+          return now - createdAt <= 20 * 60 * 1000;
+        })();
+
+        return (
           <View
             key={incident._id}
             className="bg-white p-6 rounded-2xl mb-4 shadow-sm border border-gray-100"
@@ -61,6 +69,7 @@ const IncidentScreen = () => {
                 </Text>
               </View>
 
+            {canEdit && (
               <TouchableOpacity
                 className="p-2 rounded-full bg-gray-50 active:bg-gray-100"
                 onPress={() => {
@@ -70,6 +79,7 @@ const IncidentScreen = () => {
               >
                 <MaterialIcons name="edit" size={20} color="#6B7280" />
               </TouchableOpacity>
+           )}
             </View>
 
             <View className="space-y-3">
@@ -139,7 +149,8 @@ const IncidentScreen = () => {
               </View>
             </View>
           </View>
-        ))}
+        );  
+      })}
       </ScrollView>
       <View className="mb-32" />
       <IncidentScreenDialog

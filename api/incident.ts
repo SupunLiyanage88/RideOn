@@ -23,6 +23,11 @@ export const incidentSchema = z.object({
   description: z.string(),
   date: z.date(),
   time: z.string(),
+  createdAt: z.string().or(z.date()),
+  user: z.object({
+    _id: z.string(),
+    email: z.string(),
+  }).optional(), 
 });
 
 export type Incident = z.infer<typeof incidentSchema>;
@@ -42,5 +47,10 @@ export async function getAllIncident() {
 
 export async function updateIncident(data: Incident) {
   const res = await axios.put(`/api/incident/${data._id}`, data);
+  return res.data;
+}
+
+export async function deleteIncident(id?: string) {
+  const res = await axios.delete(`/api/incident/${id}`);
   return res.data;
 }
