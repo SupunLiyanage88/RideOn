@@ -88,7 +88,7 @@ const Admin = () => {
             title="Bike Management"
             icon={<Ionicons name="bicycle" size={26} color="white" />}
             color="#37A77D"
-            onPress={() => console.log("Bike Management pressed")}
+            onPress={() => router.push("/(admin)/BikeManagement")}
           />
           <ManagementCard
             title="Emergency Management"
