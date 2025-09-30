@@ -35,7 +35,7 @@ const BikeManagement = () => {
   if (isBikeLoading || isBikeStatLoading) {
     return (
       <View className="flex-1 justify-center items-center bg-white">
-        <Loader itemName="Bikes" textClassName="text-xl"/>
+        <Loader itemName="Bikes" textClassName="text-xl" />
       </View>
     );
   }
