@@ -29,6 +29,13 @@ export async function getBikeById(id: string) {
   return res.data;
 }
 
+//Get Condition Stats
+export async function getBikeConditionStats() {
+  const res = await axios.get("/api/bike/stats");
+  return res.data;
+}
+
+
 // Update
 export async function updateBike(id: string, data: Partial<Bike>) {
   const res = await axios.put(`/api/bike/${id}`, data);

@@ -1,0 +1,39 @@
+import { ActivityIndicator, ActivityIndicatorProps, Text, View } from 'react-native';
+
+interface LoaderProps {
+  showSubtitle?: boolean;
+  itemName?: string;
+  size?: ActivityIndicatorProps['size']; 
+  containerClassName?: string;
+  textClassName?: string;
+}
+
+const Loader = ({ 
+  showSubtitle = true,
+  itemName = "",
+  size = "large",
+  containerClassName = "",
+  textClassName = ""
+}: LoaderProps) => {
+  return (
+    <View className={`flex-1 justify-center items-center bg-white ${containerClassName}`}>
+      <View className="items-center">
+        <ActivityIndicator size={size} color="#37A77D" />
+        <Text className={`mt-3 text-[#083A4C] text-base font-semibold ${textClassName}`}>
+          Loading {itemName}...
+        </Text>
+        {showSubtitle && (
+          <Text className="mt-1 text-[#083A4C]/60 text-sm">
+            Please wait a moment
+          </Text>
+        )}
+      </View>
+    </View>
+  );
+};
+
+export default Loader;
+
+//itemName="user profile"
+//showSubtitle={false}
+//textClassName="text-xl"
