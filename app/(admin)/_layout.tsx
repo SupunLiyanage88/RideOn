@@ -8,6 +8,10 @@ export default function Layout() {
         options={{ title: "Station Management" }}
       />
       <Stack.Screen
+        name="EmergencyManagement"
+        options={{ title: "Emergency Management" }}
+      />
+      <Stack.Screen
         name="PackageManagement"
         options={{ title: "Package Management" }}
       />
