@@ -3,14 +3,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Location from "expo-location";
 import React, { useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Alert, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import SOSButton from "./SOSButton";
 import UserMap from "./UserMap";
@@ -21,7 +14,6 @@ const AccidentScreen = () => {
     latitude: number;
     longitude: number;
   } | null>(null);
-  const [loading, setLoading] = useState(true);
   const [alertActive, setAlertActive] = useState(false);
 
   const { isLoading } = useQuery({
@@ -48,7 +40,6 @@ const AccidentScreen = () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         alert("Permission to access location was denied");
-        setLoading(false);
         return;
       }
 
@@ -57,7 +48,6 @@ const AccidentScreen = () => {
         latitude: currentLoc.coords.latitude,
         longitude: currentLoc.coords.longitude,
       });
-      setLoading(false);
 
       subscriber = await Location.watchPositionAsync(
         {
@@ -75,10 +65,7 @@ const AccidentScreen = () => {
     };
 
     getLocation();
-
-    return () => {
-      if (subscriber) subscriber.remove();
-    };
+    return () => subscriber?.remove();
   }, []);
 
   const handleActivate = () => {
@@ -86,14 +73,8 @@ const AccidentScreen = () => {
       alert("⚠️ Location not available yet");
       return;
     }
-
     setAlertActive(true);
-    console.log(location.latitude, location.longitude);
-    const payload = {
-      latitude: location.latitude,
-      longitude: location.longitude,
-    };
-    saveAccidentMutation(payload as Accident);
+    saveAccidentMutation(location as Accident);
   };
 
   const handleCancel = () => {
@@ -104,26 +85,51 @@ const AccidentScreen = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 px-2">
+    <SafeAreaView style={{ flex: 1, paddingHorizontal: 8 }}>
       <ScrollView>
-        <View className="mb-4">
-          <Text className="text-2xl font-bold text-center text-red-600">
+        <View style={{ marginBottom: 16 }}>
+          <Text
+            style={{
+              fontSize: 24,
+              fontWeight: "bold",
+              textAlign: "center",
+              color: "red",
+            }}
+          >
             SOS Emergency
           </Text>
         </View>
 
-        <View className="bg-orange-100 w-full h-auto rounded-md p-3 border-orange-600 border">
-          <View className="flex-row">
+        <View
+          style={{
+            backgroundColor: "#FFEDD5",
+            width: "100%",
+            borderRadius: 8,
+            padding: 12,
+            borderColor: "#F97316",
+            borderWidth: 1,
+          }}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
             <MaterialIcons name="warning-amber" size={20} color="orange" />
-            <Text className="font-semibold ml-4">Safety First</Text>
+            <Text style={{ fontWeight: "600", marginLeft: 8 }}>
+              Safety First
+            </Text>
           </View>
-          <Text className="pt-3 text-justify ">
+          <Text style={{ paddingTop: 12, textAlign: "justify" }}>
             If you're in immediate danger, move to a safe location before using
             this app. For life-threatening emergencies, call 911 directly.
           </Text>
         </View>
 
-        <View className="justify-center items-center mt-2 px-4">
+        <View
+          style={{
+            justifyContent: "center",
+            alignItems: "center",
+            marginTop: 8,
+            paddingHorizontal: 16,
+          }}
+        >
           <SOSButton
             isActive={alertActive}
             onActivate={handleActivate}
@@ -138,9 +144,26 @@ const AccidentScreen = () => {
               : "Tap to send emergency alert"}
           </Text>
         </View>
-        <View className="mt-4 p-3 rounded-lg">
-          <View className="bg-gray-200 rounded-r-md mt-2">
-            <View className="h-52 rounded-lg border-2 border-dashed border-muted-foreground/20 flex items-center justify-center">
+
+        <View style={{ marginTop: 16, padding: 12, borderRadius: 8 }}>
+          <View
+            style={{
+              backgroundColor: "#E5E7EB",
+              borderRadius: 8,
+              marginTop: 8,
+            }}
+          >
+            <View
+              style={{
+                height: 208,
+                borderRadius: 8,
+                borderStyle: "dashed",
+                borderWidth: 2,
+                borderColor: "#D1D5DB",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
               {location ? (
                 <UserMap
                   latitude={location.latitude}
@@ -148,24 +171,16 @@ const AccidentScreen = () => {
                   style={{ width: "100%", height: "100%" }}
                 />
               ) : (
-                <View className="m-2">
-                  <ActivityIndicator size="large" color="#0B4057" />
-                </View>
+                <ActivityIndicator size="large" color="#0B4057" />
               )}
             </View>
           </View>
         </View>
+
+        <View style={{ marginBottom: 20 }}></View>
       </ScrollView>
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});
 
 export default AccidentScreen;

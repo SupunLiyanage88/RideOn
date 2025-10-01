@@ -1,16 +1,17 @@
 import {
-    ActivityIndicator,
-    ActivityIndicatorProps,
-    Text,
-    View,
+  ActivityIndicator,
+  ActivityIndicatorProps,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 
 interface LoaderProps {
   showSubtitle?: boolean;
   itemName?: string;
   size?: ActivityIndicatorProps["size"];
-  containerClassName?: string;
-  textClassName?: string;
+  containerStyle?: any;
+  textStyle?: any;
   showText?: boolean;
 }
 
@@ -18,27 +19,23 @@ const Loader = ({
   showSubtitle = true,
   itemName = "",
   size = "large",
-  containerClassName = "",
-  textClassName = "",
+  containerStyle = {},
+  textStyle = {},
   showText = true,
 }: LoaderProps) => {
   return (
-    <View
-      className={`flex-1 justify-center items-center bg-white ${containerClassName}`}
-    >
-      <View className="items-center">
+    <View style={[styles.container, containerStyle]}>
+      <View style={styles.content}>
         <ActivityIndicator size={size} color="#37A77D" />
 
         {/* Only render text if showText is true */}
         {showText ? (
           <>
-            <Text
-              className={`mt-3 text-[#083A4C] text-base font-semibold ${textClassName}`}
-            >
+            <Text style={[styles.mainText, textStyle]}>
               Loading {itemName}...
             </Text>
             {showSubtitle && (
-              <Text className="mt-1 text-[#083A4C]/60 text-sm">
+              <Text style={styles.subtitleText}>
                 Please wait a moment
               </Text>
             )}
@@ -49,9 +46,27 @@ const Loader = ({
   );
 };
 
-export default Loader;
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'white',
+  },
+  content: {
+    alignItems: 'center',
+  },
+  mainText: {
+    marginTop: 12,
+    color: '#083A4C',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  subtitleText: {
+    marginTop: 4,
+    color: 'rgba(8, 58, 76, 0.6)',
+    fontSize: 14,
+  },
+});
 
-//itemName="user profile"
-//showSubtitle={false}
-//textClassName="text-xl"
-//showText={false}
+export default Loader;

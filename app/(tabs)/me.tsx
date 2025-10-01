@@ -41,9 +41,18 @@ const LogoutButton = () => {
   return (
     <TouchableOpacity
       onPress={handleLogout}
-      className="bg-red-500 px-4 py-2 rounded-2xl"
+      style={{
+        backgroundColor: "#ef4444",
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 16,
+      }}
     >
-      <Text className="text-white font-semibold text-base">
+      <Text style={{
+        color: "white",
+        fontWeight: "600",
+        fontSize: 16,
+      }}>
         {isPending ? "Logging out" : "Log out"}
       </Text>
     </TouchableOpacity>
@@ -58,7 +67,7 @@ const Me = () => {
 
   if (isBikeStationLoading) {
     return (
-      <SafeAreaView className="flex-1 justify-center items-center">
+      <SafeAreaView style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color="blue" />
       </SafeAreaView>
     );
@@ -66,7 +75,7 @@ const Me = () => {
 
   if (!bikeStationData || bikeStationData.length === 0) {
     return (
-      <SafeAreaView className="flex-1 justify-center items-center">
+      <SafeAreaView style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <Text>No bike stations found</Text>
         <LogoutButton />
       </SafeAreaView>
@@ -74,17 +83,36 @@ const Me = () => {
   }
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ padding: 16 }}>
         {bikeStationData.map((station: any) => (
           <View
             key={station._id}
-            className="bg-white p-4 rounded-2xl mb-4 shadow"
+            style={{
+              backgroundColor: "white",
+              padding: 16,
+              borderRadius: 16,
+              marginBottom: 16,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.1,
+              shadowRadius: 3,
+              elevation: 2,
+            }}
           >
-            <Text className="text-lg font-bold text-gray-800">
+            <Text style={{
+              fontSize: 18,
+              fontWeight: "bold",
+              color: "#1f2937",
+            }}>
               {station.stationName}
             </Text>
-            <Text className="text-gray-600 mb-2">{station.stationLocation}</Text>
+            <Text style={{
+              color: "#4b5563",
+              marginBottom: 8,
+            }}>
+              {station.stationLocation}
+            </Text>
 
             {/* Mini Map */}
             <MapView
@@ -107,13 +135,17 @@ const Me = () => {
               />
             </MapView>
 
-            <Text className="mt-2 text-sm text-gray-500">
+            <Text style={{
+              marginTop: 8,
+              fontSize: 14,
+              color: "#6b7280",
+            }}>
               Lat: {station.latitude}, Lng: {station.longitude}
             </Text>
           </View>
         ))}
 
-        <View className="mt-4">
+        <View style={{ marginTop: 16 }}>
           <LogoutButton />
         </View>
       </ScrollView>

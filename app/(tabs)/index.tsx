@@ -11,14 +11,21 @@ import Weather from "../components/Weather";
 export default function Index() {
   const { user, status } = UseCurrentUser();
 
-if (status === "loading") {
-  return (
-    <View className="flex-1 justify-center items-center">
-      <ActivityIndicator size="large" color="#3b82f6" />
-      <Text className="mt-2">Checking authentication...</Text>
-    </View>
-  );
-}
+  if (status === "loading") {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <ActivityIndicator size="large" color="#3b82f6" />
+        <Text style={{ marginTop: 8 }}>Checking authentication...</Text>
+      </View>
+    );
+  }
+
   const city = "Malabe";
 
   const {
@@ -37,24 +44,57 @@ if (status === "loading") {
       : "Unknown";
 
   return (
-    <View className="flex-1 bg-white">
-      <SafeAreaView className="p-4">
+    <View style={{ flex: 1, backgroundColor: "white" }}>
+      <SafeAreaView style={{ padding: 8, flex: 1 }}>
         {/* Searchbar */}
         <Searchbar />
 
         {/* Weather Component */}
-        <ScrollView className="h-full">
+        <ScrollView style={{ flex: 1 }}>
           {isLoading ? (
-            <View className=" menu-card flex-1 justify-center h-20 items-center mt-10">
+            <View
+              style={{
+                width: "100%",
+                borderRadius: 8,
+                backgroundColor: "#fff",
+                padding: 16,
+                shadowColor: "#000",
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                shadowOffset: { width: 0, height: 2 },
+                elevation: 3,
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+                height: 80,
+                marginTop: 40,
+              }}
+            >
               <ActivityIndicator size="large" color="#3b82f6" />
-              <Text className="mt-2">Loading weather data...</Text>
+              <Text style={{ marginTop: 8 }}>Loading weather data...</Text>
             </View>
           ) : isError ? (
-            <View className="menu-card flex-1 justify-center items-center mt-10">
-              <Text className="text-red-500">
+            <View
+              style={{
+                width: "100%",
+                borderRadius: 8,
+                backgroundColor: "#fff",
+                padding: 16,
+                shadowColor: "#000",
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                shadowOffset: { width: 0, height: 2 },
+                elevation: 3,
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+                marginTop: 40,
+              }}
+            >
+              <Text style={{ color: "red", fontSize: 16 }}>
                 Error: {(error as Error).message}
               </Text>
-              <Text className="mt-2">Please try another location</Text>
+              <Text style={{ marginTop: 8 }}>Please try another location</Text>
             </View>
           ) : (
             <Weather location={location} weatherData={weatherData} />

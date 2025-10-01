@@ -10,34 +10,27 @@ const SosScreen = () => {
   const [clickedAccident, setClickedAccident] = useState(false);
 
   return (
-    <SafeAreaView className="flex-1">
-      {/* <KeyboardAwareScrollView
-        className="flex-1"
-        contentContainerStyle={{ flexGrow: 1 }}
-        enableOnAndroid={true}
-        keyboardShouldPersistTaps="handled"
-      > */}
-        <View className="flex-grow px-5 pt-5">
-          {/* Toggle Button */}
-          <View className="items-center justify-center ">
-            <ToggleButton
-              leftLabel="Incident"
-              rightLabel="Accident"
-              click01={clickedIncident}
-              click02={clickedAccident}
-              onToggle={(left, right) => {
-                setClickedIncident(left);
-                setClickedAccident(right);
-              }}
-            />
-          </View>
-
-          {/* Screen Content */}
-          <View className="flex-1">
-            {clickedIncident ? <IncidentScreen /> : <AccidentScreen />}
-          </View>
+    <SafeAreaView style={{ flex: 1 }}>
+      <View style={{ flexGrow: 1, paddingHorizontal: 20, paddingTop: 20 }}>
+        {/* Toggle Button */}
+        <View style={{ alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+          <ToggleButton
+            leftLabel="Incident"
+            rightLabel="Accident"
+            click01={clickedIncident}
+            click02={clickedAccident}
+            onToggle={(left, right) => {
+              setClickedIncident(left);
+              setClickedAccident(right);
+            }}
+          />
         </View>
-      {/* </KeyboardAwareScrollView> */}
+
+        {/* Screen Content */}
+        <View style={{ flex: 1 }}>
+          {clickedIncident ? <IncidentScreen /> : <AccidentScreen />}
+        </View>
+      </View>
     </SafeAreaView>
   );
 };

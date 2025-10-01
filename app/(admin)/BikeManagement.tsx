@@ -3,11 +3,13 @@ import { images } from "@/constants/images";
 import { useQuery } from "@tanstack/react-query";
 import React from "react";
 import {
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import BikeCard from "../components/BikeCard";
 import Loader from "../components/Loader";
 
@@ -34,8 +36,8 @@ const BikeManagement = () => {
 
   if (isBikeLoading || isBikeStatLoading) {
     return (
-      <View className="flex-1 justify-center items-center bg-white">
-        <Loader itemName="Bikes" textClassName="text-xl" />
+      <View style={styles.loadingContainer}>
+        <Loader itemName="Bikes" textStyle={{ fontSize: 20 }} />
       </View>
     );
   }
@@ -89,28 +91,47 @@ const BikeManagement = () => {
   const pedalStats = getConditionDetails(bikeStatData?.pedal);
 
   return (
-    <ScrollView className="h-full">
-      <View className="flex justify-center px-5 mt-3">
-        <BikeCard
-          title="Electric Bikes"
-          count={electricCount}
-          conditionPercentage={electricStats.percentage}
-          conditionText={electricStats.text}
-          conditionColor={electricStats.color}
-          imageSource={images.evbike}
-        />
-        <BikeCard
-          title="Pedal Bikes"
-          count={pedalCount}
-          conditionPercentage={pedalStats.percentage}
-          conditionText={pedalStats.text}
-          conditionColor={pedalStats.color}
-          imageSource={images.pdbike}
-        />
-      </View>
-      <AddBtn />
-    </ScrollView>
+    <SafeAreaView>
+      <ScrollView style={styles.scrollView}>
+        <View style={styles.container}>
+          <BikeCard
+            title="Electric Bikes"
+            count={electricCount}
+            conditionPercentage={electricStats.percentage}
+            conditionText={electricStats.text}
+            conditionColor={electricStats.color}
+            imageSource={images.evbike}
+          />
+          <BikeCard
+            title="Pedal Bikes"
+            count={pedalCount}
+            conditionPercentage={pedalStats.percentage}
+            conditionText={pedalStats.text}
+            conditionColor={pedalStats.color}
+            imageSource={images.pdbike}
+          />
+        </View>
+        <AddBtn />
+      </ScrollView>
+    </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "white",
+  },
+  scrollView: {
+    height: "100%",
+  },
+  container: {
+    justifyContent: "center",
+    paddingHorizontal: 10,
+    marginTop: 12,
+  },
+});
 
 export default BikeManagement;

@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { ActivityIndicator, ScrollView, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ManagementCard from "../components/ManagementCard";
 
@@ -12,26 +12,7 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import Feather from '@expo/vector-icons/Feather';
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-type StatCardProps = {
-  title: string;
-  value: string | number;
-  isLoading: boolean;
-};
-
-const StatCard = ({ title, value, isLoading }: StatCardProps) => {
-  return (
-    <View className="bg-gray-300 p-5 rounded-2xl flex-1 m-3 justify-center items-center">
-      <Text className="text-start">{title}</Text>
-      {isLoading ? (
-        <ActivityIndicator size="small" className="mt-2" />
-      ) : (
-        <Text className="text-3xl text-start font-semibold mt-2">
-          {value ?? 0}
-        </Text>
-      )}
-    </View>
-  );
-};
+import StatCard from "../components/StatCard";
 
 const Admin = () => {
   const [bikeStationModalVisible, setBikeStationModalVisible] = useState(false);
@@ -46,10 +27,10 @@ const Admin = () => {
     queryFn: getAllIncident,
   });
   return (
-    <SafeAreaView>
-      <Text className="text-xl font-bold my-4 mx-auto">Ride On Admin</Text>
-      <View className="p-3">
-        <View className="flex-row flex-wrap justify-center">
+    <SafeAreaView style={styles.safeArea}>
+      <Text style={styles.title}>Ride On Admin</Text>
+      <View style={styles.statsContainer}>
+        <View style={styles.statsRow}>
           <StatCard
             title="Total Stations"
             value={bikeStationData?.length}
@@ -61,7 +42,7 @@ const Admin = () => {
             isLoading={isBikeStationLoading}
           />
         </View>
-        <View className="flex-row flex-wrap justify-center">
+        <View style={styles.statsRow}>
           <StatCard
             title="Ongoing Emergency"
             value={incidentData?.length}
@@ -74,7 +55,7 @@ const Admin = () => {
           />
         </View>
       </View>
-      <View className="px-5">
+      <View style={styles.cardsContainer}>
         <ScrollView showsVerticalScrollIndicator={false}>
           <ManagementCard
             title="Station Management"
@@ -113,5 +94,29 @@ const Admin = () => {
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  safeArea: {
+    backgroundColor: 'white',
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginVertical: 16,
+    marginHorizontal: 'auto',
+    textAlign: 'center',
+  },
+  statsContainer: {
+    padding: 12,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+  },
+  cardsContainer: {
+    paddingHorizontal: 20,
+  },
+});
 
 export default Admin;
