@@ -9,10 +9,12 @@ import { Controller, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
   Pressable,
+  StyleSheet,
   Text,
   TextInput,
-  View
+  View,
 } from "react-native";
+
 type FormData = {
   email: string;
   password: string;
@@ -45,9 +47,10 @@ export default function LoginScreen() {
     loginMutation(data);
   };
   const [hidePassword, setHidePassword] = useState(true);
+  
   return (
-    <View className="flex-1 items-center mt-10 px-5">
-      <View className="w-full max-w-md rounded-2xl p-1 ">
+    <View style={styles.container}>
+      <View style={styles.formContainer}>
         <Controller
           control={control}
           name="email"
@@ -59,18 +62,18 @@ export default function LoginScreen() {
             },
           }}
           render={({ field: { onChange, value } }) => (
-            <View className="mb-6">
+            <View style={styles.inputContainer}>
               <TextInput
                 placeholder="Email"
                 value={value}
                 onChangeText={onChange}
                 autoCapitalize="none"
                 keyboardType="email-address"
-                className="w-full rounded-xl border border-zinc-200 px-4 py-4 text-zinc-900"
+                style={styles.textInput}
                 placeholderTextColor="#9ca3af"
               />
               {errors?.email && (
-                <Text className="text-red-500 mt-1">
+                <Text style={styles.errorText}>
                   {errors.email.message}
                 </Text>
               )}
@@ -87,54 +90,57 @@ export default function LoginScreen() {
             minLength: { value: 6, message: "Min 6 characters" },
           }}
           render={({ field: { onChange, value } }) => (
-            <View className="mb-2">
-              <View className="flex-row items-center rounded-xl border border-zinc-200 px-4">
+            <View style={styles.inputContainer}>
+              <View style={styles.passwordContainer}>
                 <TextInput
                   placeholder="Password"
                   value={value}
                   onChangeText={onChange}
                   secureTextEntry={hidePassword}
-                  className="flex-1 py-4 text-zinc-900"
+                  style={styles.passwordInput}
                   placeholderTextColor="#9ca3af"
                 />
                 <Pressable onPress={() => setHidePassword((v) => !v)}>
-                  <Text className="text-zinc-500">
-                    {hidePassword ? <Ionicons name="eye" size={24} color="black" /> : <Ionicons name="eye-off-outline" size={24} color="black" />}
-                  </Text>
+                  <Ionicons 
+                    name={hidePassword ? "eye" : "eye-off-outline"} 
+                    size={24} 
+                    color="black" 
+                  />
                 </Pressable>
               </View>
               {errors?.password && (
-                <Text className="text-red-500 mt-1">
+                <Text style={styles.errorText}>
                   {errors.password.message}
                 </Text>
               )}
             </View>
           )}
         />
-        <View className="justify-end items-end mb-10">
-          <Text className="text-zinc-500 text-xs">Forgot Password?</Text>
+        <View style={styles.forgotPasswordContainer}>
+          <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
         </View>
 
         {/* Submit */}
-        <View className="flex-row justify-center">
+        <View style={styles.submitContainer}>
           <Pressable
             disabled={isPending}
             onPress={handleSubmit(handleLogin)}
-            className={`w-full rounded-full py-3 items-center justify-center ${
-              isPending ? "bg-zinc-300" : "bg-[#0B4057]"
-            }`}
+            style={[
+              styles.submitButton,
+              isPending ? styles.submitButtonDisabled : styles.submitButtonEnabled
+            ]}
           >
             {isPending ? (
               <ActivityIndicator />
             ) : (
-              <Text className="text-white font-medium">Login</Text>
+              <Text style={styles.submitButtonText}>Login</Text>
             )}
           </Pressable>
         </View>
 
         {/* Subtle footer */}
-        <View className="items-center mt-4">
-          <Text className="text-zinc-500 text-xs">
+        <View style={styles.footerContainer}>
+          <Text style={styles.footerText}>
             By continuing, you agree to our Terms & Privacy Policy
           </Text>
         </View>
@@ -142,3 +148,85 @@ export default function LoginScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    marginTop: 40,
+    paddingHorizontal: 20,
+  },
+  formContainer: {
+    width: '100%',
+    maxWidth: 400,
+    borderRadius: 16,
+    padding: 4,
+  },
+  inputContainer: {
+    marginBottom: 24,
+  },
+  textInput: {
+    width: '100%',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e5e5e5',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    color: '#18181b',
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e5e5e5',
+    paddingHorizontal: 16,
+  },
+  passwordInput: {
+    flex: 1,
+    paddingVertical: 16,
+    color: '#18181b',
+  },
+  errorText: {
+    color: '#ef4444',
+    marginTop: 4,
+  },
+  forgotPasswordContainer: {
+    justifyContent: 'flex-end',
+    alignItems: 'flex-end',
+    marginBottom: 40,
+  },
+  forgotPasswordText: {
+    color: '#6b7280',
+    fontSize: 12,
+  },
+  submitContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  submitButton: {
+    width: '100%',
+    borderRadius: 999,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  submitButtonEnabled: {
+    backgroundColor: '#0B4057',
+  },
+  submitButtonDisabled: {
+    backgroundColor: '#d4d4d4',
+  },
+  submitButtonText: {
+    color: 'white',
+    fontWeight: '500',
+  },
+  footerContainer: {
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  footerText: {
+    color: '#6b7280',
+    fontSize: 12,
+  },
+});

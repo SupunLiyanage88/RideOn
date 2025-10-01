@@ -1,10 +1,10 @@
 import UseCurrentUser from "@/hooks/useCurrentUser";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import cn from "clsx";
 import { Redirect, Tabs } from "expo-router";
 import React from "react";
-import { Platform, Text, View } from "react-native";
+import { Platform, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
 type TabIconProps = {
   focused: boolean;
   icon: any;
@@ -13,13 +13,13 @@ type TabIconProps = {
 
 const TabIcon = ({ focused, icon, title }: TabIconProps) => {
   return (
-    <View className="tab-icon ">
-      <Ionicons name={icon} size={28} color={focused ? "#37A77D" : "#ffffff"} />
+    <View style={styles.tabIcon}>
+      <Ionicons name={icon} size={23} color={focused ? "#37A77D" : "#ffffff"} />
       <Text
-        className={cn(
-          "text-sm font-bold",
-          focused ? "text-primary" : "text-white"
-        )}
+        style={[
+          styles.tabText,
+          focused ? styles.textPrimary : styles.textWhite,
+        ]}
       >
         {title}
       </Text>
@@ -33,6 +33,7 @@ const _layout = () => {
 
   const isAuthenticated = user && status === "success";
   const isAdmin = user?.role === "Admin";
+
   if (!isAuthenticated) return <Redirect href="/loginScreen" />;
 
   return (
@@ -41,11 +42,13 @@ const _layout = () => {
         headerShown: false,
         tabBarShowLabel: false,
         tabBarStyle: {
-          height: Platform.OS === "android" ? 110 : 90,
-          paddingBottom: Platform.OS === "android" ? insets.bottom : 0,
+          height:
+            Platform.OS === "android" ? 65 + insets.bottom : 70 + insets.bottom,
+          paddingTop: 10,
           position: "absolute",
           left: 0,
           right: 0,
+          bottom: 0,
           backgroundColor: "#0B4057",
         },
       }}
@@ -113,14 +116,8 @@ const _layout = () => {
           ),
         }}
       />
-      {/* <Tabs.Screen
-        name="admin"
-        options={{
-          href: null, // 👈 hides it from the tab bar
-        }}
-      /> */}
 
-      {/* Me */}
+      {/* Admin */}
       <Tabs.Screen
         name="admin"
         options={{
@@ -137,3 +134,29 @@ const _layout = () => {
 };
 
 export default _layout;
+
+const styles = StyleSheet.create({
+  tabBar: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    backgroundColor: "#0B4057",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tabIcon: {
+    width: 50,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tabText: {
+    fontSize: 12,
+    fontWeight: "bold",
+  },
+  textPrimary: {
+    color: "#37A77D",
+  },
+  textWhite: {
+    color: "#ffffff",
+  },
+});
