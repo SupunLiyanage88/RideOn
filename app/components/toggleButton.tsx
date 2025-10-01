@@ -1,5 +1,4 @@
-import "@/app/globals";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 
 type ToggleProps = {
@@ -14,13 +13,26 @@ const ToggleButton: React.FC<ToggleProps> = ({
   leftLabel,
   rightLabel,
   onToggle,
-  click01,
-  click02,
+  click01 = true, // default left active
+  click02 = false,
 }) => {
+  const [activeLeft, setActiveLeft] = useState(click01);
+  const [activeRight, setActiveRight] = useState(click02);
+
+  // sync props if parent updates
+  useEffect(() => {
+    setActiveLeft(click01);
+    setActiveRight(click02);
+  }, [click01, click02]);
+
   const handlePress = (value: string) => {
     if (value === leftLabel) {
+      setActiveLeft(true);
+      setActiveRight(false);
       onToggle?.(true, false);
     } else {
+      setActiveLeft(false);
+      setActiveRight(true);
       onToggle?.(false, true);
     }
   };
@@ -30,12 +42,12 @@ const ToggleButton: React.FC<ToggleProps> = ({
       <TouchableOpacity
         onPress={() => handlePress(leftLabel)}
         className={`flex-1 justify-center items-center rounded-full ${
-          click01 ? "bg-white" : "bg-transparent"
+          activeLeft ? "bg-white" : "bg-transparent"
         }`}
       >
         <Text
           className={`${
-            click01 ? "text-[#0B4057] font-bold" : "text-gray-500"
+            activeLeft ? "text-[#0B4057] font-bold" : "text-gray-500"
           }`}
         >
           {leftLabel}
@@ -45,12 +57,12 @@ const ToggleButton: React.FC<ToggleProps> = ({
       <TouchableOpacity
         onPress={() => handlePress(rightLabel)}
         className={`flex-1 justify-center items-center rounded-full ${
-          click02 ? "bg-white" : "bg-transparent"
+          activeRight ? "bg-white" : "bg-transparent"
         }`}
       >
         <Text
           className={`${
-            click02 ? "text-[#0B4057] font-bold" : "text-gray-500"
+            activeRight ? "text-[#0B4057] font-bold" : "text-gray-500"
           }`}
         >
           {rightLabel}

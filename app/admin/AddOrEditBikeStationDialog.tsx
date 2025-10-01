@@ -1,0 +1,214 @@
+import {
+  BikeStation,
+  saveBikeStation,
+  updateBikeStation,
+} from "@/api/bikeStation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Controller, useForm } from "react-hook-form";
+import {
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import DialogHeader from "../components/DialogHeader";
+import HelperText from "../components/HelperText";
+import MapPicker from "../components/MapPicker";
+type DialogProps = {
+  visible: boolean;
+  onClose: () => void;
+  defaultValues?: BikeStation;
+};
+const AddOrEditBikeStationDialog = ({
+  visible,
+  onClose,
+  defaultValues,
+}: DialogProps) => {
+  const {
+    control,
+    handleSubmit,
+    register,
+    reset,
+    formState: { errors },
+  } = useForm<BikeStation>({
+    defaultValues: defaultValues,
+    mode: "onChange",
+  });
+
+  const queryClient = useQueryClient();
+  const { mutate: createBikeStationMutation, isPending: isCreating } =
+    useMutation({
+      mutationFn: saveBikeStation,
+      onSuccess: () => {
+        alert("Bike Station Save Successful");
+        reset();
+        onClose();
+        queryClient.invalidateQueries({
+          queryKey: ["station-data"],
+        });
+      },
+      onError: (data) => {
+        alert("Bike Station Save Failed");
+        console.log(data);
+      },
+    });
+
+  const { mutate: updateBikeStationMutation, isPending: isUpdating } =
+    useMutation({
+      mutationFn: updateBikeStation,
+      onSuccess: () => {
+        alert("Bike Station Update Successful");
+        reset();
+        onClose();
+        queryClient.invalidateQueries({
+          queryKey: ["station-data"],
+        });
+      },
+      onError: (data) => {
+        alert("Bike Station Update Failed");
+        console.log(data);
+      },
+    });
+
+  const handleSaveStation = (data: BikeStation) => {
+    console.log(data);
+    if (data.latitude === undefined || data.longitude === undefined) {
+      alert("Please select a location on the map.");
+      return;
+    }
+    if (defaultValues) {
+      const updatedData = { ...data, _id: defaultValues._id };
+      if (!updatedData._id) {
+        alert("Bike Station Id Missing");
+        return;
+      }
+      updateBikeStationMutation(updatedData);
+    } else {
+      createBikeStationMutation(data);
+    }
+  };
+  return (
+    <Modal visible={visible} transparent animationType="slide">
+      <View className="flex-1 items-center justify-center bg-black/50">
+        <View className="bg-white rounded-2xl p-6 w-4/5">
+          <DialogHeader
+            title={defaultValues ? "Edit Bike Station" : "Add Bike Station"}
+            onClose={onClose}
+          />
+
+          <Controller
+            control={control}
+            name="stationName"
+            render={({ field: { onChange, value } }) => (
+              <View className="mb-6">
+                <View className="flex-row items-center rounded-xl border border-zinc-200 px-4">
+                  <TextInput
+                    placeholder="Station Name"
+                    value={value}
+                    onChangeText={onChange}
+                    className="flex-1 py-4 text-zinc-900"
+                    placeholderTextColor="#9ca3af"
+                    defaultValue={defaultValues?.stationName}
+                  />
+                </View>
+                <HelperText
+                  visible={!!errors.stationName}
+                  message={errors.stationName?.message}
+                  type="error"
+                />
+              </View>
+            )}
+          />
+          <Controller
+            control={control}
+            name="stationLocation"
+            render={({ field: { onChange, value } }) => (
+              <View className="mb-6">
+                <View className="flex-row items-center rounded-xl border border-zinc-200 px-4">
+                  <TextInput
+                    placeholder="Station Location"
+                    value={value}
+                    onChangeText={onChange}
+                    className="flex-1 py-4 text-zinc-900"
+                    placeholderTextColor="#9ca3af"
+                    defaultValue={defaultValues?.stationLocation}
+                  />
+                </View>
+                <HelperText
+                  visible={!!errors.stationLocation}
+                  message={errors.stationLocation?.message}
+                  type="error"
+                />
+              </View>
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="latitude"
+            rules={{
+              required: "Latitude is required",
+            }}
+            render={({ field: { onChange, value } }) => (
+              <Controller
+                control={control}
+                name="longitude"
+                rules={{
+                  required: "Latitude is required",
+                }}
+                render={({
+                  field: { onChange: onChangeLong, value: valueLong },
+                }) => (
+                  <View className="mb-6">
+                    <MapPicker
+                      value={
+                        value && valueLong
+                          ? { latitude: value, longitude: valueLong }
+                          : undefined
+                      }
+                      defaultValues={defaultValues}
+                      onChange={({ latitude, longitude }) => {
+                        onChange(latitude);
+                        onChangeLong(longitude);
+                      }}
+                    />
+                    <HelperText
+                      visible={!!errors.latitude || !!errors.longitude}
+                      message={
+                        errors.latitude?.message || errors.longitude?.message
+                      }
+                      type="error"
+                    />
+                    <Text className="mt-2 text-s text-zinc-500 ">
+                      Lat: {value?.toFixed(5)}, Lng: {valueLong?.toFixed(5)}
+                    </Text>
+                  </View>
+                )}
+              />
+            )}
+          />
+
+          <View className="flex-row justify-center">
+            <Pressable
+              onPress={handleSubmit(handleSaveStation)}
+              disabled={isCreating || isUpdating}
+              className="w-full rounded-full py-3 items-center justify-center bg-[#0B4057]"
+            >
+              {isCreating || isUpdating ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text className="text-white text-center font-bold">
+                  {defaultValues ? "Update Station" : "Save Station"}
+                </Text>
+              )}
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+export default AddOrEditBikeStationDialog;

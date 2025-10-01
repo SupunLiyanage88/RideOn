@@ -5,13 +5,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React from "react";
-import {
-  ActivityIndicator,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -75,48 +69,32 @@ const Me = () => {
 
   return (
     <SafeAreaView className="flex-1">
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
-        {bikeStationData.map((station: any) => (
-          <View
-            key={station._id}
-            className="bg-white p-4 rounded-2xl mb-4 shadow"
-          >
-            <Text className="text-lg font-bold text-gray-800">
-              {station.stationName}
-            </Text>
-            <Text className="text-gray-600 mb-2">{station.stationLocation}</Text>
-
-            {/* Mini Map */}
-            <MapView
-              style={{ height: 150, borderRadius: 12 }}
-              initialRegion={{
+      <View className="flex-1">
+        <MapView
+          style={{ flex: 1 }}
+          initialRegion={{
+            latitude: bikeStationData[0].latitude,
+            longitude: bikeStationData[0].longitude,
+            latitudeDelta: 0.05,
+            longitudeDelta: 0.05,
+          }}
+        >
+          {bikeStationData.map((station: any) => (
+            <Marker
+              key={station._id}
+              coordinate={{
                 latitude: station.latitude,
                 longitude: station.longitude,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01,
               }}
-              scrollEnabled={false}
-              zoomEnabled={false}
-            >
-              <Marker
-                coordinate={{
-                  latitude: station.latitude,
-                  longitude: station.longitude,
-                }}
-                title={station.stationName}
-              />
-            </MapView>
-
-            <Text className="mt-2 text-sm text-gray-500">
-              Lat: {station.latitude}, Lng: {station.longitude}
-            </Text>
-          </View>
-        ))}
-
-        <View className="mt-4">
-          <LogoutButton />
-        </View>
-      </ScrollView>
+              title={station.stationName}
+              description={station.stationLocation}
+            />
+          ))}
+        </MapView>
+      </View>
+      <View className="p-4">
+        <LogoutButton />
+      </View>
     </SafeAreaView>
   );
 };

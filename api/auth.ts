@@ -1,12 +1,20 @@
 import axios from "axios";
 import { z } from "zod";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+export enum Role {
+  ADMIN = "Admin",
+  USER = "User",
+}
 
 export const userSchema = z.object({
   id: z.number(),
+  userName: z.string(),
   email: z.string(),
   mobile: z.string(),
   password: z.string(),
   confirmPassword: z.string().optional(),
+  role: z.enum(Role)
 });
 
 export type User = z.infer<typeof userSchema>;
@@ -22,6 +30,12 @@ export async function login({
     email,
     password,
   });
+    const { token } = res.data;
+
+  //  Save token for future requests
+  if (token) {
+    await AsyncStorage.setItem("token", token);
+  }
   return res.data;
 }
 
@@ -37,5 +51,6 @@ export async function userRegister(data: User) {
 
 export async function logout() {
   const res = await axios.post("/api/auth/logout");
+  await AsyncStorage.removeItem("token");
   return res.data;
 }

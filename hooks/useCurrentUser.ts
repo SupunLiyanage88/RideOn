@@ -7,12 +7,16 @@ interface UseCurrentUserResult {
 }
 
 function UseCurrentUser(): UseCurrentUserResult {
-  const { data, status } = useQuery<User>({
+  const { data, status, error } = useQuery<User, Error>({
     queryKey: ["current-user"],
     queryFn: validateUser,
+    retry: false,
   });
 
-  console.log("Current user data:", data, "Status:", status);
+  if (error?.message?.includes("No token, authorization denied")) {
+    return { user: undefined, status: "loading" };
+  }
+  console.log("Current User:", data);
   return { user: data, status };
 }
 

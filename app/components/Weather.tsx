@@ -1,6 +1,7 @@
 import "@/api/weather";
 import { WeatherData } from "@/api/weather";
 import { images } from "@/constants/images";
+import UseCurrentUser from "@/hooks/useCurrentUser";
 import Entypo from "@expo/vector-icons/Entypo";
 import Fontisto from "@expo/vector-icons/Fontisto";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -12,8 +13,6 @@ interface WeatherProps {
 }
 
 const Weather: React.FC<WeatherProps> = ({ location, weatherData }) => {
-  const name = "Supun";
-
   const today = new Date();
   const options: Intl.DateTimeFormatOptions = {
     weekday: "long",
@@ -31,9 +30,10 @@ const Weather: React.FC<WeatherProps> = ({ location, weatherData }) => {
     : "";
   const humidity = weatherData ? weatherData.main.humidity : "";
   const windSpeed = weatherData ? weatherData.wind.speed : "";
-
+  const { user, status } = UseCurrentUser();
+  const name = user?.userName;
   return (
-    <View className="menu-card mt-5 mb-4 px-5 pb-5 bg-[#D9D9D9] rounded-2xl shadow-sm">
+    <View className="menu-card mt-5 mb-4 px-5 pb-5 bg-[#D9D9D9] rounded-[2rem] shadow-sm">
       <View className="flex-row justify-between items-center">
         <Text className="text-2xl font-bold my-5">Good Afternoon, {name}</Text>
         <MaterialIcons name="open-in-new" size={20} color="black" />
@@ -91,4 +91,4 @@ const Weather: React.FC<WeatherProps> = ({ location, weatherData }) => {
   );
 };
 
-export default Weather
+export default Weather;
