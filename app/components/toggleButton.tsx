@@ -38,32 +38,53 @@ const ToggleButton: React.FC<ToggleProps> = ({
   };
 
   return (
-    <View className="flex-row bg-[#E6E6E6] rounded-full w-[87%] h-14 p-1">
+    <View
+      style={{
+        flexDirection: "row",
+        backgroundColor: "#E6E6E6",
+        borderRadius: 9999,
+        width: "87%",
+        height: 56, // h-14 ~ 56px
+        padding: 4, // p-1 ~ 4px
+      }}
+    >
+      {/* Left Button */}
       <TouchableOpacity
         onPress={() => handlePress(leftLabel)}
-        className={`flex-1 justify-center items-center rounded-full ${
-          activeLeft ? "bg-white" : "bg-transparent"
-        }`}
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          borderRadius: 9999,
+          backgroundColor: activeLeft ? "#FFFFFF" : "transparent",
+        }}
       >
         <Text
-          className={`${
-            activeLeft ? "text-[#0B4057] font-bold" : "text-gray-500"
-          }`}
+          style={{
+            color: activeLeft ? "#0B4057" : "#6B7280", // text-gray-500
+            fontWeight: activeLeft ? "700" : "400",
+          }}
         >
           {leftLabel}
         </Text>
       </TouchableOpacity>
 
+      {/* Right Button */}
       <TouchableOpacity
         onPress={() => handlePress(rightLabel)}
-        className={`flex-1 justify-center items-center rounded-full ${
-          activeRight ? "bg-white" : "bg-transparent"
-        }`}
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          borderRadius: 9999,
+          backgroundColor: activeRight ? "#FFFFFF" : "transparent",
+        }}
       >
         <Text
-          className={`${
-            activeRight ? "text-[#0B4057] font-bold" : "text-gray-500"
-          }`}
+          style={{
+            color: activeRight ? "#0B4057" : "#6B7280", // text-gray-500
+            fontWeight: activeRight ? "700" : "400",
+          }}
         >
           {rightLabel}
         </Text>

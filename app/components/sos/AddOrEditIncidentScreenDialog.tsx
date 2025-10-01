@@ -22,16 +22,14 @@ import {
 import DialogHeader from "../DialogHeader";
 import HelperText from "../HelperText";
 import ToggleEnumButton from "../ToggleEnumButton";
+
 type DialogProps = {
   visible: boolean;
   onClose: () => void;
   defaultValues?: Incident;
 };
-const IncidentScreenDialog = ({
-  visible,
-  onClose,
-  defaultValues,
-}: DialogProps) => {
+
+const IncidentScreenDialog = ({ visible, onClose, defaultValues }: DialogProps) => {
   const {
     control,
     handleSubmit,
@@ -73,16 +71,14 @@ const IncidentScreenDialog = ({
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const queryClient = useQueryClient();
-  
+
   const { mutate: saveIncidentMutation, isPending } = useMutation({
     mutationFn: saveIncident,
     onSuccess: () => {
       alert("Incident Save successful");
       reset();
       onClose();
-      queryClient.invalidateQueries({
-        queryKey: ["incident-data"],
-      });
+      queryClient.invalidateQueries({ queryKey: ["incident-data"] });
     },
     onError: (data) => {
       alert("Incident Save failed");
@@ -90,26 +86,21 @@ const IncidentScreenDialog = ({
     },
   });
 
-  const { mutate: updateIncidentMutation, isPending: isUpdating } = useMutation(
-    {
-      mutationFn: updateIncident,
-      onSuccess: () => {
-        alert("Incident Updated Successful");
-        reset();
-        onClose();
-        queryClient.invalidateQueries({
-          queryKey: ["incident-data"],
-        });
-      },
-      onError: (data) => {
-        alert("Incident Update failed");
-        console.log(data);
-      },
-    }
-  );
+  const { mutate: updateIncidentMutation, isPending: isUpdating } = useMutation({
+    mutationFn: updateIncident,
+    onSuccess: () => {
+      alert("Incident Updated Successful");
+      reset();
+      onClose();
+      queryClient.invalidateQueries({ queryKey: ["incident-data"] });
+    },
+    onError: (data) => {
+      alert("Incident Update failed");
+      console.log(data);
+    },
+  });
 
   const handleSaveIncident = (data: Incident) => {
-    console.log(data);
     if (defaultValues) {
       const updatedData = { ...data, _id: defaultValues._id };
       if (!updatedData._id) {
@@ -136,8 +127,19 @@ const IncidentScreenDialog = ({
 
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <View className="flex-1 items-center justify-center bg-black/50">
-        <View className="bg-white rounded-2xl p-6 w-[90%] max-h-[90%]">
+      <View style={{
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "rgba(0,0,0,0.5)"
+      }}>
+        <View style={{
+          backgroundColor: "#FFFFFF",
+          borderRadius: 24,
+          padding: 24,
+          width: "90%",
+          maxHeight: "90%"
+        }}>
           <DialogHeader
             title={defaultValues ? "Edit Incident" : "Add Incident"}
             onClose={handleClose}
@@ -145,99 +147,72 @@ const IncidentScreenDialog = ({
 
           <ScrollView showsVerticalScrollIndicator={false}>
             {/* Incident Type */}
-            <View className=" bg-white rounded-2xl px-4">
-              <View className="mb-6 mt-4">
-                <Text className="font-bold">Incident Type ?</Text>
-              </View>
-              <View>
-                <Controller
-                  control={control}
-                  name="incidentType"
-                  render={({ field: { value, onChange } }) => (
-                    <ToggleEnumButton
-                      options={IncidentType}
-                      value={value}
-                      onChange={onChange}
-                    />
-                  )}
-                />
-              </View>
+            <View style={{ backgroundColor: "#FFFFFF", borderRadius: 24, paddingHorizontal: 16, marginBottom: 16 }}>
+              <Text style={{ fontWeight: "700", marginBottom: 12, marginTop: 16 }}>Incident Type ?</Text>
+              <Controller
+                control={control}
+                name="incidentType"
+                render={({ field: { value, onChange } }) => (
+                  <ToggleEnumButton options={IncidentType} value={value} onChange={onChange} />
+                )}
+              />
             </View>
 
             {/* Incident Level */}
-            <View className=" bg-white rounded-2xl px-4">
-              <View className="mb-6 mt-2">
-                <Text className="font-bold">Incident Level ?</Text>
-              </View>
-              <View>
-                <Controller
-                  control={control}
-                  name="howSerious"
-                  render={({ field: { value, onChange } }) => (
-                    <ToggleEnumButton
-                      options={HowSerious}
-                      value={value}
-                      onChange={onChange}
-                    />
-                  )}
-                />
-              </View>
+            <View style={{ backgroundColor: "#FFFFFF", borderRadius: 24, paddingHorizontal: 16, marginBottom: 16 }}>
+              <Text style={{ fontWeight: "700", marginBottom: 12, marginTop: 8 }}>Incident Level ?</Text>
+              <Controller
+                control={control}
+                name="howSerious"
+                render={({ field: { value, onChange } }) => (
+                  <ToggleEnumButton options={HowSerious} value={value} onChange={onChange} />
+                )}
+              />
             </View>
 
             {/* Description */}
-            <View className=" bg-white rounded-2xl px-4">
-              <View className="mb-6 mt-2">
-                <Text className="font-bold">Describe Incident</Text>
-              </View>
-              <View>
-                <Controller
-                  control={control}
-                  name="description"
-                  render={({ field: { onChange, value } }) => (
-                    <View className="mb-6">
-                      <View className="flex-row items-center rounded-xl border border-zinc-200 px-4">
-                        <TextInput
-                          placeholder="Incident"
-                          value={value}
-                          onChangeText={onChange}
-                          className="flex-1 py-4 text-zinc-900"
-                          placeholderTextColor="#9ca3af"
-                          // {...register("description", {
-                          //   required: {
-                          //     value: true,
-                          //     message: "Incident is required",
-                          //   },
-                          // })}
-                        />
-                      </View>
-                      <HelperText
-                        visible={!!errors.description}
-                        message={errors.description?.message}
-                        type="error"
+            <View style={{ backgroundColor: "#FFFFFF", borderRadius: 24, paddingHorizontal: 16, marginBottom: 16 }}>
+              <Text style={{ fontWeight: "700", marginBottom: 12, marginTop: 8 }}>Describe Incident</Text>
+              <Controller
+                control={control}
+                name="description"
+                render={({ field: { onChange, value } }) => (
+                  <View style={{ marginBottom: 16 }}>
+                    <View style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      borderWidth: 1,
+                      borderColor: "#E4E4E7",
+                      borderRadius: 16,
+                      paddingHorizontal: 16,
+                    }}>
+                      <TextInput
+                        placeholder="Incident"
+                        value={value}
+                        onChangeText={onChange}
+                        style={{ flex: 1, paddingVertical: 16, color: "#111827" }}
+                        placeholderTextColor="#9CA3AF"
                       />
                     </View>
-                  )}
-                />
-              </View>
+                    <HelperText visible={!!errors.description} message={errors.description?.message} type="error" />
+                  </View>
+                )}
+              />
             </View>
 
             {/* Incident Date */}
-            <View className=" bg-white rounded-2xl px-4 pb-6">
-              <View className="mb-6 ">
-                <Text className="font-bold">Incident Date</Text>
-              </View>
+            <View style={{ backgroundColor: "#FFFFFF", borderRadius: 24, paddingHorizontal: 16, paddingBottom: 24, marginBottom: 16 }}>
+              <Text style={{ fontWeight: "700", marginBottom: 12 }}>Incident Date</Text>
               <Controller
                 control={control}
                 name="date"
                 render={({ field: { value, onChange } }) => (
                   <View>
                     <TouchableOpacity
-                      className="border rounded-xl px-4 py-3"
+                      style={{ borderWidth: 1, borderColor: "#E4E4E7", borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12 }}
                       onPress={() => setShowDatePicker(true)}
                     >
-                      <Text>
-                        {value ? value.toDateString() : "Select Date"}
-                      </Text>
+                      <Text>{value ? value.toDateString() : "Select Date"}</Text>
                     </TouchableOpacity>
                     {showDatePicker && (
                       <DateTimePicker
@@ -255,10 +230,8 @@ const IncidentScreenDialog = ({
             </View>
 
             {/* Incident Time */}
-            <View className=" bg-white rounded-2xl px-4 pb-10">
-              <View className="mb-6 mt-2">
-                <Text className="font-bold">Incident Time</Text>
-              </View>
+            <View style={{ backgroundColor: "#FFFFFF", borderRadius: 24, paddingHorizontal: 16, paddingBottom: 40, marginBottom: 16 }}>
+              <Text style={{ fontWeight: "700", marginBottom: 12, marginTop: 8 }}>Incident Time</Text>
               <Controller
                 control={control}
                 name="time"
@@ -275,7 +248,7 @@ const IncidentScreenDialog = ({
                   return (
                     <View>
                       <TouchableOpacity
-                        className="border rounded-xl px-4 py-3"
+                        style={{ borderWidth: 1, borderColor: "#E4E4E7", borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12 }}
                         onPress={() => setShowTimePicker(true)}
                       >
                         <Text>{displayTime}</Text>
@@ -287,14 +260,9 @@ const IncidentScreenDialog = ({
                           onChange={(_, selectedTime: Date | undefined) => {
                             setShowTimePicker(false);
                             if (selectedTime) {
-                              const hours = String(
-                                selectedTime.getHours()
-                              ).padStart(2, "0");
-                              const minutes = String(
-                                selectedTime.getMinutes()
-                              ).padStart(2, "0");
-                              const timeString = `${hours}:${minutes}`; // always "HH:mm"
-                              onChange(timeString);
+                              const hours = String(selectedTime.getHours()).padStart(2, "0");
+                              const minutes = String(selectedTime.getMinutes()).padStart(2, "0");
+                              onChange(`${hours}:${minutes}`);
                             }
                           }}
                         />
@@ -306,16 +274,23 @@ const IncidentScreenDialog = ({
             </View>
 
             {/* Submit */}
-            <View className="flex-row justify-center">
+            <View style={{ flexDirection: "row", justifyContent: "center", marginBottom: 16 }}>
               <Pressable
                 onPress={handleSubmit(handleSaveIncident)}
-                disabled={isPending}
-                className="w-full rounded-full py-4 items-center justify-center bg-[#0B4057]"
+                disabled={isPending || isUpdating}
+                style={{
+                  width: "100%",
+                  borderRadius: 9999,
+                  paddingVertical: 16,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: "#0B4057",
+                }}
               >
-                {isPending ? (
+                {isPending || isUpdating ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text className="text-white text-center font-bold">
+                  <Text style={{ color: "#FFFFFF", fontWeight: "700", textAlign: "center" }}>
                     Submit Incident
                   </Text>
                 )}
@@ -327,6 +302,5 @@ const IncidentScreenDialog = ({
     </Modal>
   );
 };
-//test
-export default IncidentScreenDialog;
 
+export default IncidentScreenDialog;

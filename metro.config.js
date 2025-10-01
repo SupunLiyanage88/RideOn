@@ -1,6 +1,8 @@
 const { getDefaultConfig } = require("expo/metro-config");
-const { withNativeWind } = require('nativewind/metro');
- 
-const config = getDefaultConfig(__dirname)
- 
-module.exports = withNativeWind(config, { input: './app/globals.css' })
+
+const config = getDefaultConfig(__dirname);
+
+config.resolver.extraNodeModules = {
+  "@react-native-masked-view/masked-view": require.resolve("@react-native-masked-view/masked-view"),
+};
+module.exports = config;
