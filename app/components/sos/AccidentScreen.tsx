@@ -10,7 +10,10 @@ import UserMap from "./UserMap";
 
 const AccidentScreen = () => {
   const queryClient = useQueryClient();
-  const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [location, setLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
   const [alertActive, setAlertActive] = useState(false);
 
   const { isLoading } = useQuery({
@@ -47,9 +50,16 @@ const AccidentScreen = () => {
       });
 
       subscriber = await Location.watchPositionAsync(
-        { accuracy: Location.Accuracy.High, timeInterval: 3000, distanceInterval: 1 },
+        {
+          accuracy: Location.Accuracy.High,
+          timeInterval: 3000,
+          distanceInterval: 1,
+        },
         (loc) => {
-          setLocation({ latitude: loc.coords.latitude, longitude: loc.coords.longitude });
+          setLocation({
+            latitude: loc.coords.latitude,
+            longitude: loc.coords.longitude,
+          });
         }
       );
     };
@@ -78,51 +88,82 @@ const AccidentScreen = () => {
     <SafeAreaView style={{ flex: 1, paddingHorizontal: 8 }}>
       <ScrollView>
         <View style={{ marginBottom: 16 }}>
-          <Text style={{ fontSize: 24, fontWeight: "bold", textAlign: "center", color: "red" }}>
+          <Text
+            style={{
+              fontSize: 24,
+              fontWeight: "bold",
+              textAlign: "center",
+              color: "red",
+            }}
+          >
             SOS Emergency
           </Text>
         </View>
 
-        <View style={{
-          backgroundColor: "#FFEDD5",
-          width: "100%",
-          borderRadius: 8,
-          padding: 12,
-          borderColor: "#F97316",
-          borderWidth: 1,
-        }}>
+        <View
+          style={{
+            backgroundColor: "#FFEDD5",
+            width: "100%",
+            borderRadius: 8,
+            padding: 12,
+            borderColor: "#F97316",
+            borderWidth: 1,
+          }}
+        >
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <MaterialIcons name="warning-amber" size={20} color="orange" />
-            <Text style={{ fontWeight: "600", marginLeft: 8 }}>Safety First</Text>
+            <Text style={{ fontWeight: "600", marginLeft: 8 }}>
+              Safety First
+            </Text>
           </View>
           <Text style={{ paddingTop: 12, textAlign: "justify" }}>
-            If you're in immediate danger, move to a safe location before using this app. For life-threatening emergencies, call 911 directly.
+            If you're in immediate danger, move to a safe location before using
+            this app. For life-threatening emergencies, call 911 directly.
           </Text>
         </View>
 
-        <View style={{ justifyContent: "center", alignItems: "center", marginTop: 8, paddingHorizontal: 16 }}>
+        <View
+          style={{
+            justifyContent: "center",
+            alignItems: "center",
+            marginTop: 8,
+            paddingHorizontal: 16,
+          }}
+        >
           <SOSButton
             isActive={alertActive}
             onActivate={handleActivate}
             onCancel={handleCancel}
             isLocationLoading={!location}
           />
-          <Text style={{ color: alertActive ? "green" : "#A1A1AA", marginTop: 28 }}>
-            {alertActive ? "🚨 Tap To cancel Alert !" : "Tap to send emergency alert"}
+          <Text
+            style={{ color: alertActive ? "green" : "#A1A1AA", marginTop: 28 }}
+          >
+            {alertActive
+              ? "🚨 Tap To cancel Alert !"
+              : "Tap to send emergency alert"}
           </Text>
         </View>
 
         <View style={{ marginTop: 16, padding: 12, borderRadius: 8 }}>
-          <View style={{ backgroundColor: "#E5E7EB", borderRadius: 8, marginTop: 8 }}>
-            <View style={{
-              height: 208,
+          <View
+            style={{
+              backgroundColor: "#E5E7EB",
               borderRadius: 8,
-              borderStyle: "dashed",
-              borderWidth: 2,
-              borderColor: "#D1D5DB",
-              justifyContent: "center",
-              alignItems: "center",
-            }}>
+              marginTop: 8,
+            }}
+          >
+            <View
+              style={{
+                height: 208,
+                borderRadius: 8,
+                borderStyle: "dashed",
+                borderWidth: 2,
+                borderColor: "#D1D5DB",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
               {location ? (
                 <UserMap
                   latitude={location.latitude}
@@ -135,6 +176,8 @@ const AccidentScreen = () => {
             </View>
           </View>
         </View>
+
+        <View style={{ marginBottom: 20 }}></View>
       </ScrollView>
     </SafeAreaView>
   );

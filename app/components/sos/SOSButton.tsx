@@ -10,16 +10,22 @@ type SOSButtonProps = {
 };
 
 const SOSButton: React.FC<SOSButtonProps> = ({
-  isActive,
+  isActive = false,
   onActivate,
   onCancel,
   isLocationLoading,
 }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const [isClicked, setIsClicked] = useState(false);
+  const [internalActive, setInternalActive] = useState(isActive);
+
+  // Sync with external isActive prop
+  useEffect(() => {
+    setInternalActive(isActive);
+  }, [isActive]);
 
   useEffect(() => {
-    if (isActive) {
+    if (internalActive) {
       const loop = Animated.loop(
         Animated.sequence([
           Animated.timing(scaleAnim, {
@@ -38,21 +44,42 @@ const SOSButton: React.FC<SOSButtonProps> = ({
 
       return () => loop.stop();
     } else {
-      scaleAnim.stopAnimation();
-      scaleAnim.setValue(1);
+      // Reset animation when not active
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
     }
-  }, [isActive]);
+  }, [internalActive, scaleAnim]);
+
+  const handlePressIn = () => {
+    setIsClicked(true);
+  };
+
+  const handlePressOut = () => {
+    setIsClicked(false);
+  };
 
   const handlePress = () => {
-    if (!isActive) {
+    if (isLocationLoading) return;
+    
+    if (!internalActive) {
+      setInternalActive(true);
       onActivate && onActivate();
     } else {
+      setInternalActive(false);
       onCancel && onCancel();
     }
   };
 
   return (
-    <TouchableWithoutFeedback onPress={handlePress} disabled={isLocationLoading}>
+    <TouchableWithoutFeedback 
+      onPress={handlePress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      disabled={isLocationLoading}
+    >
       <Animated.View
         style={{
           justifyContent: "center",
@@ -60,7 +87,7 @@ const SOSButton: React.FC<SOSButtonProps> = ({
           width: 170,
           height: 170,
           marginTop: 24,
-          borderRadius: 90,
+          borderRadius: 85, // Half of width/height for perfect circle
           transform: [{ scale: scaleAnim }],
           borderWidth: isClicked ? 0 : 4,
           borderColor: isClicked ? "transparent" : "white",
