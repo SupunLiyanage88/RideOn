@@ -6,7 +6,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import HelperText from "../components/HelperText";
 
 const RegisterScreen = () => {
@@ -45,21 +45,21 @@ const RegisterScreen = () => {
   };
 
   return (
-    <View className="flex-1 items-center mt-10 px-5">
-      <View className="w-full max-w-md rounded-2xl p-1">
+    <View style={styles.container}>
+      <View style={styles.formContainer}>
         <Controller
           control={control}
           name="userName"
           render={({ field: { onChange, value } }) => (
-            <View className="mb-6">
+            <View style={styles.inputContainer}>
               <TextInput
                 placeholder="User Name"
                 value={value}
                 onChangeText={onChange}
                 autoCapitalize="none"
-                className="w-full rounded-xl border border-zinc-200 px-4 py-4 text-zinc-900"
+                style={styles.textInput}
                 placeholderTextColor="#9ca3af"
-                {...register("mobile", {
+                {...register("userName", {
                   required: {
                     value: true,
                     message: "User Name is required",
@@ -82,14 +82,14 @@ const RegisterScreen = () => {
           control={control}
           name="email"
           render={({ field: { onChange, value } }) => (
-            <View className="mb-6">
+            <View style={styles.inputContainer}>
               <TextInput
                 placeholder="Email"
                 value={value}
                 onChangeText={onChange}
                 autoCapitalize="none"
                 keyboardType="email-address"
-                className="w-full rounded-xl border border-zinc-200 px-4 py-4 text-zinc-900"
+                style={styles.textInput}
                 placeholderTextColor="#9ca3af"
                 {...register("email", {
                   required: {
@@ -123,14 +123,14 @@ const RegisterScreen = () => {
           control={control}
           name="mobile"
           render={({ field: { onChange, value } }) => (
-            <View className="mb-6">
+            <View style={styles.inputContainer}>
               <TextInput
                 placeholder="Mobile"
                 value={value}
                 onChangeText={onChange}
                 autoCapitalize="none"
                 keyboardType="number-pad"
-                className="w-full rounded-xl border border-zinc-200 px-4 py-4 text-zinc-900"
+                style={styles.textInput}
                 placeholderTextColor="#9ca3af"
                 {...register("mobile", {
                   required: {
@@ -139,7 +139,7 @@ const RegisterScreen = () => {
                   },
                   maxLength: {
                     value: 10,
-                    message: "Mobile number must be at least 6 digits",
+                    message: "Mobile number must be at least 10 digits",
                   },
                   pattern: {
                     value: /^[0-9]+$/,
@@ -160,14 +160,14 @@ const RegisterScreen = () => {
           control={control}
           name="password"
           render={({ field: { onChange, value } }) => (
-            <View className="mb-6">
-              <View className="flex-row items-center rounded-xl border border-zinc-200 px-4">
+            <View style={styles.inputContainer}>
+              <View style={styles.passwordContainer}>
                 <TextInput
                   placeholder="Password"
                   value={value}
                   onChangeText={onChange}
                   secureTextEntry={password}
-                  className="flex-1 py-4 text-zinc-900"
+                  style={styles.passwordInput}
                   placeholderTextColor="#9ca3af"
                   {...register("password", {
                     required: {
@@ -191,14 +191,14 @@ const RegisterScreen = () => {
           control={control}
           name="confirmPassword"
           render={({ field: { onChange, value } }) => (
-            <View className="mb-6">
-              <View className="flex-row items-center rounded-xl border border-zinc-200 px-4">
+            <View style={styles.inputContainer}>
+              <View style={styles.passwordContainer}>
                 <TextInput
                   placeholder="Confirm Password"
                   value={value}
                   onChangeText={onChange}
                   secureTextEntry={hidePassword}
-                  className="flex-1 py-4 text-zinc-900"
+                  style={styles.passwordInput}
                   placeholderTextColor="#9ca3af"
                   {...register("confirmPassword", {
                     required: {
@@ -212,17 +212,11 @@ const RegisterScreen = () => {
                   })}
                 />
                 <Pressable onPress={() => setHidePassword((v) => !v)}>
-                  <Text className="text-zinc-500">
-                    {hidePassword ? (
-                      <Ionicons name="eye" size={24} color="black" />
-                    ) : (
-                      <Ionicons
-                        name="eye-off-outline"
-                        size={24}
-                        color="black"
-                      />
-                    )}
-                  </Text>
+                  <Ionicons 
+                    name={hidePassword ? "eye" : "eye-off-outline"} 
+                    size={24} 
+                    color="black" 
+                  />
                 </Pressable>
               </View>
               <HelperText
@@ -234,17 +228,74 @@ const RegisterScreen = () => {
           )}
         />
 
-        <View className="flex-row justify-center">
+        <View style={styles.submitContainer}>
           <Pressable
             onPress={handleSubmit(handleRegister)}
-            className="w-full rounded-full py-3 items-center justify-center bg-[#0B4057]"
+            style={styles.submitButton}
           >
-            <Text className="text-white text-center font-bold">Register</Text>
+            <Text style={styles.submitButtonText}>Register</Text>
           </Pressable>
         </View>
       </View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    marginTop: 40,
+    paddingHorizontal: 20,
+  },
+  formContainer: {
+    width: '100%',
+    maxWidth: 400,
+    borderRadius: 16,
+    padding: 4,
+  },
+  inputContainer: {
+    marginBottom: 24,
+  },
+  textInput: {
+    width: '100%',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e5e5e5',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    color: '#18181b',
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e5e5e5',
+    paddingHorizontal: 16,
+  },
+  passwordInput: {
+    flex: 1,
+    paddingVertical: 16,
+    color: '#18181b',
+  },
+  submitContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  submitButton: {
+    width: '100%',
+    borderRadius: 999,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0B4057',
+  },
+  submitButtonText: {
+    color: 'white',
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
+});
 
 export default RegisterScreen;

@@ -1,5 +1,5 @@
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface BikeCardProps {
   title: string;
@@ -23,28 +23,72 @@ const BikeCard: React.FC<BikeCardProps> = ({
   return (
     <TouchableOpacity 
       onPress={onPress} 
-      className="flex-row bg-white m-2 py-5 px-5 rounded-3xl"
+      style={styles.container}
     >
-      <View className="flex-1">
-        <Text className="text-lg font-bold text-[#969696]">{title}</Text>
-        <Text className="text-7xl mt-2 font-bold">{count}</Text>
-        <Text>{conditionPercentage} of bikes are in</Text>
-        <Text className="font-semibold" style={{ color: conditionColor }}>
+      <View style={styles.contentContainer}>
+        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.count}>{count}</Text>
+        <Text style={styles.conditionLabel}>{conditionPercentage} of bikes are in</Text>
+        <Text style={[styles.conditionText, { color: conditionColor }]}>
           {conditionText}
         </Text>
       </View>
-      <View className="ml-2 items-center justify-center">
+      <View style={styles.imageContainer}>
         <Image
           source={imageSource}
-          className="w-52 h-32"
+          style={styles.image}
           resizeMode="contain"
         />
       </View>
-      <View className="ml-auto self-center">
+      <View style={styles.iconContainer}>
         <FontAwesome6 name="angle-right" size={20} color="black" />
       </View>
     </TouchableOpacity>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    backgroundColor: 'white',
+    margin: 8,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    borderRadius: 24,
+  },
+  contentContainer: {
+    flex: 1,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#969696',
+  },
+  count: {
+    fontSize: 56,
+    marginTop: 8,
+    fontWeight: 'bold',
+  },
+  conditionLabel: {
+    fontSize: 12,
+  },
+  conditionText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  imageContainer: {
+    marginLeft: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  image: {
+    width: 208,
+    height: 128,
+  },
+  iconContainer: {
+    marginLeft: 'auto',
+    alignSelf: 'center',
+  },
+});
 
 export default BikeCard;
