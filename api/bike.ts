@@ -8,6 +8,8 @@ export const bikeSchema = z.object({
   fuelType: z.string(),
   distance: z.string(),
   condition: z.string(),
+  availability: z.boolean(),
+  assigned: z.boolean(),
 });
 
 export type Bike = z.infer<typeof bikeSchema>;
@@ -35,7 +37,6 @@ export async function getBikeConditionStats() {
   const res = await axios.get("/api/bike/stats");
   return res.data;
 }
-
 
 // Update
 export async function updateBike(id: string, data: Partial<Bike>) {

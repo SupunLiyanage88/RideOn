@@ -63,6 +63,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#969696',
+    width: 120,
   },
   count: {
     fontSize: 56,

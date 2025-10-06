@@ -83,7 +83,7 @@ const AddOrEditBikeDialog = ({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide">
+    <Modal visible={visible} transparent animationType="slide">    
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View
           style={{

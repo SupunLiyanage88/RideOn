@@ -6,7 +6,7 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AddBtn from "../components/AddBtn";
 import AddOrEditBikeDialog from "../components/admin/BikeManagement/AddOrEditBikeDialog";
-import BikeCard from "../components/BikeCard";
+import BikeCard from "../components/admin/BikeManagement/BikeCard";
 import Loader from "../components/Loader";
 
 const BikeManagement = () => {
@@ -79,9 +79,22 @@ const BikeManagement = () => {
   const pedalStats = getConditionDetails(bikeStatData?.pedal);
 
   return (
-    <SafeAreaView>
-      <ScrollView style={styles.scrollView}>
+    <SafeAreaView edges={["left", "right"]} style={styles.safeArea}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollViewContent}
+      >
         <View style={styles.container}>
+          <AddBtn
+            title="Add New Bike"
+            backgroundColor="#083A4C"
+            textColor="#FFFFFF"
+            iconColor="#FFFFFF"
+            iconSize={25}
+            onPress={() => {
+              setBikeModalVisible(true);
+            }}
+          />
           <BikeCard
             title="Electric Bikes"
             count={electricCount}
@@ -99,16 +112,6 @@ const BikeManagement = () => {
             imageSource={images.pdbike}
           />
         </View>
-        <AddBtn
-          title="Add New Bike"
-          backgroundColor="#083A4C"
-          textColor="#FFFFFF"
-          iconColor="#FFFFFF"
-          iconSize={35}
-          onPress={() => {
-            setBikeModalVisible(true);
-          }}
-        />
         <AddOrEditBikeDialog
           visible={bikeModalVisible}
           onClose={() => {
@@ -123,20 +126,25 @@ const BikeManagement = () => {
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#EBEBEB",
+  },
+  scrollView: {
+    flex: 1,
+    paddingHorizontal: 10,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+  },
+  container: {
+    marginTop: 12,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "white",
   },
-  scrollView: {
-    height: "100%",
-  },
-  container: {
-    justifyContent: "center",
-    paddingHorizontal: 10,
-    marginTop: 12,
-  },
 });
-
 export default BikeManagement;
