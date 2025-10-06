@@ -1,0 +1,45 @@
+{
+  "cli": {
+    "version": ">= 16.20.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "environment": "development",
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://rideon-server.vercel.app",
+        "EXPO_PUBLIC_WEATHER_API_KEY": "e8fae99b6b755b6617646ea4b3f5f344",
+        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyBDLI8FJtPpOWZXhrPshg3Ux00ZPL5FPhc",
+        "APP_ENV": "development"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "environment": "preview",
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://rideon-server.vercel.app",
+        "EXPO_PUBLIC_WEATHER_API_KEY": "e8fae99b6b755b6617646ea4b3f5f344",
+        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyBDLI8FJtPpOWZXhrPshg3Ux00ZPL5FPhc",
+        "APP_ENV": "preview"
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "environment": "production",
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://rideon-server.vercel.app",
+        "EXPO_PUBLIC_WEATHER_API_KEY": "e8fae99b6b755b6617646ea4b3f5f344",
+        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyBDLI8FJtPpOWZXhrPshg3Ux00ZPL5FPhc",
+        "APP_ENV": "production"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
