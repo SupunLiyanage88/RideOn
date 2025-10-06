@@ -3,8 +3,9 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { format, parse } from "date-fns";
 import React from "react";
-import { ActivityIndicator, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Loader from "../components/Loader";
 
 const IncidentManagement = () => {
   const {
@@ -18,8 +19,8 @@ const IncidentManagement = () => {
   return (
     <SafeAreaView style={{ paddingHorizontal: 16, paddingBottom: 16 }}>
       {isIncidentDataFetching && (
-        <View style={{ margin: 4 }}>
-          <ActivityIndicator size="large" color="#0B4057" />
+        <View style={{ paddingBottom: 24, margin: 8 }}>
+          <Loader textStyle={{ fontSize: 20 }} showText={false} />
         </View>
       )}
 
@@ -45,23 +46,29 @@ const IncidentManagement = () => {
               borderColor: "#f3f4f6",
             }}
           >
-            <View style={{ 
-              flexDirection: "row", 
-              justifyContent: "space-between", 
-              alignItems: "center", 
-              marginBottom: 16 
-            }}>
-              <View style={{ 
-                backgroundColor: "#0B4057", 
-                paddingHorizontal: 24, 
-                paddingVertical: 8, 
-                borderRadius: 24 
-              }}>
-                <Text style={{ 
-                  color: "white", 
-                  fontWeight: "600", 
-                  fontSize: 14 
-                }}>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 16,
+              }}
+            >
+              <View
+                style={{
+                  backgroundColor: "#0B4057",
+                  paddingHorizontal: 24,
+                  paddingVertical: 8,
+                  borderRadius: 24,
+                }}
+              >
+                <Text
+                  style={{
+                    color: "white",
+                    fontWeight: "600",
+                    fontSize: 14,
+                  }}
+                >
                   {incident.incidentType}
                 </Text>
               </View>
@@ -75,7 +82,9 @@ const IncidentManagement = () => {
                     height: 12,
                     borderRadius: 6,
                     marginRight: 8,
-                    backgroundColor: incident.howSerious?.toLowerCase().includes("critical")
+                    backgroundColor: incident.howSerious
+                      ?.toLowerCase()
+                      .includes("critical")
                       ? "#ef4444"
                       : incident.howSerious?.toLowerCase().includes("high")
                         ? "#fb923c"
@@ -94,43 +103,51 @@ const IncidentManagement = () => {
               </View>
 
               <View>
-                <Text style={{ 
-                  color: "#4b5563", 
-                  lineHeight: 20 
-                }}>
+                <Text
+                  style={{
+                    color: "#4b5563",
+                    lineHeight: 20,
+                  }}
+                >
                   {incident.description}
                 </Text>
               </View>
 
-              <View style={{ 
-                flexDirection: "row", 
-                justifyContent: "space-between", 
-                backgroundColor: "#f9fafb", 
-                borderRadius: 8, 
-                padding: 12 
-              }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  backgroundColor: "#f9fafb",
+                  borderRadius: 8,
+                  padding: 12,
+                }}
+              >
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
                   <MaterialIcons
                     name="calendar-today"
                     size={16}
                     color="#6B7280"
                   />
-                  <Text style={{ 
-                    color: "#374151", 
-                    marginLeft: 8, 
-                    fontSize: 14 
-                  }}>
+                  <Text
+                    style={{
+                      color: "#374151",
+                      marginLeft: 8,
+                      fontSize: 14,
+                    }}
+                  >
                     {format(new Date(incident?.date), "MMM dd, yyyy")}
                   </Text>
                 </View>
 
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
                   <MaterialIcons name="access-time" size={16} color="#6B7280" />
-                  <Text style={{ 
-                    color: "#374151", 
-                    marginLeft: 8, 
-                    fontSize: 14 
-                  }}>
+                  <Text
+                    style={{
+                      color: "#374151",
+                      marginLeft: 8,
+                      fontSize: 14,
+                    }}
+                  >
                     {incident?.time
                       ? (() => {
                           try {

@@ -4,16 +4,16 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import React from "react";
 import {
-  ActivityIndicator,
   Dimensions,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Loader from "../components/Loader";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -29,6 +29,11 @@ const AccidentManagement = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      {isFetching && (
+        <View style={{ paddingBottom: 24, margin: 8 }}>
+          <Loader textStyle={{ fontSize: 20 }} />
+        </View>
+      )}
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <View>
@@ -37,34 +42,16 @@ const AccidentManagement = () => {
               {accidentData?.length || 0} reported Accidents
             </Text>
           </View>
-          <TouchableOpacity onPress={() => refetch()} style={styles.refreshButton}>
+          <TouchableOpacity
+            onPress={() => refetch()}
+            style={styles.refreshButton}
+          >
             <MaterialIcons name="refresh" size={20} color="white" />
           </TouchableOpacity>
         </View>
       </View>
 
-      {isFetching && (
-        <View style={styles.loadingContainer}>
-          <View style={styles.loadingContent}>
-            <ActivityIndicator size="large" color="#0B4057" />
-            <Text style={styles.loadingText}>Loading Accident Report...</Text>
-          </View>
-        </View>
-      )}
-
-      {!isFetching && (!accidentData || accidentData.length === 0) && (
-        <View style={styles.emptyContainer}>
-          <View style={styles.emptyContent}>
-            <MaterialIcons name="warning" size={48} color="#9CA3AF" />
-            <Text style={styles.emptyTitle}>No Accidents Reported</Text>
-            <Text style={styles.emptySubtitle}>
-              All clear! No accident reports have been submitted yet.
-            </Text>
-          </View>
-        </View>
-      )}
-
-      {!isFetching && accidentData && accidentData.length > 0 && (
+      {accidentData && accidentData.length > 0 && (
         <ScrollView
           showsVerticalScrollIndicator={false}
           style={styles.scrollView}
@@ -136,10 +123,14 @@ const AccidentManagement = () => {
                 </View>
 
                 <View style={styles.actionsContainer}>
-                  <TouchableOpacity style={[styles.actionButton, styles.viewButton]}>
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.viewButton]}
+                  >
                     <Text style={styles.viewButtonText}>View Details</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={[styles.actionButton, styles.takeActionButton]}>
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.takeActionButton]}
+                  >
                     <Text style={styles.takeActionButtonText}>Take Action</Text>
                   </TouchableOpacity>
                 </View>

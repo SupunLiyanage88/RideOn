@@ -28,68 +28,74 @@ const Admin = () => {
   });
   return (
     <SafeAreaView style={styles.safeArea}>
-      <Text style={styles.title}>Ride On Admin</Text>
-      <View style={styles.statsContainer}>
-        <View style={styles.statsRow}>
-          <StatCard
-            title="Total Stations"
-            value={bikeStationData?.length}
-            isLoading={isBikeStationLoading}
-          />
-          <StatCard
-            title="Total Bikes"
-            value={12}
-            isLoading={isBikeStationLoading}
-          />
+      <View style={styles.container}>
+        <Text style={styles.title}>Ride On Admin</Text>
+        <View style={styles.statsContainer}>
+          <View style={styles.statsRow}>
+            <StatCard
+              title="Total Stations"
+              value={bikeStationData?.length}
+              isLoading={isBikeStationLoading}
+            />
+            <StatCard
+              title="Total Bikes"
+              value={12}
+              isLoading={isBikeStationLoading}
+            />
+          </View>
+          <View style={styles.statsRow}>
+            <StatCard
+              title="Ongoing Emergency"
+              value={incidentData?.length}
+              isLoading={isIncidentLoading}
+            />
+            <StatCard
+              title="Monthly Payments"
+              value={13}
+              isLoading={isBikeStationLoading}
+            />
+          </View>
         </View>
-        <View style={styles.statsRow}>
-          <StatCard
-            title="Ongoing Emergency"
-            value={incidentData?.length}
-            isLoading={isIncidentLoading}
-          />
-          <StatCard
-            title="Monthly Payments"
-            value={13}
-            isLoading={isBikeStationLoading}
-          />
+        <View style={styles.cardsContainer}>
+          <ScrollView 
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollViewContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <ManagementCard
+              title="Station Management"
+              icon={
+                <FontAwesome5 name="broadcast-tower" size={18} color="white" />
+              }
+              color="#083A4C"
+              onPress={() => router.push("/(admin)/StationManagement")}
+            />
+            <ManagementCard
+              title="Bike Management"
+              icon={<Ionicons name="bicycle" size={26} color="white" />}
+              color="#37A77D"
+              onPress={() => router.push("/(admin)/BikeManagement")}
+            />
+            <ManagementCard
+              title="Emergency Management"
+              icon={<AntDesign name="alert" size={24} color="white" />}
+              color="#B83434"
+              onPress={() => router.push("/(admin)/EmergencyManagement")}
+            />
+            <ManagementCard
+              title="Payment Management"
+              icon={<MaterialIcons name="payment" size={24} color="white" />}
+              color="#348AB8"
+              onPress={() => console.log("Payment Management pressed")}
+            />
+            <ManagementCard
+              title="Package Management"
+              icon={<Feather name="package" size={24} color="white" />}
+              color="#083A4C"
+              onPress={() => console.log("Package Management pressed")}
+            />
+          </ScrollView>
         </View>
-      </View>
-      <View style={styles.cardsContainer}>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <ManagementCard
-            title="Station Management"
-            icon={
-              <FontAwesome5 name="broadcast-tower" size={18} color="white" />
-            }
-            color="#083A4C"
-            onPress={() => router.push("/(admin)/StationManagement")}
-          />
-          <ManagementCard
-            title="Bike Management"
-            icon={<Ionicons name="bicycle" size={26} color="white" />}
-            color="#37A77D"
-            onPress={() => router.push("/(admin)/BikeManagement")}
-          />
-          <ManagementCard
-            title="Emergency Management"
-            icon={<AntDesign name="alert" size={24} color="white" />}
-            color="#B83434"
-            onPress={() => router.push("/(admin)/EmergencyManagement")}
-          />
-          <ManagementCard
-            title="Payment Management"
-            icon={<MaterialIcons name="payment" size={24} color="white" />}
-            color="#348AB8"
-            onPress={() => console.log("Payment Management pressed")}
-          />
-          <ManagementCard
-            title="Package Management"
-            icon={<Feather name="package" size={24} color="white" />}
-            color="#083A4C"
-            onPress={() => console.log("Package Management pressed")}
-          />
-        </ScrollView>
       </View>
     </SafeAreaView>
   );
@@ -97,7 +103,11 @@ const Admin = () => {
 
 const styles = StyleSheet.create({
   safeArea: {
+    flex: 1,
     backgroundColor: 'white',
+  },
+  container: {
+    flex: 1,
   },
   title: {
     fontSize: 20,
@@ -115,7 +125,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   cardsContainer: {
+    flex: 1, // This makes the cards container take up remaining space
     paddingHorizontal: 20,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    paddingBottom: 20, // Add some bottom padding for better scrolling
   },
 });
 

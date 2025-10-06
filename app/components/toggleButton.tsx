@@ -50,6 +50,7 @@ const ToggleButton: React.FC<ToggleProps> = ({
     >
       {/* Left Button */}
       <TouchableOpacity
+        activeOpacity={1} // 👈 no dimming effect
         onPress={() => handlePress(leftLabel)}
         style={{
           flex: 1,
@@ -71,6 +72,7 @@ const ToggleButton: React.FC<ToggleProps> = ({
 
       {/* Right Button */}
       <TouchableOpacity
+        activeOpacity={1} // 👈 no dimming effect
         onPress={() => handlePress(rightLabel)}
         style={{
           flex: 1,

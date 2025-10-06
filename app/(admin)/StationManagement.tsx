@@ -7,17 +7,17 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useState } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AddOrEditBikeStationDialog from "../admin/AddOrEditBikeStationDialog";
 import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
+import Loader from "../components/Loader";
 
 const StationManagement = () => {
   const [bikeStationModalVisible, setBikeStationModalVisible] = useState(false);
@@ -69,8 +69,8 @@ const StationManagement = () => {
       </Pressable>
 
       {isBikeStationLoading && (
-        <View style={{ margin: 8 }}>
-          <ActivityIndicator size="large" color="#0B4057" />
+        <View style={{ paddingBottom: 24, margin: 8 }}>
+          <Loader textStyle={{ fontSize: 20 }} />
         </View>
       )}
 
