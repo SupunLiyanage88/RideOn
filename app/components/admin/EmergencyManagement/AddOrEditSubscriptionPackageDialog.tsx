@@ -15,8 +15,8 @@ import {
   TextInput,
   View,
 } from "react-native";
-import DialogHeader from "../components/DialogHeader";
-import HelperText from "../components/HelperText";
+import DialogHeader from "../../DialogHeader";
+import HelperText from "../../HelperText";
 
 type DialogProps = {
   visible: boolean;

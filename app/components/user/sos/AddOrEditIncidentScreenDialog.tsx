@@ -19,9 +19,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import DialogHeader from "../DialogHeader";
-import HelperText from "../HelperText";
-import ToggleEnumButton from "../ToggleEnumButton";
+import DialogHeader from "../../DialogHeader";
+import HelperText from "../../HelperText";
+import ToggleEnumButton from "../../ToggleEnumButton";
 
 type DialogProps = {
   visible: boolean;

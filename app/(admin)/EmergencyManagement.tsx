@@ -1,5 +1,5 @@
-import AccidentManagement from "@/app/(admin)/AccidentManagement";
-import IncidentManagement from "@/app/(admin)/IncidentManagement";
+import AccidentManagement from "@/app/components/admin/EmergencyManagement/AccidentManagement";
+import IncidentManagement from "@/app/components/admin/EmergencyManagement/IncidentManagement";
 import React, { useState } from "react";
 import { View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";

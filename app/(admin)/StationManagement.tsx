@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
-import AddOrEditBikeStationDialog from "../admin/AddOrEditBikeStationDialog";
+import AddOrEditBikeStationDialog from "../components/admin/StationManagement/AddOrEditBikeStationDialog";
 import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
 import Loader from "../components/Loader";
 
