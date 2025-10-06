@@ -30,7 +30,13 @@ const IncidentScreen = () => {
   });
 
   return (
-    <SafeAreaView style={{ flex: 1, paddingHorizontal: 8 }}>
+    <SafeAreaView
+      edges={["left", "right"]}
+      style={{
+        flex: 1,
+        marginBottom: 15
+      }}
+    >
       <Pressable
         onPress={() => {
           setEditingIncident(null);
@@ -58,7 +64,15 @@ const IncidentScreen = () => {
       )}
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        {incidentData?.map((incident: Incident) => (
+        {incidentData?.map((incident: Incident) => {
+        const canEdit = (() => {
+          if (!incident.createdAt) return false;
+          const createdAt = new Date(incident.createdAt).getTime();
+          const now = Date.now();
+          return now - createdAt <= 20 * 60 * 1000;
+        })();
+
+        return (
           <View
             key={incident._id}
             style={{
@@ -98,6 +112,7 @@ const IncidentScreen = () => {
                 </Text>
               </View>
 
+            {canEdit && (
               <TouchableOpacity
                 style={{
                   padding: 8,
@@ -111,6 +126,7 @@ const IncidentScreen = () => {
               >
                 <MaterialIcons name="edit" size={20} color="#6B7280" />
               </TouchableOpacity>
+            )}
             </View>
 
             <View style={{ gap: 12 }}>
@@ -202,7 +218,8 @@ const IncidentScreen = () => {
               </View>
             </View>
           </View>
-        ))}
+        );
+      })}
         <View style={{ marginBottom: 50 }} />
       </ScrollView>
       
