@@ -28,7 +28,7 @@ const AddBtn = ({
         flexDirection: "row",
         justifyContent: "center",
         alignItems: "center",
-        width: 400,
+        width: "100%",
         marginHorizontal: "auto",
         backgroundColor,
       }}

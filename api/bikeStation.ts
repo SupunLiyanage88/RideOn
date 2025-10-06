@@ -51,7 +51,11 @@ export async function deleteBikeStation(id?: string) {
   return res.data;
 }
 
-export async function fetchBikeStation() {
+export async function fetchBikeStation({ query }: { query: string }) {
+  const res = await axios.get(`/api/bike-station/search?keyword=${query}`);
+  return res.data;
+}
+export async function getAllBikeStations() {
   const res = await axios.get("/api/bike-station");
   return res.data;
 }

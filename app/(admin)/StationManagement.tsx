@@ -3,11 +3,11 @@ import {
   deleteBikeStation,
   fetchBikeStation,
 } from "@/api/bikeStation";
+import { useDebounce } from "@/utils/useDebounce.utils";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useState } from "react";
 import {
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,19 +16,36 @@ import {
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AddBtn from "../components/AddBtn";
 import AddOrEditBikeStationDialog from "../components/admin/StationManagement/AddOrEditBikeStationDialog";
 import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
 import Loader from "../components/Loader";
+import SearchInput from "../components/SearchBarQuery";
 
 const StationManagement = () => {
   const [bikeStationModalVisible, setBikeStationModalVisible] = useState(false);
   const [selectedData, setSelectedData] = useState<BikeStation | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedQuery = useDebounce(searchQuery, 200);
 
-  const { data: bikeStationData, isFetching: isBikeStationLoading } = useQuery({
-    queryKey: ["station-data"],
-    queryFn: fetchBikeStation,
+  const {
+    data: bikeStationData,
+    refetch: researchBikeStation,
+    isFetching: isBikeStationLoading,
+  } = useQuery({
+    queryKey: ["station-data", debouncedQuery],
+    queryFn: ({ queryKey }) => fetchBikeStation({ query: queryKey[1] }),
   });
+  const handleSearch = async (query: string) => {
+    console.log("Searching for:", query);
+    setSearchQuery(query);
+    try {
+      await researchBikeStation();
+    } catch (error) {
+      console.error("Search failed:", error);
+    }
+  };
 
   const queryClient = useQueryClient();
   const { mutate: deleteBikeStationMutation, isPending: isDeleting } =
@@ -50,30 +67,27 @@ const StationManagement = () => {
   return (
     <SafeAreaView edges={["left", "right"]} style={styles.safeArea}>
       <View style={{ paddingHorizontal: 12 }}>
-        <Pressable
+        <SearchInput
+          placeholder="Search Users..."
+          value={searchQuery}
+          onChange={setSearchQuery}
+          onSearch={handleSearch}
+          isSearching={isBikeStationLoading}
+        />
+
+        <AddBtn
+          title="Add New Bike"
+          backgroundColor="#083A4C"
+          textColor="#FFFFFF"
+          iconColor="#FFFFFF"
+          iconSize={25}
           onPress={() => {
             setBikeStationModalVisible(true);
           }}
-          style={{
-            backgroundColor: "#0B4057",
-            borderRadius: 9999,
-            paddingLeft: 28,
-            paddingRight: 28,
-            paddingTop: 12,
-            paddingBottom: 12,
-            marginBottom: 16,
-            marginTop: 30,
-            alignSelf: "flex-end",
-          }}
-        >
-          <Text style={{ color: "#ffffff", fontWeight: "800", fontSize: 16 }}>
-            + Add a Bike Station
-          </Text>
-        </Pressable>
-
+        />
         {isBikeStationLoading && (
           <View style={{ paddingBottom: 24, margin: 8 }}>
-            <Loader textStyle={{ fontSize: 20 }} />
+            <Loader textStyle={{ fontSize: 20 }} showText={false}/>
           </View>
         )}
 
@@ -210,7 +224,7 @@ const StationManagement = () => {
               </Text>
             </View>
           ))}
-          <View style={{ marginBottom: 140 }} />
+          <View style={{ marginBottom: 160 }} />
         </ScrollView>
 
         {bikeStationModalVisible && (
