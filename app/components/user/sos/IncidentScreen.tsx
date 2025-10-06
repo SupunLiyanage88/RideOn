@@ -2,7 +2,7 @@ import { getUserIncident, Incident } from "@/api/incident";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { format, parse } from "date-fns";
-import React from "react";
+import React, { useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -12,11 +12,12 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AddBtn from "../../AddBtn";
 import IncidentScreenDialog from "./AddOrEditIncidentScreenDialog";
 
 const IncidentScreen = () => {
-  const [modalVisible, setModalVisible] = React.useState(false);
-  const [editingIncident, setEditingIncident] = React.useState<any | null>(
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editingIncident, setEditingIncident] = useState<any | null>(
     null
   );
 
@@ -42,19 +43,17 @@ const IncidentScreen = () => {
           setEditingIncident(null);
           setModalVisible(true);
         }}
-        style={{
-          backgroundColor: "#0B4057",
-          borderRadius: 9999,
-          paddingHorizontal: 28,
-          paddingVertical: 12,
-          marginBottom: 16,
-          width: "auto",
-          alignSelf: "flex-end",
-        }}
       >
-        <Text style={{ color: "white", fontWeight: "800", fontSize: 16 }}>
-          + Add a Incident
-        </Text>
+        <AddBtn
+          title="Add a Incident"
+          backgroundColor="#083A4C"
+          textColor="#FFFFFF"
+          iconColor="#FFFFFF"
+          iconSize={25}
+          onPress={() => {
+            setModalVisible(true);
+          }}
+        />
       </Pressable>
 
       {isIncidentDataFetching && (
@@ -79,7 +78,8 @@ const IncidentScreen = () => {
               backgroundColor: "white",
               padding: 24,
               borderRadius: 16,
-              marginBottom: 16,
+              marginBottom: 10,
+              marginTop: 15,
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 1 },
               shadowOpacity: 0.05,
