@@ -1,19 +1,17 @@
 import { Bike, getAllBikes, getBikeConditionStats } from "@/api/bike";
 import { images } from "@/constants/images";
 import { useQuery } from "@tanstack/react-query";
-import React from "react";
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import React, { useState } from "react";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AddOrEditBikeDialog from "../admin/AddOrEditBikeDialog";
+import AddBtn from "../components/AddBtn";
 import BikeCard from "../components/BikeCard";
 import Loader from "../components/Loader";
 
 const BikeManagement = () => {
+  const [bikeModalVisible, setBikeModalVisible] = useState(false);
+  const [selectedData, setSelectedData] = useState<Bike | null>(null);
   const { data: bikeStatData, isFetching: isBikeStatLoading } = useQuery({
     queryKey: ["bike-stat-data"],
     queryFn: getBikeConditionStats,
@@ -23,16 +21,6 @@ const BikeManagement = () => {
     queryKey: ["bike-data"],
     queryFn: getAllBikes,
   });
-
-  const AddBtn = () => {
-    return (
-      <TouchableOpacity>
-        <View>
-          <Text>Add btn</Text>
-        </View>
-      </TouchableOpacity>
-    );
-  };
 
   if (isBikeLoading || isBikeStatLoading) {
     return (
@@ -111,7 +99,24 @@ const BikeManagement = () => {
             imageSource={images.pdbike}
           />
         </View>
-        <AddBtn />
+        <AddBtn
+          title="Add New Bike"
+          backgroundColor="#083A4C"
+          textColor="#FFFFFF"
+          iconColor="#FFFFFF"
+          iconSize={35}
+          onPress={() => {
+            setBikeModalVisible(true);
+          }}
+        />
+        <AddOrEditBikeDialog
+          visible={bikeModalVisible}
+          onClose={() => {
+            setBikeModalVisible(false);
+            setSelectedData(null);
+          }}
+          defaultValues={selectedData ?? undefined}
+        />
       </ScrollView>
     </SafeAreaView>
   );
