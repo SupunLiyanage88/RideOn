@@ -1,4 +1,4 @@
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 
@@ -11,49 +11,39 @@ interface AddBtnProps {
   iconSize?: number;
 }
 
-const AddBtn = ({
-  title = "Add New Bike",
+const AddBtn = ({ 
+  title = "Add New Bike", 
   onPress,
   backgroundColor = "#083A4C",
   textColor = "white",
   iconColor = "white",
-  iconSize = 25,
+  iconSize = 45
 }: AddBtnProps) => {
   return (
-    <TouchableOpacity
-      style={{
+    <TouchableOpacity 
+      style={{ 
         borderRadius: 24,
         paddingVertical: 16,
         marginVertical: 8,
         flexDirection: "row",
         justifyContent: "center",
         alignItems: "center",
-        width: 400,
-        marginHorizontal: "auto",
-        backgroundColor,
+        width: "100%",
+        backgroundColor 
       }}
       onPress={onPress}
     >
-      <View
-        style={{
-          alignItems: "center",
-          justifyContent: "center",
-          flexDirection: "row",
-          gap: 8,
-        }}
-      >
-        <MaterialIcons
-          name="add-circle-outline"
-          size={iconSize}
-          color={iconColor}
-        />
-        <Text
-          style={{
-            fontWeight: "600",
-            fontSize: 18,
-            color: textColor,
-          }}
-        >
+      <View style={{ 
+        alignItems: "center", 
+        justifyContent: "center" 
+      }}>
+        <MaterialIcons name="add-circle-outline" size={iconSize} color={iconColor} />
+        <Text style={{ 
+          fontWeight: "600", 
+          fontSize: 18, 
+          marginTop: 8,
+          color: textColor 
+        }}>
           {title}
         </Text>
       </View>

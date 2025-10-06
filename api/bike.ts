@@ -4,6 +4,7 @@ import { z } from "zod";
 export const bikeSchema = z.object({
   _id: z.string(),
   bikeModel: z.string(),
+  bikeId: z.string(),
   fuelType: z.string(),
   distance: z.string(),
   condition: z.string(),
