@@ -32,14 +32,6 @@ const BikeManagement = () => {
     queryFn: getAllBikes,
   });
 
-  if (isBikeLoading || isBikeStatLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Loader itemName="Bikes" textStyle={{ fontSize: 20 }} />
-      </View>
-    );
-  }
-
   type ConditionKey = "good" | "average" | "bad";
 
   const getConditionDetails = (stats?: {
@@ -130,6 +122,11 @@ const BikeManagement = () => {
             <View style={{ marginTop: 10, marginBottom: 10 }}>
               <Searchbar />
             </View>
+            {isBikeLoading && (
+              <View style={{ paddingBottom: 24, margin: 8 }}>
+                <Loader textStyle={{ fontSize: 20 }} showText={false} />
+              </View>
+            )}
             {bikeData?.map((bike: Bike) => (
               <BikeGetCard
                 key={bike._id}
@@ -157,7 +154,7 @@ const BikeManagement = () => {
               setBikeModalVisible(true);
             }}
           />
-          
+
           <AddOrEditBikeDialog
             visible={bikeModalVisible}
             onClose={() => {
