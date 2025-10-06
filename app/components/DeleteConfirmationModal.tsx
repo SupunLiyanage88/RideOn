@@ -42,31 +42,73 @@ const DeleteConfirmationModal = ({
       transparent
       onRequestClose={handleClose}
     >
-      <View className="flex-1 bg-black/50 justify-center items-center">
-        <View className="bg-white w-4/5 rounded-2xl p-5">
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: "rgba(0,0,0,0.5)", // bg-black/50
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <View
+          style={{
+            backgroundColor: "#fff",
+            width: "80%", // w-4/5
+            borderRadius: 16, // rounded-2xl
+            padding: 20, // p-5
+          }}
+        >
           {/* Title */}
-          <Text className="text-lg font-bold mb-2">{title}</Text>
+          <Text
+            style={{
+              fontSize: 18, // text-lg
+              fontWeight: "700", // font-bold
+              marginBottom: 8, // mb-2
+            }}
+          >
+            {title}
+          </Text>
 
           {/* Content */}
-          <View className="mb-4">
+          <View style={{ marginBottom: 16 }}>
             {typeof content === "string" ? (
-              <Text className="text-sm text-gray-700">{content}</Text>
+              <Text
+                style={{
+                  fontSize: 14, // text-sm
+                  color: "#374151", // text-gray-700
+                }}
+              >
+                {content}
+              </Text>
             ) : (
               content
             )}
           </View>
 
           {/* Actions */}
-          <View className="flex-row justify-end">
+          <View style={{ flexDirection: "row", justifyContent: "flex-end" }}>
             <TouchableOpacity
               disabled={submitting}
               onPress={() => {
                 handleReject();
                 handleClose();
               }}
-              className="px-4 py-2 rounded-lg bg-gray-200 mr-2"
+              style={{
+                paddingHorizontal: 16, // px-4
+                paddingVertical: 8, // py-2
+                borderRadius: 8, // rounded-lg
+                backgroundColor: "#E5E7EB", // bg-gray-200
+                marginRight: 8, // mr-2
+              }}
             >
-              <Text className="text-gray-800 font-medium">Cancel</Text>
+              <Text
+                style={{
+                  color: "#1F2937", // text-gray-800
+                  fontWeight: "500",
+                }}
+              >
+                Cancel
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -83,11 +125,17 @@ const DeleteConfirmationModal = ({
                   setSubmitting(false);
                 }
               }}
-              className={`flex-row items-center px-4 py-2 rounded-lg ${
-                submitting || deleteButtonDisabled
-                  ? "bg-red-500/60"
-                  : "bg-red-600"
-              }`}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                borderRadius: 8,
+                backgroundColor:
+                  submitting || deleteButtonDisabled
+                    ? "rgba(239,68,68,0.6)" // bg-red-500/60
+                    : "#DC2626", // bg-red-600
+              }}
             >
               {submitting ? (
                 <ActivityIndicator size="small" color="#fff" />
@@ -96,12 +144,18 @@ const DeleteConfirmationModal = ({
               ) : (
                 <MaterialIcons name="delete" size={20} color="#fff" />
               )}
-              <Text className="text-white font-medium ml-2">
+              <Text
+                style={{
+                  color: "#fff",
+                  fontWeight: "500",
+                  marginLeft: 8,
+                }}
+              >
                 {customDeleteButtonText
                   ? customDeleteButtonText
                   : submitting
-                  ? "Deleting..."
-                  : "Delete"}
+                    ? "Deleting..."
+                    : "Delete"}
               </Text>
             </TouchableOpacity>
           </View>

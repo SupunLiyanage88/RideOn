@@ -13,7 +13,13 @@ const ToggleEnumButton = <T extends Record<string, string>>({
   onChange,
 }: ToggleEnumButtonProps<T>) => {
   return (
-    <View className="flex flex-wrap mb-4">
+    <View
+      style={{
+        flexDirection: "row",
+        flexWrap: "wrap",
+        marginBottom: 16, // mb-4
+      }}
+    >
       {(Object.keys(options) as Array<keyof T>).map((key) => {
         const option = options[key];
         const selected = value === option;
@@ -22,11 +28,25 @@ const ToggleEnumButton = <T extends Record<string, string>>({
           <TouchableOpacity
             key={key as string}
             onPress={() => onChange(option)}
-            className={`px-6 w-full py-2 rounded-full border mb-4 h-14 justify-center ${
-              selected ? "bg-secondary border-secondary" : "bg-white border-gray-300"
-            }`}
+            style={{
+              paddingHorizontal: 24, // px-6
+              paddingVertical: 8, // py-2
+              width: "100%",
+              height: 56, // h-14
+              borderRadius: 9999, // rounded-full
+              borderWidth: 1,
+              borderColor: selected ? "#0B4057" : "#D1D5DB", // border-secondary / border-gray-300
+              marginBottom: 16, // mb-4
+              justifyContent: "center",
+              backgroundColor: selected ? "#0B4057" : "#FFFFFF", // bg-secondary / bg-white
+              alignItems: "center",
+            }}
           >
-            <Text className={`${selected ? "text-white" : "text-black"}`}>
+            <Text
+              style={{
+                color: selected ? "#FFFFFF" : "#000000", // text-white / text-black
+              }}
+            >
               {option}
             </Text>
           </TouchableOpacity>

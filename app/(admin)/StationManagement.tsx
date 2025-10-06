@@ -7,26 +7,28 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useState } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AddOrEditBikeStationDialog from "../admin/AddOrEditBikeStationDialog";
 import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
+import Loader from "../components/Loader";
 
 const StationManagement = () => {
   const [bikeStationModalVisible, setBikeStationModalVisible] = useState(false);
   const [selectedData, setSelectedData] = useState<BikeStation | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
   const { data: bikeStationData, isFetching: isBikeStationLoading } = useQuery({
     queryKey: ["station-data"],
     queryFn: fetchBikeStation,
   });
+
   const queryClient = useQueryClient();
   const { mutate: deleteBikeStationMutation, isPending: isDeleting } =
     useMutation({
@@ -45,21 +47,30 @@ const StationManagement = () => {
     });
 
   return (
-    <SafeAreaView className="flex-1 px-6">
+    <SafeAreaView style={{ paddingHorizontal: 24, flex: 1 }}>
       <Pressable
         onPress={() => {
           setBikeStationModalVisible(true);
         }}
-        className="bg-[#0B4057] rounded-full px-7 py-3 mb-4 w-auto self-end"
+        style={{
+          backgroundColor: "#0B4057",
+          borderRadius: 9999,
+          paddingLeft: 28,
+          paddingRight: 28,
+          paddingTop: 12,
+          paddingBottom: 12,
+          marginBottom: 16,
+          alignSelf: "flex-end",
+        }}
       >
-        <Text className="text-white font-extrabold text-base">
+        <Text style={{ color: "#ffffff", fontWeight: "800", fontSize: 16 }}>
           + Add a Bike Station
         </Text>
       </Pressable>
 
       {isBikeStationLoading && (
-        <View className="m-2">
-          <ActivityIndicator size="large" color="#0B4057" />
+        <View style={{ paddingBottom: 24, margin: 8 }}>
+          <Loader textStyle={{ fontSize: 20 }} />
         </View>
       )}
 
@@ -67,15 +78,42 @@ const StationManagement = () => {
         {bikeStationData?.map((station: any) => (
           <View
             key={station._id}
-            className="bg-white p-5 rounded-2xl mb-6 shadow-lg"
+            style={{
+              backgroundColor: "#ffffff",
+              padding: 20,
+              borderRadius: 16,
+              marginBottom: 24,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.2,
+              shadowRadius: 4,
+              elevation: 4,
+            }}
           >
-            <View className="flex-row justify-between items-center mb-3">
-              <Text className="text-xl font-semibold text-gray-900">
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 12,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 20,
+                  fontWeight: "600",
+                  color: "#111827", // text-gray-900
+                }}
+              >
                 Name: {station.stationName}
               </Text>
-              <View className="flex-row">
+              <View style={{ flexDirection: "row" }}>
                 <TouchableOpacity
-                  className="p-4 rounded-full bg-gray-50 active:bg-gray-100"
+                  style={{
+                    padding: 16,
+                    borderRadius: 9999,
+                    backgroundColor: "#F9FAFB", // gray-50
+                  }}
                   onPress={() => {
                     setSelectedData(station);
                     setBikeStationModalVisible(true);
@@ -83,9 +121,15 @@ const StationManagement = () => {
                 >
                   <MaterialIcons name="edit" size={22} color="#3B82F6" />
                 </TouchableOpacity>
-                <View className="m-2"></View>
+
+                <View style={{ margin: 8 }} />
+
                 <TouchableOpacity
-                  className="p-4 rounded-full bg-gray-50 active:bg-gray-100"
+                  style={{
+                    padding: 16,
+                    borderRadius: 9999,
+                    backgroundColor: "#F9FAFB",
+                  }}
                   onPress={() => {
                     setSelectedData(station);
                     setDeleteDialogOpen(true);
@@ -100,18 +144,37 @@ const StationManagement = () => {
               </View>
             </View>
 
-            <Text className="text-sm text-gray-500 mb-1">
+            <Text
+              style={{
+                fontSize: 14,
+                color: "#6B7280", // gray-500
+                marginBottom: 4,
+              }}
+            >
               ID:{" "}
-              <Text className="font-medium text-gray-700">
+              <Text style={{ fontWeight: "500", color: "#374151" }}>
                 {station.stationId}
               </Text>
             </Text>
 
-            <Text className="text-sm text-gray-500 mb-3">
+            <Text
+              style={{
+                fontSize: 14,
+                color: "#6B7280",
+                marginBottom: 12,
+              }}
+            >
               {station.stationLocation}
             </Text>
 
-            <View className="overflow-hidden rounded-xl border border-gray-200">
+            <View
+              style={{
+                borderRadius: 12,
+                overflow: "hidden",
+                borderWidth: 1,
+                borderColor: "#E5E7EB", // gray-200
+              }}
+            >
               <MapView
                 style={{ height: 150 }}
                 initialRegion={{
@@ -133,12 +196,19 @@ const StationManagement = () => {
               </MapView>
             </View>
 
-            <Text className="mt-3 text-xs text-gray-500">
+            <Text
+              style={{
+                marginTop: 12,
+                fontSize: 12,
+                color: "#6B7280",
+              }}
+            >
               📍 Lat: {station.latitude}, Lng: {station.longitude}
             </Text>
           </View>
         ))}
       </ScrollView>
+
       <AddOrEditBikeStationDialog
         visible={bikeStationModalVisible}
         onClose={() => {
@@ -153,13 +223,22 @@ const StationManagement = () => {
           open={deleteDialogOpen}
           title="Remove Bike Station Confirmation"
           content={
-            <View className="bg-orange-100 w-full h-auto rounded-md p-3 border-orange-600 border">
-              <Text className="text-gray-600">
+            <View
+              style={{
+                backgroundColor: "#FFEDD5", // orange-100
+                width: "100%",
+                borderRadius: 8,
+                padding: 12,
+                borderWidth: 1,
+                borderColor: "#DC2626", // red-600
+              }}
+            >
+              <Text style={{ color: "#4B5563" }}>
                 Are you sure you want to remove this Bike Station?{"\n"}
               </Text>
-              <View className="flex-row">
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <MaterialIcons name="warning-amber" size={20} color="orange" />
-                <Text className="text-red-500 font-medium">
+                <Text style={{ color: "#EF4444", fontWeight: "500" }}>
                   This action is not reversible.
                 </Text>
               </View>

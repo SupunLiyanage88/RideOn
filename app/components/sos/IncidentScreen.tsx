@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import IncidentScreenDialog from "./AddOrEditIncidentScreenDialog";
+
 const IncidentScreen = () => {
   const [modalVisible, setModalVisible] = React.useState(false);
   const [editingIncident, setEditingIncident] = React.useState<any | null>(
@@ -29,21 +30,29 @@ const IncidentScreen = () => {
   });
 
   return (
-    <SafeAreaView className="flex-1 px-2">
+    <SafeAreaView style={{ flex: 1, paddingHorizontal: 8 }}>
       <Pressable
         onPress={() => {
           setEditingIncident(null);
           setModalVisible(true);
         }}
-        className="bg-[#0B4057] rounded-full px-7 py-3 mb-4 w-auto self-end"
+        style={{
+          backgroundColor: "#0B4057",
+          borderRadius: 9999,
+          paddingHorizontal: 28,
+          paddingVertical: 12,
+          marginBottom: 16,
+          width: "auto",
+          alignSelf: "flex-end",
+        }}
       >
-        <Text className="text-white font-extrabold text-base">
+        <Text style={{ color: "white", fontWeight: "800", fontSize: 16 }}>
           + Add a Incident
         </Text>
       </Pressable>
 
       {isIncidentDataFetching && (
-        <View className="m-2">
+        <View style={{ margin: 8 }}>
           <ActivityIndicator size="large" color="#0B4057" />
         </View>
       )}
@@ -52,18 +61,50 @@ const IncidentScreen = () => {
         {incidentData?.map((incident: Incident) => (
           <View
             key={incident._id}
-            className="bg-white p-6 rounded-2xl mb-4 shadow-sm border border-gray-100"
+            style={{
+              backgroundColor: "white",
+              padding: 24,
+              borderRadius: 16,
+              marginBottom: 16,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.05,
+              shadowRadius: 3,
+              elevation: 1,
+              borderWidth: 1,
+              borderColor: "#f3f4f6",
+            }}
           >
-            <View className="flex-row justify-between items-center mb-4">
-              <View className="bg-[#0B4057] px-6 py-2 rounded-3xl">
-                <Text className="text-white font-semibold text-sm">
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 16,
+              }}
+            >
+              <View
+                style={{
+                  backgroundColor: "#0B4057",
+                  paddingHorizontal: 24,
+                  paddingVertical: 8,
+                  borderRadius: 9999,
+                }}
+              >
+                <Text
+                  style={{ color: "white", fontWeight: "600", fontSize: 14 }}
+                >
                   {incident.incidentType}
                 </Text>
               </View>
 
               <TouchableOpacity
-                className="p-2 rounded-full bg-gray-50 active:bg-gray-100"
-                onPress={() => {
+                style={{
+                  padding: 8,
+                  borderRadius: 9999,
+                  backgroundColor: "#f9fafb",
+                }}
+                onPressIn={() => {
                   setEditingIncident(incident);
                   setModalVisible(true);
                 }}
@@ -72,22 +113,32 @@ const IncidentScreen = () => {
               </TouchableOpacity>
             </View>
 
-            <View className="space-y-3">
-              <View className="flex-row items-center">
+            <View style={{ gap: 12 }}>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <View
-                  className={`w-3 h-3 rounded-full mr-2 ${
-                    incident.howSerious?.toLowerCase().includes("critical")
-                      ? "bg-red-500"
-                      : incident.howSerious?.toLowerCase().includes("high")
-                        ? "bg-orange-400"
-                        : incident.howSerious?.toLowerCase().includes("medium")
-                          ? "bg-yellow-500"
-                          : "bg-green-500"
-                  }`}
+                  style={{
+                    width: 12,
+                    height: 12,
+                    borderRadius: 9999,
+                    marginRight: 8,
+                    backgroundColor: incident.howSerious
+                      ?.toLowerCase()
+                      .includes("critical")
+                      ? "#ef4444"
+                      : incident.howSerious
+                          ?.toLowerCase()
+                          .includes("high")
+                        ? "#fb923c"
+                        : incident.howSerious
+                            ?.toLowerCase()
+                            .includes("medium")
+                          ? "#eab308"
+                          : "#22c55e",
+                  }}
                 />
 
-                <Text className="text-gray-700">
-                  <Text className="font-semibold text-gray-900">
+                <Text style={{ color: "#374151" }}>
+                  <Text style={{ fontWeight: "600", color: "#111827" }}>
                     Severity:{" "}
                   </Text>
                   {incident.howSerious}
@@ -95,26 +146,38 @@ const IncidentScreen = () => {
               </View>
 
               <View>
-                <Text className="text-gray-600 leading-5">
+                <Text style={{ color: "#4b5563", lineHeight: 20 }}>
                   {incident.description}
                 </Text>
               </View>
 
-              <View className="flex-row justify-between bg-gray-50 rounded-lg p-3">
-                <View className="flex-row items-center">
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  backgroundColor: "#f9fafb",
+                  borderRadius: 8,
+                  padding: 12,
+                }}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
                   <MaterialIcons
                     name="calendar-today"
                     size={16}
                     color="#6B7280"
                   />
-                  <Text className="text-gray-700 ml-2 text-sm">
+                  <Text
+                    style={{ color: "#374151", marginLeft: 8, fontSize: 14 }}
+                  >
                     {format(new Date(incident?.date), "MMM dd, yyyy")}
                   </Text>
                 </View>
 
-                <View className="flex-row items-center">
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
                   <MaterialIcons name="access-time" size={16} color="#6B7280" />
-                  <Text className="text-gray-700 ml-2 text-sm">
+                  <Text
+                    style={{ color: "#374151", marginLeft: 8, fontSize: 14 }}
+                  >
                     {incident?.time
                       ? (() => {
                           try {
@@ -140,8 +203,9 @@ const IncidentScreen = () => {
             </View>
           </View>
         ))}
+        <View style={{ marginBottom: 50 }} />
       </ScrollView>
-      <View className="mb-32" />
+      
       <IncidentScreenDialog
         visible={modalVisible}
         onClose={() => setModalVisible(false)}

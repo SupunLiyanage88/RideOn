@@ -10,9 +10,12 @@ const EmergencyManagement = () => {
   const [clickedAccident, setClickedAccident] = useState(false);
 
   return (
-    <SafeAreaView className="flex-1">
-      <View className="flex-grow px-1 ">
-        <View className="items-center justify-center ">
+    <SafeAreaView style={{flex: 1}}>
+      <View style={{flexGrow: 1, paddingHorizontal: 4}}>
+        <View style={{
+          alignItems: "center",
+          justifyContent: "center"
+        }}>
           <ToggleButton
             leftLabel="Incident"
             rightLabel="Accident"
@@ -24,11 +27,12 @@ const EmergencyManagement = () => {
             }}
           />
         </View>
-        <View className="flex-1">
+        <View style={{flex: 1}}>
           {clickedIncident ? <IncidentManagement /> : <AccidentManagement />}
         </View>
       </View>
     </SafeAreaView>
   );
 };
+
 export default EmergencyManagement;

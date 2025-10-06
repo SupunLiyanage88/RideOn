@@ -72,7 +72,8 @@ const MapPicker = ({
 
   return (
     <View>
-      <View className="mb-4" />
+      {/* mb-4 → marginBottom: 16 */}
+      <View style={{ marginBottom: 16 }} />
       <View style={{ height: 200 }}>
         {loading ? (
           <View style={styles.loaderContainer}>

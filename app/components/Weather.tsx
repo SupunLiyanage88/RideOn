@@ -32,15 +32,51 @@ const Weather: React.FC<WeatherProps> = ({ location, weatherData }) => {
   const windSpeed = weatherData ? weatherData.wind.speed : "";
   const { user, status } = UseCurrentUser();
   const name = user?.userName;
+  
   return (
-    <View className="menu-card mt-5 mb-4 px-5 pb-5 bg-[#D9D9D9] rounded-[2rem] shadow-sm">
-      <View className="flex-row justify-between items-center">
-        <Text className="text-2xl font-bold my-5">Good Afternoon, {name}</Text>
+    <View
+      style={{
+        marginTop: 20,
+        marginBottom: 16,
+        paddingLeft: 20,
+        paddingRight: 20,
+        paddingBottom: 20,
+        backgroundColor: "#D9D9D9",
+        borderRadius: 32,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        elevation: 2,
+      }}
+    >
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 24,
+            fontWeight: "bold",
+            marginVertical: 20,
+          }}
+        >
+          Good Afternoon, {name}
+        </Text>
         <MaterialIcons name="open-in-new" size={20} color="black" />
       </View>
 
-      <View className="flex-row justify-between items-center">
-        <View className="flex-row">
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <View style={{ flexDirection: "row" }}>
           <Image
             source={
               weatherData
@@ -49,29 +85,64 @@ const Weather: React.FC<WeatherProps> = ({ location, weatherData }) => {
                   }
                 : images.sun
             }
-            className="w-16 h-16"
+            style={{ width: 64, height: 64 }}
           />
-          <View className="ml-3">
-            <Text className="text-xl capitalize">
+          <View style={{ marginLeft: 12 }}>
+            <Text
+              style={{
+                fontSize: 20,
+                textTransform: "capitalize",
+              }}
+            >
               {weatherDescription || "Life's better on two wheels."}
             </Text>
-            <View className="flex-row mt-1 items-center">
+            <View
+              style={{
+                flexDirection: "row",
+                marginTop: 4,
+                alignItems: "center",
+              }}
+            >
               <Entypo name="location-pin" size={15} color="black" />
-              <Text className="ml-1">{location}</Text>
+              <Text style={{ marginLeft: 4 }}>{location}</Text>
             </View>
-            <View className="flex-row mt-1 items-center">
+            <View
+              style={{
+                flexDirection: "row",
+                marginTop: 4,
+                alignItems: "center",
+              }}
+            >
               <Fontisto name="date" size={12} color="black" />
-              <Text className="text-black ml-2">{formattedDate}</Text>
+              <Text style={{ color: "black", marginLeft: 8 }}>
+                {formattedDate}
+              </Text>
             </View>
             {weatherData && (
-              <View className="flex-row mt-2">
-                <View className="flex-row items-center mr-4">
+              <View
+                style={{
+                  flexDirection: "row",
+                  marginTop: 8,
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    marginRight: 16,
+                  }}
+                >
                   <Fontisto name="blood-drop" size={12} color="black" />
-                  <Text className="ml-1">{humidity}%</Text>
+                  <Text style={{ marginLeft: 4 }}>{humidity}%</Text>
                 </View>
-                <View className="flex-row items-center">
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                  }}
+                >
                   <Fontisto name="wind" size={12} color="black" />
-                  <Text className="ml-1">{windSpeed} m/s</Text>
+                  <Text style={{ marginLeft: 4 }}>{windSpeed} m/s</Text>
                 </View>
               </View>
             )}
@@ -79,9 +150,21 @@ const Weather: React.FC<WeatherProps> = ({ location, weatherData }) => {
         </View>
 
         {weatherData && (
-          <View className="items-end">
-            <Text className="text-4xl font-bold">{tempCelsius}°C</Text>
-            <Text className="text-gray-500 mt-1">
+          <View style={{ alignItems: "flex-end" }}>
+            <Text
+              style={{
+                fontSize: 36,
+                fontWeight: "bold",
+              }}
+            >
+              {tempCelsius}°C
+            </Text>
+            <Text
+              style={{
+                color: "#6B7280",
+                marginTop: 4,
+              }}
+            >
               Feels like {Math.round(weatherData.main.feels_like - 273.15)}°C
             </Text>
           </View>

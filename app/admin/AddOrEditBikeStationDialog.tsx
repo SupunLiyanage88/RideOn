@@ -16,11 +16,13 @@ import {
 import DialogHeader from "../components/DialogHeader";
 import HelperText from "../components/HelperText";
 import MapPicker from "../components/MapPicker";
+
 type DialogProps = {
   visible: boolean;
   onClose: () => void;
   defaultValues?: BikeStation;
 };
+
 const AddOrEditBikeStationDialog = ({
   visible,
   onClose,
@@ -29,7 +31,6 @@ const AddOrEditBikeStationDialog = ({
   const {
     control,
     handleSubmit,
-    register,
     reset,
     formState: { errors },
   } = useForm<BikeStation>({
@@ -73,7 +74,6 @@ const AddOrEditBikeStationDialog = ({
     });
 
   const handleSaveStation = (data: BikeStation) => {
-    console.log(data);
     if (data.latitude === undefined || data.longitude === undefined) {
       alert("Please select a location on the map.");
       return;
@@ -89,27 +89,52 @@ const AddOrEditBikeStationDialog = ({
       createBikeStationMutation(data);
     }
   };
+
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <View className="flex-1 items-center justify-center bg-black/50">
-        <View className="bg-white rounded-2xl p-6 w-4/5">
+      <View
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "rgba(0,0,0,0.5)",
+        }}
+      >
+        <View
+          style={{
+            backgroundColor: "#fff",
+            borderRadius: 16,
+            padding: 24,
+            width: "80%",
+          }}
+        >
           <DialogHeader
             title={defaultValues ? "Edit Bike Station" : "Add Bike Station"}
             onClose={onClose}
           />
 
+          {/* Station Name */}
           <Controller
             control={control}
             name="stationName"
             render={({ field: { onChange, value } }) => (
-              <View className="mb-6">
-                <View className="flex-row items-center rounded-xl border border-zinc-200 px-4">
+              <View style={{ marginBottom: 24 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    borderWidth: 1,
+                    borderColor: "#D4D4D8",
+                    borderRadius: 12,
+                    paddingHorizontal: 16,
+                  }}
+                >
                   <TextInput
                     placeholder="Station Name"
                     value={value}
                     onChangeText={onChange}
-                    className="flex-1 py-4 text-zinc-900"
-                    placeholderTextColor="#9ca3af"
+                    style={{ flex: 1, paddingVertical: 16, color: "#27272A" }}
+                    placeholderTextColor="#9CA3AF"
                     defaultValue={defaultValues?.stationName}
                   />
                 </View>
@@ -121,18 +146,29 @@ const AddOrEditBikeStationDialog = ({
               </View>
             )}
           />
+
+          {/* Station Location */}
           <Controller
             control={control}
             name="stationLocation"
             render={({ field: { onChange, value } }) => (
-              <View className="mb-6">
-                <View className="flex-row items-center rounded-xl border border-zinc-200 px-4">
+              <View style={{ marginBottom: 24 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    borderWidth: 1,
+                    borderColor: "#D4D4D8",
+                    borderRadius: 12,
+                    paddingHorizontal: 16,
+                  }}
+                >
                   <TextInput
                     placeholder="Station Location"
                     value={value}
                     onChangeText={onChange}
-                    className="flex-1 py-4 text-zinc-900"
-                    placeholderTextColor="#9ca3af"
+                    style={{ flex: 1, paddingVertical: 16, color: "#27272A" }}
+                    placeholderTextColor="#9CA3AF"
                     defaultValue={defaultValues?.stationLocation}
                   />
                 </View>
@@ -145,23 +181,20 @@ const AddOrEditBikeStationDialog = ({
             )}
           />
 
+          {/* Map Picker */}
           <Controller
             control={control}
             name="latitude"
-            rules={{
-              required: "Latitude is required",
-            }}
+            rules={{ required: "Latitude is required" }}
             render={({ field: { onChange, value } }) => (
               <Controller
                 control={control}
                 name="longitude"
-                rules={{
-                  required: "Latitude is required",
-                }}
+                rules={{ required: "Longitude is required" }}
                 render={({
                   field: { onChange: onChangeLong, value: valueLong },
                 }) => (
-                  <View className="mb-6">
+                  <View style={{ marginBottom: 24 }}>
                     <MapPicker
                       value={
                         value && valueLong
@@ -181,7 +214,9 @@ const AddOrEditBikeStationDialog = ({
                       }
                       type="error"
                     />
-                    <Text className="mt-2 text-s text-zinc-500 ">
+                    <Text
+                      style={{ marginTop: 8, fontSize: 14, color: "#6B7280" }}
+                    >
                       Lat: {value?.toFixed(5)}, Lng: {valueLong?.toFixed(5)}
                     </Text>
                   </View>
@@ -190,16 +225,30 @@ const AddOrEditBikeStationDialog = ({
             )}
           />
 
-          <View className="flex-row justify-center">
+          {/* Save Button */}
+          <View style={{ flexDirection: "row", justifyContent: "center" }}>
             <Pressable
               onPress={handleSubmit(handleSaveStation)}
               disabled={isCreating || isUpdating}
-              className="w-full rounded-full py-3 items-center justify-center bg-[#0B4057]"
+              style={{
+                width: "100%",
+                borderRadius: 9999,
+                paddingVertical: 12,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "#0B4057",
+              }}
             >
               {isCreating || isUpdating ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text className="text-white text-center font-bold">
+                <Text
+                  style={{
+                    color: "#fff",
+                    fontWeight: "700",
+                    textAlign: "center",
+                  }}
+                >
                   {defaultValues ? "Update Station" : "Save Station"}
                 </Text>
               )}

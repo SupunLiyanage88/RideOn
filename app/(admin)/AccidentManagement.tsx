@@ -4,15 +4,16 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import React from "react";
 import {
-  ActivityIndicator,
   Dimensions,
   ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Loader from "../components/Loader";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -27,75 +28,47 @@ const AccidentManagement = () => {
   });
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <View className="px-6 pt-6 pb-4 bg-white border-b border-gray-200">
-        <View className="flex-row justify-between items-center">
+    <SafeAreaView style={styles.container}>
+      {isFetching && (
+        <View style={{ paddingBottom: 24, margin: 8 }}>
+          <Loader textStyle={{ fontSize: 20 }} />
+        </View>
+      )}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
           <View>
-            <Text className="text-2xl font-bold text-gray-900">
-              Accident Reports
-            </Text>
-            <Text className="text-gray-500 mt-1">
+            <Text style={styles.title}>Accident Reports</Text>
+            <Text style={styles.subtitle}>
               {accidentData?.length || 0} reported Accidents
             </Text>
           </View>
           <TouchableOpacity
             onPress={() => refetch()}
-            className="bg-[#0B4057] p-3 rounded-xl"
+            style={styles.refreshButton}
           >
             <MaterialIcons name="refresh" size={20} color="white" />
           </TouchableOpacity>
         </View>
       </View>
 
-      {isFetching && (
-        <View className="flex-1 justify-center items-center">
-          <View className="p-6 rounded-2xl items-center">
-            <ActivityIndicator size="large" color="#0B4057" />
-            <Text className="text-gray-600 mt-3 font-medium">
-              Loading Accident Report...
-            </Text>
-          </View>
-        </View>
-      )}
-
-      {!isFetching && (!accidentData || accidentData.length === 0) && (
-        <View className="flex-1 justify-center items-center px-6">
-          <View className="bg-white p-8 rounded-2xl shadow-sm items-center">
-            <MaterialIcons name="warning" size={48} color="#9CA3AF" />
-            <Text className="text-xl font-bold text-gray-700 mt-4">
-              No Accidents Reported
-            </Text>
-            <Text className="text-gray-500 text-center mt-2">
-              All clear! No accident reports have been submitted yet.
-            </Text>
-          </View>
-        </View>
-      )}
-
-      {!isFetching && accidentData && accidentData.length > 0 && (
+      {accidentData && accidentData.length > 0 && (
         <ScrollView
           showsVerticalScrollIndicator={false}
-          className="flex-1 px-4 pt-4"
-          contentContainerStyle={{ paddingBottom: 20 }}
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollViewContent}
         >
           {accidentData.map((accident: Accident) => (
-            <View
-              key={accident._id}
-              className="bg-white rounded-2xl mb-4 shadow-lg border border-gray-100 overflow-hidden"
-            >
-              <View className="p-4 pb-3">
-                <View className="flex-row items-center">
+            <View key={accident._id} style={styles.accidentCard}>
+              <View style={styles.cardHeader}>
+                <View style={styles.titleContainer}>
                   <MaterialIcons name="warning" size={20} color="#DC2626" />
-                  <Text className="text-lg font-bold text-gray-900 ml-2">
-                    {accident.title}
-                  </Text>
+                  <Text style={styles.accidentTitle}>{accident.title}</Text>
                 </View>
               </View>
 
-              <View className="px-4">
+              <View style={styles.mapContainer}>
                 <MapView
-                  className="rounded-xl"
-                  style={{ width: "100%", height: 140 }}
+                  style={styles.map}
                   initialRegion={{
                     latitude: accident.latitude,
                     longitude: accident.longitude,
@@ -123,42 +96,42 @@ const AccidentManagement = () => {
                 </MapView>
               </View>
 
-              <View className="p-4">
-                <View className="bg-gray-50 rounded-xl p-3 mb-3">
-                  <View className="flex-row justify-between items-center mb-2">
-                    <View className="flex-row items-center">
+              <View style={styles.cardContent}>
+                <View style={styles.dateTimeContainer}>
+                  <View style={styles.dateTimeRow}>
+                    <View style={styles.dateTimeItem}>
                       <MaterialIcons
                         name="calendar-today"
                         size={16}
                         color="#0B4057"
                       />
-                      <Text className="ml-2 text-gray-700 text-sm font-medium">
+                      <Text style={styles.dateTimeText}>
                         {format(new Date(accident.createdAt), "MMM dd, yyyy")}
                       </Text>
                     </View>
-                    <View className="flex-row items-center">
+                    <View style={styles.dateTimeItem}>
                       <MaterialIcons
                         name="access-time"
                         size={16}
                         color="#0B4057"
                       />
-                      <Text className="ml-2 text-gray-700 text-sm font-medium">
+                      <Text style={styles.dateTimeText}>
                         {format(new Date(accident.createdAt), "hh:mm a")}
                       </Text>
                     </View>
                   </View>
                 </View>
 
-                <View className="flex-row justify-between mt-2">
-                  <TouchableOpacity className="flex-1 bg-gray-100 py-2 rounded-lg mr-2">
-                    <Text className="text-gray-700 text-center font-semibold">
-                      View Details
-                    </Text>
+                <View style={styles.actionsContainer}>
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.viewButton]}
+                  >
+                    <Text style={styles.viewButtonText}>View Details</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity className="flex-1 bg-[#0B4057] py-2 rounded-lg ml-2">
-                    <Text className="text-white text-center font-semibold">
-                      Take Action
-                    </Text>
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.takeActionButton]}
+                  >
+                    <Text style={styles.takeActionButtonText}>Take Action</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -169,5 +142,183 @@ const AccidentManagement = () => {
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 16,
+    backgroundColor: "white",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb", 
+  },
+  headerContent: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#111827",
+  },
+  subtitle: {
+    color: "#6b7280",
+    marginTop: 4,
+  },
+  refreshButton: {
+    backgroundColor: "#0B4057",
+    padding: 12,
+    borderRadius: 12,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingContent: {
+    padding: 24,
+    borderRadius: 16,
+    alignItems: "center",
+  },
+  loadingText: {
+    color: "#6b7280",
+    marginTop: 12,
+    fontWeight: "500",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+  },
+  emptyContent: {
+    backgroundColor: "white",
+    padding: 32,
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+    alignItems: "center",
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#374151",
+    marginTop: 16,
+  },
+  emptySubtitle: {
+    color: "#6b7280",
+    textAlign: "center",
+    marginTop: 8,
+  },
+  scrollView: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+  },
+  scrollViewContent: {
+    paddingBottom: 20,
+  },
+  accidentCard: {
+    backgroundColor: "white",
+    borderRadius: 16,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: "#f3f4f6",
+    overflow: "hidden",
+  },
+  cardHeader: {
+    padding: 16,
+    paddingBottom: 12,
+  },
+  titleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  accidentTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#111827",
+    marginLeft: 8,
+  },
+  mapContainer: {
+    paddingHorizontal: 16,
+  },
+  map: {
+    width: "100%",
+    height: 140,
+    borderRadius: 12,
+  },
+  cardContent: {
+    padding: 16,
+  },
+  dateTimeContainer: {
+    backgroundColor: "#f9fafb",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+  },
+  dateTimeRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  dateTimeItem: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  dateTimeText: {
+    marginLeft: 8,
+    color: "#374151",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  actionsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 8,
+  },
+  actionButton: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  viewButton: {
+    backgroundColor: "#f3f4f6",
+    marginRight: 8,
+  },
+  takeActionButton: {
+    backgroundColor: "#0B4057",
+    marginLeft: 8,
+  },
+  viewButtonText: {
+    color: "#374151",
+    textAlign: "center",
+    fontWeight: "600",
+  },
+  takeActionButtonText: {
+    color: "white",
+    textAlign: "center",
+    fontWeight: "600",
+  },
+});
 
 export default AccidentManagement;
