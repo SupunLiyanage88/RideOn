@@ -43,15 +43,6 @@ const IncidentScreen = () => {
           setEditingIncident(null);
           setModalVisible(true);
         }}
-        style={{
-          backgroundColor: "#0B4057",
-          borderRadius: 9999,
-          paddingHorizontal: 28,
-          paddingVertical: 12,
-          marginBottom: 16,
-          width: "auto",
-          alignSelf: "flex-end",
-        }}
       >
         <AddBtn
           title="Add a Incident"
@@ -87,7 +78,8 @@ const IncidentScreen = () => {
               backgroundColor: "white",
               padding: 24,
               borderRadius: 16,
-              marginBottom: 16,
+              marginBottom: 10,
+              marginTop: 15,
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 1 },
               shadowOpacity: 0.05,
