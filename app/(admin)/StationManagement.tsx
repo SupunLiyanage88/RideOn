@@ -27,7 +27,7 @@ const StationManagement = () => {
   const [selectedData, setSelectedData] = useState<BikeStation | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const debouncedQuery = useDebounce(searchQuery, 200);
+  const debouncedQuery = useDebounce(searchQuery, 500);
 
   const {
     data: bikeStationData,
@@ -67,14 +67,6 @@ const StationManagement = () => {
   return (
     <SafeAreaView edges={["left", "right"]} style={styles.safeArea}>
       <View style={{ paddingHorizontal: 12 }}>
-        <SearchInput
-          placeholder="Search Users..."
-          value={searchQuery}
-          onChange={setSearchQuery}
-          onSearch={handleSearch}
-          isSearching={isBikeStationLoading}
-        />
-
         <AddBtn
           title="Add New Bike"
           backgroundColor="#083A4C"
@@ -85,9 +77,23 @@ const StationManagement = () => {
             setBikeStationModalVisible(true);
           }}
         />
+        <View
+          style={{
+            marginTop: 5,
+            marginBottom: 15,
+          }}
+        >
+          <SearchInput
+            placeholder="Search Stations..."
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onSearch={handleSearch}
+            isSearching={isBikeStationLoading}
+          />
+        </View>
         {isBikeStationLoading && (
-          <View style={{ paddingBottom: 24, margin: 8 }}>
-            <Loader textStyle={{ fontSize: 20 }} showText={false}/>
+          <View style={{ padding: 24, margin: 8 }}>
+            <Loader textStyle={{ fontSize: 20 }} showText={false} />
           </View>
         )}
 
