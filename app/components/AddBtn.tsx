@@ -28,6 +28,7 @@ const AddBtn = ({
         flexDirection: "row",
         justifyContent: "center",
         alignItems: "center",
+        width: "100%",
         backgroundColor 
       }}
       onPress={onPress}

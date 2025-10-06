@@ -1,4 +1,4 @@
-import { fetchBikeStation } from "@/api/bikeStation";
+import { getAllBikeStations } from "@/api/bikeStation";
 import { getAllIncident } from "@/api/incident";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
@@ -21,7 +21,7 @@ const Admin = () => {
 
   const { data: bikeStationData, isFetching: isBikeStationLoading } = useQuery({
     queryKey: ["station-data"],
-    queryFn: fetchBikeStation,
+    queryFn: getAllBikeStations,
   });
 
   const { data: incidentData, isFetching: isIncidentLoading } = useQuery({
