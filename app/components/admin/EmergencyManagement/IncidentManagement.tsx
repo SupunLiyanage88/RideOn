@@ -5,7 +5,7 @@ import { format, parse } from "date-fns";
 import React from "react";
 import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Loader from "../components/Loader";
+import Loader from "../../Loader";
 
 const IncidentManagement = () => {
   const {

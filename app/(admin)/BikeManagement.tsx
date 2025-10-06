@@ -4,8 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import AddOrEditBikeDialog from "../admin/AddOrEditBikeDialog";
 import AddBtn from "../components/AddBtn";
+import AddOrEditBikeDialog from "../components/admin/BikeManagement/AddOrEditBikeDialog";
 import BikeCard from "../components/BikeCard";
 import Loader from "../components/Loader";
 

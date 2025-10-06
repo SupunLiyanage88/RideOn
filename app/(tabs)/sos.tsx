@@ -1,6 +1,6 @@
-import AccidentScreen from "@/app/components/sos/AccidentScreen";
-import IncidentScreen from "@/app/components/sos/IncidentScreen";
 import ToggleButton from "@/app/components/toggleButton";
+import AccidentScreen from "@/app/components/user/sos/AccidentScreen";
+import IncidentScreen from "@/app/components/user/sos/IncidentScreen";
 import React, { useState } from "react";
 import { View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";

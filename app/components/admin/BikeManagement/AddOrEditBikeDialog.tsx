@@ -17,7 +17,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-import HelperText from "../components/HelperText";
+import HelperText from "../../HelperText";
 
 const { width: screenWidth } = Dimensions.get("window");
 
