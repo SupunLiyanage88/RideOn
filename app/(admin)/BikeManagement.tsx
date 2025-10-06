@@ -2,15 +2,25 @@ import { Bike, getAllBikes, getBikeConditionStats } from "@/api/bike";
 import { images } from "@/constants/images";
 import { useQuery } from "@tanstack/react-query";
 import React, { useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AddBtn from "../components/AddBtn";
 import AddOrEditBikeDialog from "../components/admin/BikeManagement/AddOrEditBikeDialog";
 import BikeCard from "../components/admin/BikeManagement/BikeCard";
+import BikeDetailsModal from "../components/admin/BikeManagement/BikeDetailsModal";
+import BikeGetCard from "../components/admin/BikeManagement/BikeGetCard";
 import Loader from "../components/Loader";
+import Searchbar from "../components/Searchbar";
 
 const BikeManagement = () => {
   const [bikeModalVisible, setBikeModalVisible] = useState(false);
+  const [detailsModalVisible, setDetailsModalVisible] = useState(false);
   const [selectedData, setSelectedData] = useState<Bike | null>(null);
   const { data: bikeStatData, isFetching: isBikeStatLoading } = useQuery({
     queryKey: ["bike-stat-data"],
@@ -21,14 +31,6 @@ const BikeManagement = () => {
     queryKey: ["bike-data"],
     queryFn: getAllBikes,
   });
-
-  if (isBikeLoading || isBikeStatLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Loader itemName="Bikes" textStyle={{ fontSize: 20 }} />
-      </View>
-    );
-  }
 
   type ConditionKey = "good" | "average" | "bad";
 
@@ -80,47 +82,89 @@ const BikeManagement = () => {
 
   return (
     <SafeAreaView edges={["left", "right"]} style={styles.safeArea}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollViewContent}
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 20} // Increased offset
       >
-        <View style={styles.container}>
-          <AddBtn
-            title="Add New Bike"
-            backgroundColor="#083A4C"
-            textColor="#FFFFFF"
-            iconColor="#FFFFFF"
-            iconSize={25}
-            onPress={() => {
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollViewContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.container}>
+            <AddBtn
+              title="Add New Bike"
+              backgroundColor="#083A4C"
+              textColor="#FFFFFF"
+              iconColor="#FFFFFF"
+              iconSize={25}
+              onPress={() => {
+                setBikeModalVisible(true);
+              }}
+            />
+            <BikeCard
+              title="Electric Bikes"
+              count={electricCount}
+              conditionPercentage={electricStats.percentage}
+              conditionText={electricStats.text}
+              conditionColor={electricStats.color}
+              imageSource={images.evbike}
+            />
+            <BikeCard
+              title="Pedal Bikes"
+              count={pedalCount}
+              conditionPercentage={pedalStats.percentage}
+              conditionText={pedalStats.text}
+              conditionColor={pedalStats.color}
+              imageSource={images.pdbike}
+            />
+            <View style={{ marginTop: 10, marginBottom: 10 }}>
+              <Searchbar />
+            </View>
+            {isBikeLoading && (
+              <View style={{ paddingBottom: 24, margin: 8 }}>
+                <Loader textStyle={{ fontSize: 20 }} showText={false} />
+              </View>
+            )}
+            {bikeData?.map((bike: Bike) => (
+              <BikeGetCard
+                key={bike._id}
+                bikeId={bike.bikeId}
+                fuelType={bike.fuelType}
+                bikeModel={bike.bikeModel}
+                distance={Number(bike.distance)}
+                condition={Number(bike.condition)}
+                onPress={() => {
+                  setSelectedData(bike);
+                  setDetailsModalVisible(true);
+                }}
+              />
+            ))}
+          </View>
+          <BikeDetailsModal
+            visible={detailsModalVisible}
+            bike={selectedData}
+            onClose={() => {
+              setDetailsModalVisible(false);
+              setSelectedData(null);
+            }}
+            onEdit={() => {
+              setDetailsModalVisible(false);
               setBikeModalVisible(true);
             }}
           />
-          <BikeCard
-            title="Electric Bikes"
-            count={electricCount}
-            conditionPercentage={electricStats.percentage}
-            conditionText={electricStats.text}
-            conditionColor={electricStats.color}
-            imageSource={images.evbike}
+
+          <AddOrEditBikeDialog
+            visible={bikeModalVisible}
+            onClose={() => {
+              setBikeModalVisible(false);
+              setSelectedData(null);
+            }}
+            defaultValues={selectedData ?? undefined}
           />
-          <BikeCard
-            title="Pedal Bikes"
-            count={pedalCount}
-            conditionPercentage={pedalStats.percentage}
-            conditionText={pedalStats.text}
-            conditionColor={pedalStats.color}
-            imageSource={images.pdbike}
-          />
-        </View>
-        <AddOrEditBikeDialog
-          visible={bikeModalVisible}
-          onClose={() => {
-            setBikeModalVisible(false);
-            setSelectedData(null);
-          }}
-          defaultValues={selectedData ?? undefined}
-        />
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -130,9 +174,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#EBEBEB",
   },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
   scrollView: {
     flex: 1,
-    paddingHorizontal: 10,
+    paddingHorizontal: 15,
   },
   scrollViewContent: {
     flexGrow: 1,

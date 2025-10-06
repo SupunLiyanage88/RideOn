@@ -1,7 +1,6 @@
 import { Bike, saveBike } from "@/api/bike";
-import queryClient from "@/state/queryClient";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
@@ -40,11 +39,12 @@ const AddOrEditBikeDialog = ({
   } = useForm<Bike>({
     defaultValues: defaultValues,
   });
-
+  const queryClient = useQueryClient();
   const { mutate: saveBikeMutation, isPending } = useMutation({
     mutationFn: saveBike,
     onSuccess: async (data: any) => {
-      queryClient.invalidateQueries({ queryKey: ["bike"] });
+      queryClient.invalidateQueries({ queryKey: ["bike-data"] });
+      queryClient.invalidateQueries({ queryKey: ["bike-stat-data"] });
       console.log("Bike Save successful:", data);
       alert("Bike Save successful");
       reset();
@@ -83,7 +83,7 @@ const AddOrEditBikeDialog = ({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide">    
+    <Modal visible={visible} transparent animationType="slide">
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View
           style={{
@@ -634,7 +634,7 @@ const AddOrEditBikeDialog = ({
                     flexDirection: "row",
                     gap: 10,
                     alignItems: "center",
-                    justifyContent: "flex-start",                    
+                    justifyContent: "flex-start",
                   }}
                 >
                   <Pressable
