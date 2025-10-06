@@ -146,7 +146,6 @@ const AccidentManagement = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f9fafb",
   },
   header: {
     paddingHorizontal: 24,
@@ -154,7 +153,7 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     backgroundColor: "white",
     borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
+    borderBottomColor: "#e5e7eb", 
   },
   headerContent: {
     flexDirection: "row",
