@@ -13,8 +13,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AddBtn from "../components/AddBtn";
 import AddOrEditBikeDialog from "../components/admin/BikeManagement/AddOrEditBikeDialog";
 import BikeCard from "../components/admin/BikeManagement/BikeCard";
-import BikeGetCard from "../components/admin/BikeManagement/BikeGetCard";
 import BikeDetailsModal from "../components/admin/BikeManagement/BikeDetailsModal";
+import BikeGetCard from "../components/admin/BikeManagement/BikeGetCard";
 import Loader from "../components/Loader";
 import Searchbar from "../components/Searchbar";
 

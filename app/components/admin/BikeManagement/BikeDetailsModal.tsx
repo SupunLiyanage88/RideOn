@@ -1,17 +1,16 @@
-import { images } from "@/constants/images";
 import { Bike } from "@/api/bike";
+import { images } from "@/constants/images";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import React from "react";
 import {
-  Image,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  Dimensions,
+    Dimensions,
+    Image,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from "react-native";
 
 const { width, height } = Dimensions.get('window');
