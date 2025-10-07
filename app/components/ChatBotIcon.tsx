@@ -160,7 +160,8 @@ export const ChatIconModal: FC<ChatIconModalProps> = ({
               padding: 15,
               borderBottomWidth: 1,
               borderColor: "#ddd",
-              marginTop: Platform.OS === "ios" ? 40 : 0,
+              marginTop: Platform.OS === "ios" ? 40 : 40,
+              marginBottom: Platform.OS === "ios" ? 0 : 40,
             }}
           >
             <Text style={{ fontSize: 18, fontWeight: "600" }}>RideBot</Text>
