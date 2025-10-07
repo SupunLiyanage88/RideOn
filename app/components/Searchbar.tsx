@@ -1,31 +1,77 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { TextInput, View } from 'react-native';
+import { StyleSheet, TextInput, View } from 'react-native';
 
-const Searchbar = () => {
+interface SearchbarProps {
+  placeholder?: string;
+  value?: string;
+  onChangeText?: (text: string) => void;
+  onSubmitEditing?: () => void;
+  backgroundColor?: string;
+  textColor?: string;
+  placeholderColor?: string;
+  iconColor?: string;
+  borderRadius?: number;
+  padding?: number;
+}
+
+const Searchbar: React.FC<SearchbarProps> = ({
+  placeholder = "Search Here",
+  value,
+  onChangeText,
+  onSubmitEditing,
+  backgroundColor = "#0B4057",
+  textColor = "white",
+  placeholderColor = "#ccc",
+  iconColor = "white",
+  borderRadius = 999,
+  padding = 8,
+}) => {
   return (
     <View
-      style={{
-        flexDirection: "row",
-        backgroundColor: "#0B4057", // replace with your secondary color
-        alignItems: "center",
-        padding: 8,
-        borderRadius: 999, // full rounded
-      }}
+      style={[
+        styles.container,
+        {
+          backgroundColor,
+          borderRadius,
+          padding,
+        }
+      ]}
     >
       <Ionicons
         name="search"
         size={24}
-        color="white"
-        style={{ marginRight: 8 }}
+        color={iconColor}
+        style={styles.icon}
       />
       <TextInput
-        placeholder="Search Here"
-        style={{ flex: 1, color: "white" }}
-        placeholderTextColor="#ccc"
+        placeholder={placeholder}
+        value={value}
+        onChangeText={onChangeText}
+        onSubmitEditing={onSubmitEditing}
+        style={[
+          styles.textInput,
+          {
+            color: textColor,
+          }
+        ]}
+        placeholderTextColor={placeholderColor}
       />
     </View>
   );
 };
 
-export default Searchbar
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  icon: {
+    marginRight: 8,
+  },
+  textInput: {
+    flex: 1,
+  },
+});
+
+export default Searchbar;
