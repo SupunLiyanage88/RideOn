@@ -1,5 +1,6 @@
 import axios from "axios";
 import { z } from "zod";
+import { userSchema } from "./auth";
 
 export const bikeSchema = z.object({
   _id: z.string(),
@@ -10,6 +11,7 @@ export const bikeSchema = z.object({
   condition: z.string(),
   availability: z.boolean(),
   assigned: z.boolean(),
+  createdBy: userSchema
 });
 
 export type Bike = z.infer<typeof bikeSchema>;
@@ -39,13 +41,19 @@ export async function getBikeConditionStats() {
 }
 
 // Update
-export async function updateBike(id: string, data: Partial<Bike>) {
-  const res = await axios.put(`/api/bike/${id}`, data);
+export async function updateBike(bike: Bike) {
+  const res = await axios.put(`/api/bike/${bike._id}`, bike);
   return res.data;
 }
 
 // Delete
 export async function deleteBike(id: string) {
   const res = await axios.delete(`/api/bike/${id}`);
+  return res.data;
+}
+
+// Search Bikes
+export async function searchBikes({ query } : {query: String}) {
+  const res = await axios.get(`/api/bike/search?query=${query}`);
   return res.data;
 }

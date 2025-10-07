@@ -1,5 +1,11 @@
-import { Bike, getAllBikes, getBikeConditionStats } from "@/api/bike";
+import {
+  Bike,
+  getAllBikes,
+  getBikeConditionStats,
+  searchBikes,
+} from "@/api/bike";
 import { images } from "@/constants/images";
+import { useDebounce } from "@/utils/useDebounce.utils";
 import { useQuery } from "@tanstack/react-query";
 import React, { useState } from "react";
 import {
@@ -16,7 +22,7 @@ import BikeCard from "../components/admin/BikeManagement/BikeCard";
 import BikeDetailsModal from "../components/admin/BikeManagement/BikeDetailsModal";
 import BikeGetCard from "../components/admin/BikeManagement/BikeGetCard";
 import Loader from "../components/Loader";
-import Searchbar from "../components/Searchbar";
+import SearchInput from "../components/SearchBarQuery";
 
 const BikeManagement = () => {
   const [bikeModalVisible, setBikeModalVisible] = useState(false);
@@ -26,11 +32,32 @@ const BikeManagement = () => {
     queryKey: ["bike-stat-data"],
     queryFn: getBikeConditionStats,
   });
-
   const { data: bikeData, isFetching: isBikeLoading } = useQuery({
     queryKey: ["bike-data"],
     queryFn: getAllBikes,
   });
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedQuery = useDebounce(searchQuery, 500);
+
+  const {
+    data: bikeSearchData,
+    refetch: researchBike,
+    isFetching: isBikeSearchLoading,
+  } = useQuery({
+    queryKey: ["bike-data", debouncedQuery],
+    queryFn: ({ queryKey }) => searchBikes({ query: queryKey[1] }),
+  });
+
+  console.log(bikeSearchData)
+  const handleSearch = async (query: string) => {
+    console.log("Searching for:", query);
+    setSearchQuery(query);
+    try {
+      await researchBike();
+    } catch (error) {
+      console.error("Search failed:", error);
+    }
+  };
 
   type ConditionKey = "good" | "average" | "bad";
 
@@ -103,31 +130,39 @@ const BikeManagement = () => {
                 setBikeModalVisible(true);
               }}
             />
-            <BikeCard
-              title="Electric Bikes"
-              count={electricCount}
-              conditionPercentage={electricStats.percentage}
-              conditionText={electricStats.text}
-              conditionColor={electricStats.color}
-              imageSource={images.evbike}
-            />
-            <BikeCard
-              title="Pedal Bikes"
-              count={pedalCount}
-              conditionPercentage={pedalStats.percentage}
-              conditionText={pedalStats.text}
-              conditionColor={pedalStats.color}
-              imageSource={images.pdbike}
-            />
-            <View style={{ marginTop: 10, marginBottom: 10 }}>
-              <Searchbar />
+            <View style={{ flexDirection: "row", marginTop: 5 }}>
+              <BikeCard
+                title="Electric Bikes"
+                count={electricCount}
+                conditionPercentage={electricStats.percentage}
+                conditionText={electricStats.text}
+                conditionColor={electricStats.color}
+                imageSource={images.evbike}
+              />
+              <BikeCard
+                title="Pedal Bikes"
+                count={pedalCount}
+                conditionPercentage={pedalStats.percentage}
+                conditionText={pedalStats.text}
+                conditionColor={pedalStats.color}
+                imageSource={images.pdbike}
+              />
             </View>
-            {isBikeLoading && (
+            <View style={{ marginTop: 10, marginBottom: 10 }}>
+              <SearchInput
+                placeholder="Search Bikes..."
+                value={searchQuery}
+                onChange={setSearchQuery}
+                onSearch={handleSearch}
+                isSearching={isBikeSearchLoading}
+              />
+            </View>
+            {isBikeSearchLoading && (
               <View style={{ paddingBottom: 24, margin: 8 }}>
                 <Loader textStyle={{ fontSize: 20 }} showText={false} />
               </View>
             )}
-            {bikeData?.map((bike: Bike) => (
+            {bikeSearchData?.map((bike: Bike) => (
               <BikeGetCard
                 key={bike._id}
                 bikeId={bike.bikeId}
@@ -135,6 +170,7 @@ const BikeManagement = () => {
                 bikeModel={bike.bikeModel}
                 distance={Number(bike.distance)}
                 condition={Number(bike.condition)}
+                ownedBy={bike}
                 onPress={() => {
                   setSelectedData(bike);
                   setDetailsModalVisible(true);
