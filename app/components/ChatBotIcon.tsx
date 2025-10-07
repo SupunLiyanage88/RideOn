@@ -187,3 +187,5 @@ export const ChatIconModal: FC<ChatIconModalProps> = ({ hideChatButton = false }
     </>
   );
 };
+
+export default ChatIconModal;
