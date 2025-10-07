@@ -154,7 +154,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
             {/* Loading Indicator */}
             {isSearching && (
               <View style={styles.loadingContainer}>
-                <ActivityIndicator size="small" color="#3B82F6" />
+                <ActivityIndicator size="small" color="#37A77D" />
               </View>
             )}
 
