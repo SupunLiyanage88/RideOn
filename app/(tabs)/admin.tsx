@@ -1,82 +1,138 @@
+import { fetchBikeStation } from "@/api/bikeStation";
+import { getAllIncident } from "@/api/incident";
+import { Ionicons } from "@expo/vector-icons";
+import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import ManagementCard from "../components/ManagementCard";
 
-import AddOrEditBikeDialog from "../admin/AddOrEditBikeDialog";
-import AddOrEditBikeStationDialog from "../admin/AddOrEditBikeStationDialog";
-import AddOrEditSubscriptionPackageDialog from "../admin/AddOrEditSubscriptionPackageDialog";
-
-type StatCardProps = {
-  title: string;
-  value: string | number;
-};
-
-const StatCard: React.FC<StatCardProps> = ({ title, value }) => {
-  return (
-    <View className="bg-gray-200 rounded-lg flex-1 m-2 p-4 h-24 items-center justify-center">
-      <Text className="text-sm font-medium text-gray-700">{title}</Text>
-      <Text className="text-2xl font-bold text-black mt-2">{value}</Text>
-    </View>
-  );
-};
+import AntDesign from '@expo/vector-icons/AntDesign';
+import Feather from '@expo/vector-icons/Feather';
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import StatCard from "../components/StatCard";
 
 const Admin = () => {
   const [bikeStationModalVisible, setBikeStationModalVisible] = useState(false);
   const [bikeModalVisible, setBikeModalVisible] = useState(false);
-  const [subscriptionModalVisible, setSubscriptionModalVisible] =
-    useState(false);
+  const router = useRouter();
+
+  const { data: bikeStationData, isFetching: isBikeStationLoading } = useQuery({
+    queryKey: ["station-data"],
+    queryFn: fetchBikeStation,
+  });
+
+  const { data: incidentData, isFetching: isIncidentLoading } = useQuery({
+    queryKey: ["incident-data"],
+    queryFn: getAllIncident,
+  });
 
   return (
-    <SafeAreaView className="flex-1 p-4">
-      <Text className="text-xl font-bold my-4 text-center">Ride On Admin</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <Text style={styles.title}>Ride On Admin</Text>
 
-      {/* Example Stat Cards */}
-      <View className="flex-row">
-        <StatCard title="Total Stations" value={2} />
-        <StatCard title="Total Bikes" value={10} />
+      <View style={styles.statsContainer}>
+        <View style={styles.statsRow}>
+          <StatCard
+            title="Total Stations"
+            value={bikeStationData?.length}
+            isLoading={isBikeStationLoading}
+          />
+          <StatCard
+            title="Total Bikes"
+            value={12}
+            isLoading={isBikeStationLoading}
+          />
+        </View>
+        <View style={styles.statsRow}>
+          <StatCard
+            title="Ongoing Emergency"
+            value={incidentData?.length}
+            isLoading={isIncidentLoading}
+          />
+          <StatCard
+            title="Monthly Payments"
+            value={13}
+            isLoading={isBikeStationLoading}
+          />
+        </View>
       </View>
 
-      {/* Add Bike Station */}
-      <TouchableOpacity
-        onPress={() => setBikeStationModalVisible(true)}
-        className="bg-red-500 px-4 py-2 rounded-2xl mt-5"
+      <ScrollView
+        style={styles.cardsScroll}
+        contentContainerStyle={styles.cardsContent}
+        showsVerticalScrollIndicator={false}
       >
-        <Text className="text-white font-semibold text-base">
-          Add a Bike Station
-        </Text>
-      </TouchableOpacity>
-      <AddOrEditBikeStationDialog
-        visible={bikeStationModalVisible}
-        onClose={() => setBikeStationModalVisible(false)}
-      />
-
-      {/* Add Bike */}
-      <TouchableOpacity
-        onPress={() => setBikeModalVisible(true)}
-        className="bg-red-500 px-4 py-2 rounded-2xl mt-5"
-      >
-        <Text className="text-white font-semibold text-base">Add a Bike</Text>
-      </TouchableOpacity>
-      <AddOrEditBikeDialog
-        visible={bikeModalVisible}
-        onClose={() => setBikeModalVisible(false)}
-      />
-
-      {/* Add Subscription Package */}
-      <TouchableOpacity
-        onPress={() => setSubscriptionModalVisible(true)}
-        className="bg-red-500 px-4 py-2 rounded-2xl mt-5"
-      >
-        <Text className="text-white font-semibold text-base">
-          Add a Subscription Package
-        </Text>
-      </TouchableOpacity>
-      <AddOrEditSubscriptionPackageDialog
-        visible={subscriptionModalVisible}
-        onClose={() => setSubscriptionModalVisible(false)}
-      />
+        <ManagementCard
+          title="Station Management"
+          icon={<FontAwesome5 name="broadcast-tower" size={18} color="white" />}
+          color="#083A4C"
+          onPress={() => router.push("/(admin)/StationManagement")}
+        />
+        <ManagementCard
+          title="Bike Management"
+          icon={<Ionicons name="bicycle" size={26} color="white" />}
+          color="#37A77D"
+          onPress={() => router.push("/(admin)/BikeManagement")}
+        />
+        <ManagementCard
+          title="Emergency Management"
+          icon={<AntDesign name="alert" size={24} color="white" />}
+          color="#B83434"
+          onPress={() => router.push("/(admin)/EmergencyManagement")}
+        />
+        <ManagementCard
+          title="Payment Management"
+          icon={<MaterialIcons name="payment" size={24} color="white" />}
+          color="#348AB8"
+          onPress={() => console.log("Payment Management pressed")}
+        />
+        <ManagementCard
+          title="Package Management"
+          icon={<Feather name="package" size={24} color="white" />}
+          color="#083A4C"
+          onPress={() => console.log("Package Management pressed")}
+        />
+        <ManagementCard
+          title="Package Management"
+          icon={<Feather name="package" size={24} color="white" />}
+          color="#083A4C"
+          onPress={() => console.log("Package Management pressed")}
+        />
+        <View style={{marginBottom:45}}></View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "white",
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginVertical: 16,
+    textAlign: "center",
+  },
+  statsContainer: {
+    padding: 12,
+  },
+  statsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+  },
+  cardsScroll: {
+    flex: 1,
+  },
+  cardsContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+});
 
 export default Admin;

@@ -9,6 +9,7 @@ import {
   ImageBackground,
   Platform,
   ScrollView,
+  StyleSheet,
   View,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
@@ -16,13 +17,14 @@ import LoginScreen from "./loginScreen";
 import RegisterScreen from "./registerScreen";
 
 const Loader = () => (
-  <View className="flex-1 justify-center items-center bg-white">
+  <View style={styles.loaderContainer}>
     <View
-      className="p-5 rounded-lg"
-      style={{
-        backgroundColor:
-          Platform.OS === "ios" ? "rgba(0,0,0,0.1)" : "transparent",
-      }}
+      style={[
+        styles.loaderContent,
+        {
+          backgroundColor: Platform.OS === "ios" ? "rgba(0,0,0,0.1)" : "transparent",
+        }
+      ]}
     >
       <ActivityIndicator
         size={Platform.OS === "ios" ? "large" : 50}
@@ -46,32 +48,30 @@ export default function _layout() {
 
   return (
     <KeyboardAwareScrollView
-      style={{ flex: 1, backgroundColor: "#fff" }}
-      contentContainerStyle={{ flexGrow: 1 }}
+      style={styles.keyboardScrollView}
+      contentContainerStyle={styles.keyboardContentContainer}
       enableOnAndroid={true}
       keyboardShouldPersistTaps="handled"
     >
       <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ flexGrow: 1 }}
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContentContainer}
         keyboardShouldPersistTaps="handled"
         bounces={false}
       >
-        <View
-          className="w-full relative"
-          style={{ height: Dimensions.get("screen").height / 2.25 }}
-        >
+        <View style={styles.imageContainer}>
           <ImageBackground
             source={images.patternBg}
             resizeMode="cover"
-            className="w-full h-full"
+            style={styles.backgroundImage}
           />
         </View>
 
-        <View
-          className={`flex-1 bg-white rounded-t-[4rem] px-6 ${clickedLogin ? "-mt-14" : "-mt-36"}`}
-        >
-          <View className="mt-10 justify-center items-center">
+        <View style={[
+          styles.contentContainer,
+          { marginTop: clickedLogin ? -56 : -144 }
+        ]}>
+          <View style={styles.toggleContainer}>
             <ToggleButton
               leftLabel="Login"
               rightLabel="Register"
@@ -84,12 +84,10 @@ export default function _layout() {
             />
           </View>
 
-          <View
-            style={{
-              height: clickedLogin ? 250 : 400,
-              position: "relative",
-            }}
-          >
+          <View style={[
+            styles.formContainer,
+            { height: clickedLogin ? 250 : 400 }
+          ]}>
             {clickedLogin ? <LoginScreen /> : <RegisterScreen />}
           </View>
         </View>
@@ -97,3 +95,53 @@ export default function _layout() {
     </KeyboardAwareScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'white',
+  },
+  loaderContent: {
+    padding: 20,
+    borderRadius: 8,
+  },
+  keyboardScrollView: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  keyboardContentContainer: {
+    flexGrow: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContentContainer: {
+    flexGrow: 1,
+  },
+  imageContainer: {
+    width: '100%',
+    height: Dimensions.get("screen").height / 2.25,
+    position: 'relative',
+  },
+  backgroundImage: {
+    width: '100%',
+    height: '100%',
+  },
+  contentContainer: {
+    flex: 1,
+    backgroundColor: 'white',
+    borderTopLeftRadius: 64,
+    borderTopRightRadius: 64,
+    paddingHorizontal: 24,
+  },
+  toggleContainer: {
+    marginTop: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  formContainer: {
+    position: 'relative',
+  },
+});

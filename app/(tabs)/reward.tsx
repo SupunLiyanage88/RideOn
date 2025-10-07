@@ -1,5 +1,3 @@
-// Reward.tsx
-
 import { fetchSubscriptionPackages } from '@/api/subscription'; // Import the function from api/subscription
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage

@@ -5,6 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+
 const Directions = () => {
   const station = StationData;
 
@@ -13,32 +14,63 @@ const Directions = () => {
       colors={["#737373", "#37A77D"]}
       start={{ x: 0.5, y: 1 }}
       end={{ x: 0.5, y: 0 }}
-      style={{
-        borderRadius: 32,
-        padding: 12,
-      }}
+      style={{ borderRadius: 32, padding: 12 }}
     >
-      <View className="flex-row">
-        <View className="flex-row">
-          <View className="w-14 h-14 rounded-full bg-white justify-center items-center shadow-md">
+      {/* Top Row: Station info + Map */}
+      <View style={{ flexDirection: "row" }}>
+        {/* Station Info */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "flex-start",
+            justifyContent: "flex-start",
+          }}
+        >
+          <View
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: 28,
+              backgroundColor: "white",
+              justifyContent: "center",
+              alignItems: "center",
+              shadowColor: "#000",
+              shadowOpacity: 0.1,
+              shadowRadius: 4,
+              shadowOffset: { width: 0, height: 2 },
+              elevation: 3,
+            }}
+          >
             <Image
               source={images.parkBike}
-              className="w-8 h-8"
+              style={{ width: 32, height: 32 }}
               resizeMode="contain"
             />
           </View>
-
-          <View className="ml-3">
-            <Text className="text-white font-bold text-lg">
+          <View style={{ marginLeft: 12 }}>
+            <Text style={{ color: "white", fontWeight: "700", fontSize: 18 }}>
               {station?.stationName}
             </Text>
-            <Text className="text-gray-200 text-sm">
+            <Text style={{ color: "#E5E5E5", fontSize: 14 }}>
               {station?.location}
             </Text>
           </View>
         </View>
 
-        <View className="w-[40%] h-44 rounded-[2rem] overflow-hidden ml-3 shadow-md">
+        {/* Map */}
+        <View
+          style={{
+            width: "40%",
+            height: 176,
+            borderRadius: 32,
+            overflow: "hidden",
+            shadowColor: "#000",
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+            shadowOffset: { width: 0, height: 2 },
+            elevation: 3,
+          }}
+        >
           <MapView
             provider={PROVIDER_GOOGLE}
             style={styles.map}
@@ -63,34 +95,71 @@ const Directions = () => {
         </View>
       </View>
 
-      <View className="absolute top-28">
+      {/* Overlay Bike Image */}
+      <View
+        style={{
+          position: "absolute",
+          top: 72,
+          left: 0,
+          right: 0,
+        }}
+      >
         <Image
           source={images.rideBike}
-          className="w-56 h-36"
+          style={{ width: 224, height: 144 }}
           resizeMode="contain"
         />
       </View>
 
-      <View className="bg-secondary h-20 rounded-full flex-row justify-between items-center pl-6 pr-4 py-2 mt-14">
-        <View>
-          <Text className="text-gray-400 font-light text-sm">Distance</Text>
-          <Text className="text-white font-semibold text-lg">500m away</Text>
+      {/* Info Footer */}
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          backgroundColor: "#00A99D", // bg-secondary
+          borderRadius: 50,
+          paddingHorizontal: 16,
+          paddingVertical: 8,
+          marginTop: 15,
+        }}
+      >
+        <View style={{ alignItems: "flex-start" }}>
+          <Text style={{ color: "#A3A3A3", fontSize: 12, fontWeight: "300" }}>
+            Distance
+          </Text>
+          <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>
+            500m away
+          </Text>
         </View>
-        <View>
-          <Text className="text-gray-400 font-light text-sm">ETA</Text>
-          <Text className="text-white font-semibold text-lg">2 min</Text>
+        <View style={{ alignItems: "flex-start" }}>
+          <Text style={{ color: "#A3A3A3", fontSize: 12, fontWeight: "300" }}>
+            ETA
+          </Text>
+          <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>
+            2 min
+          </Text>
         </View>
-        <View>
-          <Text className="text-gray-400 font-light text-sm">Availabilty</Text>
-          <Text className="text-white font-semibold text-lg">
+        <View style={{ alignItems: "flex-start" }}>
+          <Text style={{ color: "#A3A3A3", fontSize: 12, fontWeight: "300" }}>
+            Availability
+          </Text>
+          <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>
             {station.availability}
           </Text>
         </View>
 
-        <View className="bg-white h-14 w-14 rounded-full items-center justify-center">
-          <Text className="text-white font-semibold ">
-            <Feather name="arrow-up-right" size={24} color="black" />
-          </Text>
+        <View
+          style={{
+            backgroundColor: "white",
+            width: 56,
+            height: 56,
+            borderRadius: 28,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Feather name="arrow-up-right" size={24} color="black" />
         </View>
       </View>
     </LinearGradient>
