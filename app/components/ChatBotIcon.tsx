@@ -2,11 +2,11 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { FC, useRef, useState } from "react";
 import {
-    Animated,
-    Modal,
-    Text,
-    TouchableOpacity,
-    View,
+  Animated,
+  Modal,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { WebView } from "react-native-webview";
@@ -80,7 +80,7 @@ export const ChatIconModal: FC<ChatIconModalProps> = ({ hideChatButton = false }
           transform: [{ translateX: slideTranslateX }],
           position: "absolute",
           bottom: 100,
-          right: 20,
+          right: !isExpanded ? 10 : 20,
           zIndex: 100,
         }}
       >
@@ -90,7 +90,7 @@ export const ChatIconModal: FC<ChatIconModalProps> = ({ hideChatButton = false }
           style={{
             width: ICON_CONTAINER_SIZE,
             height: ICON_CONTAINER_SIZE,
-            backgroundColor: isExpanded ? "#083A4C" : "#083A4C40",
+            backgroundColor: isExpanded ? "#083A4C" : "#A3C5CF",
             borderRadius: ICON_CONTAINER_SIZE / 2,
             justifyContent: "center",
             alignItems: "center",
@@ -105,7 +105,8 @@ export const ChatIconModal: FC<ChatIconModalProps> = ({ hideChatButton = false }
           <Animated.View 
             style={{ 
               opacity: arrowOpacity, 
-              position: "absolute" 
+              position: "absolute", 
+              left: 16
             }}
           >
             <MaterialIcons
