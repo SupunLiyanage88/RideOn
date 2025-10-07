@@ -26,7 +26,7 @@ const IncidentScreen = () => {
     isFetching: isIncidentDataFetching,
     error,
   } = useQuery({
-    queryKey: ["incident-data"],
+    queryKey: ["incident-user-data"],
     queryFn: getUserIncident,
   });
 
