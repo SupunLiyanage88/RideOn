@@ -270,7 +270,7 @@ const Search = () => {
                   onPress={() => {
                     setSelectedStation(station);
                     router.push({
-                      pathname: "/station/[id]",
+                      pathname: "/components/user/station/[id]",
                       params: { id: station._id },
                     });
                   }}
