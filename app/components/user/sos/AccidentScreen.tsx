@@ -4,7 +4,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Location from "expo-location";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, ScrollView, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import SOSButton from "./SOSButton";
 import UserMap from "./UserMap";
 
@@ -85,7 +84,7 @@ const AccidentScreen = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, paddingHorizontal: 8 }}>
+    <View>
       <ScrollView>
         <View style={{ marginBottom: 16 }}>
           <Text
@@ -145,7 +144,7 @@ const AccidentScreen = () => {
           </Text>
         </View>
 
-        <View style={{ marginTop: 16, padding: 12, borderRadius: 8 }}>
+        <View style={{ borderRadius: 8, paddingTop: 8 }}>
           <View
             style={{
               backgroundColor: "#E5E7EB",
@@ -179,7 +178,7 @@ const AccidentScreen = () => {
 
         <View style={{ marginBottom: 20 }}></View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

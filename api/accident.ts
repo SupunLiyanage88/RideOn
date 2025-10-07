@@ -6,8 +6,11 @@ export const accidentSchema = z.object({
   title: z.string(),
   latitude: z.number(),
   longitude: z.number(),
-  user: z.string(),
   createdAt: z.string(),
+  user: z.object({
+    _id: z.string(),
+    mobile: z.string(),
+  }).optional(), 
 });
 
 export type Accident = z.infer<typeof accidentSchema>;
