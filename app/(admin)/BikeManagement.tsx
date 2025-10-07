@@ -103,6 +103,7 @@ const BikeManagement = () => {
                 setBikeModalVisible(true);
               }}
             />
+            <View style={{ flexDirection: "row", marginTop: 5 }}>
             <BikeCard
               title="Electric Bikes"
               count={electricCount}
@@ -119,6 +120,7 @@ const BikeManagement = () => {
               conditionColor={pedalStats.color}
               imageSource={images.pdbike}
             />
+            </View>
             <View style={{ marginTop: 10, marginBottom: 10 }}>
               <Searchbar />
             </View>
