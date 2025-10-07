@@ -1,5 +1,5 @@
-import AccidentManagement from "@/app/(admin)/AccidentManagement";
-import IncidentManagement from "@/app/(admin)/IncidentManagement";
+import AccidentManagement from "@/app/components/admin/EmergencyManagement/AccidentManagement";
+import IncidentManagement from "@/app/components/admin/EmergencyManagement/IncidentManagement";
 import React, { useState } from "react";
 import { View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -10,9 +10,12 @@ const EmergencyManagement = () => {
   const [clickedAccident, setClickedAccident] = useState(false);
 
   return (
-    <SafeAreaView className="flex-1">
-      <View className="flex-grow px-1 ">
-        <View className="items-center justify-center ">
+    <SafeAreaView style={{flex: 1}}>
+      <View style={{flexGrow: 1, paddingHorizontal: 4}}>
+        <View style={{
+          alignItems: "center",
+          justifyContent: "center"
+        }}>
           <ToggleButton
             leftLabel="Incident"
             rightLabel="Accident"
@@ -24,11 +27,12 @@ const EmergencyManagement = () => {
             }}
           />
         </View>
-        <View className="flex-1">
+        <View style={{flex: 1}}>
           {clickedIncident ? <IncidentManagement /> : <AccidentManagement />}
         </View>
       </View>
     </SafeAreaView>
   );
 };
+
 export default EmergencyManagement;

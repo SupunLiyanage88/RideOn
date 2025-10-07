@@ -19,9 +19,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import DialogHeader from "../DialogHeader";
-import HelperText from "../HelperText";
-import ToggleEnumButton from "../ToggleEnumButton";
+import DialogHeader from "../../DialogHeader";
+import HelperText from "../../HelperText";
+import ToggleEnumButton from "../../ToggleEnumButton";
 
 type DialogProps = {
   visible: boolean;
@@ -152,8 +152,16 @@ const IncidentScreenDialog = ({ visible, onClose, defaultValues }: DialogProps) 
               <Controller
                 control={control}
                 name="incidentType"
+                rules={{ required: "Incident Type is required" }}
                 render={({ field: { value, onChange } }) => (
+                  <>
                   <ToggleEnumButton options={IncidentType} value={value} onChange={onChange} />
+                    <HelperText
+                      visible={!!errors.incidentType}
+                      message={errors.incidentType?.message}
+                      type="error"
+                    />
+                  </>
                 )}
               />
             </View>
@@ -164,8 +172,16 @@ const IncidentScreenDialog = ({ visible, onClose, defaultValues }: DialogProps) 
               <Controller
                 control={control}
                 name="howSerious"
+                rules={{ required: "Incident Level is required" }}
                 render={({ field: { value, onChange } }) => (
+                  <>
                   <ToggleEnumButton options={HowSerious} value={value} onChange={onChange} />
+                    <HelperText
+                      visible={!!errors.howSerious}
+                      message={errors.howSerious?.message}
+                      type="error"
+                    />
+                  </>
                 )}
               />
             </View>
@@ -176,6 +192,7 @@ const IncidentScreenDialog = ({ visible, onClose, defaultValues }: DialogProps) 
               <Controller
                 control={control}
                 name="description"
+                rules={{ required: "Description is required" }}
                 render={({ field: { onChange, value } }) => (
                   <View style={{ marginBottom: 16 }}>
                     <View style={{
@@ -206,8 +223,9 @@ const IncidentScreenDialog = ({ visible, onClose, defaultValues }: DialogProps) 
               <Controller
                 control={control}
                 name="date"
+                rules={{ required: "Date is required" }}
                 render={({ field: { value, onChange } }) => (
-                  <View>
+                  <>
                     <TouchableOpacity
                       style={{ borderWidth: 1, borderColor: "#E4E4E7", borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12 }}
                       onPress={() => setShowDatePicker(true)}
@@ -224,7 +242,12 @@ const IncidentScreenDialog = ({ visible, onClose, defaultValues }: DialogProps) 
                         }}
                       />
                     )}
-                  </View>
+                    <HelperText
+                      visible={!!errors.date}
+                      message={errors.date?.message}
+                      type="error"
+                    />
+                  </>
                 )}
               />
             </View>
@@ -235,6 +258,7 @@ const IncidentScreenDialog = ({ visible, onClose, defaultValues }: DialogProps) 
               <Controller
                 control={control}
                 name="time"
+                rules={{ required: "Time is required" }}
                 render={({ field: { value, onChange } }) => {
                   const pickerDate = value
                     ? (() => {
@@ -267,6 +291,11 @@ const IncidentScreenDialog = ({ visible, onClose, defaultValues }: DialogProps) 
                           }}
                         />
                       )}
+                      <HelperText
+                        visible={!!errors.time}
+                        message={errors.time?.message}
+                        type="error"
+                      />
                     </View>
                   );
                 }}
