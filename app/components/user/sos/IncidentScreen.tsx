@@ -4,15 +4,15 @@ import { useQuery } from "@tanstack/react-query";
 import { format, parse } from "date-fns";
 import React, { useState } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AddBtn from "../../AddBtn";
+import Loader from "../../Loader";
 import IncidentScreenDialog from "./AddOrEditIncidentScreenDialog";
 
 const IncidentScreen = () => {
@@ -57,8 +57,8 @@ const IncidentScreen = () => {
       </Pressable>
 
       {isIncidentDataFetching && (
-        <View style={{ margin: 8 }}>
-          <ActivityIndicator size="large" color="#0B4057" />
+        <View style={{ margin: 8, paddingVertical: 10 }}>
+          <Loader showText={false} />
         </View>
       )}
 
