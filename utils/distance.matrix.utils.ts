@@ -3,12 +3,10 @@ export const getRouteDistance = async (
   destination: { latitude: number; longitude: number }
 ): Promise<any | null> => {
   const API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
-
   if (!API_KEY) {
     console.error("[RoutesAPI] ❌ Missing Google Maps API key.");
     return null;
   }
-
   try {
     const url =
       "https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix";
@@ -20,9 +18,6 @@ export const getRouteDistance = async (
       routingPreference: "TRAFFIC_AWARE",
       units: "METRIC",
     };
-
-    console.log("[RoutesAPI] 🌍 Fetching route data...");
-
     const response = await fetch(url, {
       method: "POST",
       headers: {
@@ -33,25 +28,22 @@ export const getRouteDistance = async (
       },
       body: JSON.stringify(body),
     });
-
     const data = await response.json();
-    console.log("[RoutesAPI] 📦 Full Response:", JSON.stringify(data, null, 2));
 
     if (data[0]?.distanceMeters != null && data[0]?.duration != null) {
-  const distanceKm = data[0].distanceMeters / 1000;
-
-  // Convert duration string like "1753s" to number
-  const durationSeconds = Number(data[0].duration.replace("s", ""));
-  
-  const hours = Math.floor(durationSeconds / 3600);
-  const minutes = Math.floor((durationSeconds % 3600) / 60);
-
-  const returnData = { distanceKm, ConvertedHours: hours, ConvertedMinutes: minutes };
-  return returnData;
-} else {
-  return null;
-}
-
+      const distanceKm = data[0].distanceMeters / 1000;
+      const durationSeconds = Number(data[0].duration.replace("s", ""));
+      const hours = Math.floor(durationSeconds / 3600);
+      const minutes = Math.floor((durationSeconds % 3600) / 60);
+      const returnData = {
+        distanceKm,
+        ConvertedHours: hours,
+        ConvertedMinutes: minutes,
+      };
+      return returnData;
+    } else {
+      return null;
+    }
   } catch (error: any) {
     console.error("[RoutesAPI] 🚨 Network or parsing error:", error.message);
     return null;
