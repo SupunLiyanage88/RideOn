@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
+import RentUserBike from "./RentUserBike";
 
 export default function StationDetail() {
   const router = useRouter();
@@ -244,6 +245,10 @@ export default function StationDetail() {
           ))
         )}
       </ScrollView>
+      <RentUserBike
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }

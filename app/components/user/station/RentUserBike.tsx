@@ -1,22 +1,36 @@
+import { fetchBikeStation } from "@/api/bikeStation";
+import { useDebounce } from "@/utils/useDebounce.utils";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import * as Location from "expo-location";
 import React, { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+    ActivityIndicator,
+    Modal,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native";
 import MapView, { Circle, Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
+import DialogHeader from "../../DialogHeader";
 
 const THEME_COLOR = "#083A4C";
-const GOOGLE_MAPS_APIKEY = "YOUR_GOOGLE_MAPS_API_KEY"; // ← Replace this
-
+const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || ""; // ← Replace this
+type DialogProps = {
+  visible: boolean;
+  onClose: () => void;
+};
 // --- Fetch bike stations ---
-async function fetchBikeStation({ query }: { query?: string }) {
-  const response = await fetch(`https://your-api-url.com/stations?query=${query || ""}`);
-  return response.json();
-}
 
 // --- Distance calculator ---
-const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+const getDistance = (
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+) => {
   const R = 6371e3;
   const φ1 = (lat1 * Math.PI) / 180;
   const φ2 = (lat2 * Math.PI) / 180;
@@ -24,17 +38,18 @@ const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => 
   const Δλ = ((lon2 - lon1) * Math.PI) / 180;
 
   const a =
-    Math.sin(Δφ / 2) ** 2 +
-    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
+    Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 };
 
-const RentUserBike = () => {
+const RentUserBike = ({ visible, onClose }: DialogProps) => {
   const mapRef = useRef<MapView | null>(null);
   const [location, setLocation] = useState<any>(null);
   const [selectedStation, setSelectedStation] = useState<any>(null);
   const [distance, setDistance] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedQuery = useDebounce(searchQuery, 500);
 
   // --- Fetch current location ---
   useEffect(() => {
@@ -54,11 +69,13 @@ const RentUserBike = () => {
   const {
     data: bikeStationData,
     isFetching: isBikeStationLoading,
+    refetch: researchBikeStation,
   } = useQuery({
-    queryKey: ["station-data"],
+    queryKey: ["station-data", debouncedQuery],
     queryFn: ({ queryKey }) => fetchBikeStation({ query: queryKey[1] }),
   });
 
+  console.log("Bike Stations:", bikeStationData);
   // --- Calculate distance when selected ---
   useEffect(() => {
     if (location && selectedStation) {
@@ -80,103 +97,113 @@ const RentUserBike = () => {
       </View>
     );
   }
-
+  const handleClose = () => {
+    onClose();
+  };
   return (
-    <View style={styles.container}>
-      <View style={styles.mapContainer}>
-        <MapView
-          ref={mapRef}
-          style={styles.map}
-          provider={PROVIDER_GOOGLE}
-          showsUserLocation={true}
-          showsMyLocationButton={false}
-          initialRegion={{
-            latitude: location.latitude,
-            longitude: location.longitude,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          }}
-        >
-          <Circle
-            center={location}
-            radius={500}
-            strokeWidth={2}
-            strokeColor={THEME_COLOR}
-            fillColor="rgba(8, 58, 76, 0.15)"
-          />
-
-          {!isBikeStationLoading &&
-            bikeStationData?.map((station: any) => (
-              <Marker
-                key={station._id}
-                coordinate={{
-                  latitude: station.latitude,
-                  longitude: station.longitude,
-                }}
-                onPress={() => setSelectedStation(station)}
-              >
-                <View
-                  style={[
-                    styles.customMarker,
-                    selectedStation?._id === station._id && styles.selectedMarker,
-                  ]}
-                >
-                  <Ionicons
-                    name="bicycle"
-                    size={20}
-                    color={selectedStation?._id === station._id ? "#fff" : THEME_COLOR}
-                  />
-                </View>
-              </Marker>
-            ))}
-
-          {selectedStation && (
-            <MapViewDirections
-              origin={location}
-              destination={{
-                latitude: selectedStation.latitude,
-                longitude: selectedStation.longitude,
-              }}
-              apikey={GOOGLE_MAPS_APIKEY}
-              strokeWidth={4}
+    <Modal visible={visible} transparent animationType="slide">
+      <View style={styles.container}>
+        <DialogHeader title={"Route Pick"} onClose={handleClose} />
+        <View style={styles.mapContainer}>
+          <MapView
+            ref={mapRef}
+            style={styles.map}
+            provider={PROVIDER_GOOGLE}
+            showsUserLocation={true}
+            showsMyLocationButton={false}
+            initialRegion={{
+              latitude: location.latitude,
+              longitude: location.longitude,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            }}
+          >
+            <Circle
+              center={location}
+              radius={500}
+              strokeWidth={2}
               strokeColor={THEME_COLOR}
-              onReady={(result) => {
-                mapRef.current?.fitToCoordinates(result.coordinates, {
-                  edgePadding: { top: 100, bottom: 100, left: 50, right: 50 },
-                  animated: true,
-                });
-              }}
+              fillColor="rgba(8, 58, 76, 0.15)"
             />
-          )}
-        </MapView>
 
-        <TouchableOpacity
-          style={styles.recenterButton}
-          onPress={() =>
-            mapRef.current?.animateToRegion(
-              {
-                latitude: location.latitude,
-                longitude: location.longitude,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01,
-              },
-              800
-            )
-          }
-        >
-          <Ionicons name="locate" size={24} color={THEME_COLOR} />
-        </TouchableOpacity>
-      </View>
+            {!isBikeStationLoading &&
+              bikeStationData?.map((station: any) => (
+                <Marker
+                  key={station._id}
+                  coordinate={{
+                    latitude: station.latitude,
+                    longitude: station.longitude,
+                  }}
+                  onPress={() => setSelectedStation(station)}
+                >
+                  <View
+                    style={[
+                      styles.customMarker,
+                      selectedStation?._id === station._id &&
+                        styles.selectedMarker,
+                    ]}
+                  >
+                    <Ionicons
+                      name="bicycle"
+                      size={20}
+                      color={
+                        selectedStation?._id === station._id
+                          ? "#fff"
+                          : THEME_COLOR
+                      }
+                    />
+                  </View>
+                </Marker>
+              ))}
 
-      {selectedStation && (
-        <View style={styles.infoBox}>
-          <Text style={styles.stationName}>{selectedStation.name}</Text>
-          <Text style={styles.stationDistance}>
-            Distance: {distance?.toFixed(2)} km
-          </Text>
+            {selectedStation && (
+              <MapViewDirections
+                origin={location}
+                destination={{
+                  latitude: selectedStation.latitude,
+                  longitude: selectedStation.longitude,
+                }}
+                apikey={GOOGLE_MAPS_API_KEY}
+                strokeWidth={4}
+                strokeColor={THEME_COLOR}
+                onReady={(result) => {
+                  mapRef.current?.fitToCoordinates(result.coordinates, {
+                    edgePadding: { top: 100, bottom: 100, left: 50, right: 50 },
+                    animated: true,
+                  });
+                }}
+              />
+            )}
+          </MapView>
+
+          <TouchableOpacity
+            style={styles.recenterButton}
+            onPress={() =>
+              mapRef.current?.animateToRegion(
+                {
+                  latitude: location.latitude,
+                  longitude: location.longitude,
+                  latitudeDelta: 0.01,
+                  longitudeDelta: 0.01,
+                },
+                800
+              )
+            }
+          >
+            <Ionicons name="locate" size={24} color={THEME_COLOR} />
+          </TouchableOpacity>
         </View>
-      )}
-    </View>
+
+        {selectedStation && (
+          <View style={styles.infoBox}>
+            <Text style={styles.stationName}>{selectedStation.name}</Text>
+            <Text style={styles.stationDistance}>
+              Distance: {distance?.toFixed(2)} km
+            </Text>
+          </View>
+        )}
+      </View>
+    </Modal>
   );
 };
 
