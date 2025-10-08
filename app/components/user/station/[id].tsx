@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
   },
   rentButton: {
     backgroundColor: "#083A4C",
-    borderRadius: 14,
+    borderRadius: 24,
     paddingVertical: 14,
     flexDirection: "row",
     justifyContent: "center",
