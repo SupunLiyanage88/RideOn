@@ -27,6 +27,7 @@ const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "";
 type DialogProps = {
   visible: boolean;
   onClose: () => void;
+  defaultBikeId?: String;
 };
 
 interface Coordinate {
@@ -34,7 +35,7 @@ interface Coordinate {
   longitude: number;
 }
 
-const RentUserBike = ({ visible, onClose }: DialogProps) => {
+const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
   const mapRef = useRef<MapView | null>(null);
   const { user } = UseCurrentUser();
   const [location, setLocation] = useState<Coordinate | null>(null);
@@ -45,7 +46,8 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
   const locationSubscription = useRef<Location.LocationSubscription | null>(
     null
   );
-
+  console.log("Selected Station:", selectedStation);
+  console.log("BikeId:", defaultBikeId);
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedQuery = useDebounce(searchQuery, 500);
 

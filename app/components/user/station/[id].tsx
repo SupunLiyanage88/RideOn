@@ -22,6 +22,7 @@ export default function StationDetail() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [modalVisible, setModalVisible] = useState(false);
+  const [bikeId, setBikeId] = useState<String | null>(null);
 
   const {
     data: stationData,
@@ -235,8 +236,12 @@ export default function StationDetail() {
                 </View>
               </View>
 
-              <TouchableOpacity style={styles.rentButton}
-                onPress={() => setModalVisible(true)}
+              <TouchableOpacity
+                style={styles.rentButton}
+                onPress={() => {
+                  setModalVisible(true);
+                  setBikeId(bike._id);
+                }}
               >
                 <Text style={styles.rentButtonText}>Rent This Bike</Text>
                 <Ionicons name="arrow-forward" size={18} color="#fff" />
@@ -248,6 +253,7 @@ export default function StationDetail() {
       <RentUserBike
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
+        defaultBikeId={bikeId || undefined}
       />
     </SafeAreaView>
   );
