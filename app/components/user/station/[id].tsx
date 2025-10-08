@@ -244,7 +244,7 @@ export default function StationDetail() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f9fafb" },
+  container: { flex: 1, backgroundColor: "#EBEBEB" },
   centerContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   loadingText: { marginTop: 12, color: "#64748b", fontSize: 15 },
   errorTitle: {
@@ -275,11 +275,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 12,
     borderColor: "#083A4C",
-    borderWidth: 1,
+    elevation: 5,
     shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
-    elevation: 3,
   },
   headerTextBox: {
     flex: 1,
@@ -322,12 +322,12 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 14,
     alignItems: "center",
-    shadowColor: "#000",
     borderColor: "#083A4C",
-    borderWidth: 1,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowRadius: 5,
   },
   statValue: {
     fontSize: 20,
@@ -350,12 +350,12 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     marginBottom: 20,
-    shadowColor: "#000",
     borderColor: "#083A4C",
-    borderWidth: 0.5,
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
   },
   bikeHeader: {
     flexDirection: "row",
