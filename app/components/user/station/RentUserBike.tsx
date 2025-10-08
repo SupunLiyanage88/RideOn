@@ -9,6 +9,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Modal,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -261,7 +262,10 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
       animationType="slide"
       onRequestClose={handleClose}
     >
-      <SafeAreaView edges={["left", "right"]} style={{ flex: 1 }}>
+      <SafeAreaView
+        edges={["left", "right"]}
+        style={{ flex: 1, marginTop: Platform.OS === "ios" ? 40 : 0 }}
+      >
         <View style={styles.container}>
           <View style={{ marginTop: 15 }}>
             <DialogHeader
