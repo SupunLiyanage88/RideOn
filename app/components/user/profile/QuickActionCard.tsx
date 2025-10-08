@@ -1,5 +1,6 @@
-import React from 'react';
-import { StyleSheet, Text, TouchableOpacity } from 'react-native';
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
+import React from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface QuickActionCardProps {
   icon: string;
@@ -8,7 +9,12 @@ interface QuickActionCardProps {
   onPress: () => void;
 }
 
-const QuickActionCard = ({ icon, title, color, onPress }: QuickActionCardProps) => {
+const QuickActionCard = ({
+  icon,
+  title,
+  color,
+  onPress,
+}: QuickActionCardProps) => {
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -18,13 +24,13 @@ const QuickActionCard = ({ icon, title, color, onPress }: QuickActionCardProps) 
         {
           backgroundColor: color,
           shadowColor: color,
-        }
+        },
       ]}
     >
-      <Text style={styles.icon}>{icon}</Text>
-      <Text style={styles.title}>
-        {title}
-      </Text>
+      <View style={{ marginBottom: 10 }}>
+        <FontAwesome5 name={icon} size={35} color="white" />
+      </View>
+      <Text style={styles.title}>{title}</Text>
     </TouchableOpacity>
   );
 };
@@ -43,16 +49,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   icon: {
-    fontSize: 36,
+    fontSize: 60,
     marginBottom: 8,
   },
   title: {
-    fontSize: 15,
+    fontSize: 17,
     fontWeight: "700",
     color: "white",
     textAlign: "center",
-    letterSpacing: -0.2
-  }
+    letterSpacing: -0.2,
+  },
 });
 
 export default QuickActionCard;
