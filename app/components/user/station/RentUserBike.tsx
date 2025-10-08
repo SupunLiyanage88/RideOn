@@ -1,4 +1,5 @@
 import { fetchBikeStation } from "@/api/bikeStation";
+import UseCurrentUser from "@/hooks/useCurrentUser";
 import { getRouteDistance } from "@/utils/distance.matrix.utils";
 import { useDebounce } from "@/utils/useDebounce.utils";
 import { Ionicons } from "@expo/vector-icons";
@@ -19,6 +20,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import DialogHeader from "../../DialogHeader";
 
 const THEME_COLOR = "#083A4C";
+const RC_FEE_VALUE = 10;
 const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "";
 
 type DialogProps = {
@@ -26,7 +28,6 @@ type DialogProps = {
   onClose: () => void;
 };
 
-// Add proper type for location
 interface Coordinate {
   latitude: number;
   longitude: number;
@@ -34,6 +35,7 @@ interface Coordinate {
 
 const RentUserBike = ({ visible, onClose }: DialogProps) => {
   const mapRef = useRef<MapView | null>(null);
+  const { user } = UseCurrentUser();
   const [location, setLocation] = useState<Coordinate | null>(null);
   const [selectedStation, setSelectedStation] = useState<any>(null);
   const [distance, setDistance] = useState<any | null>(null);
@@ -88,7 +90,7 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
   const { data: bikeStationData, isFetching: isBikeStationLoading } = useQuery({
     queryKey: ["station-data", debouncedQuery],
     queryFn: ({ queryKey }) => fetchBikeStation({ query: queryKey[1] }),
-    enabled: visible, // Only fetch when modal is visible
+    enabled: visible,
   });
 
   useEffect(() => {
@@ -120,7 +122,6 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
         return;
       }
 
-      // Stop any existing subscription
       if (locationSubscription.current) {
         locationSubscription.current.remove();
         locationSubscription.current = null;
@@ -159,12 +160,12 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
       locationSubscription.current.remove();
       locationSubscription.current = null;
     }
+    if (isNavigating) {
+      setSelectedStation(null);
+    }
   };
 
   const handleClose = () => {
-    stopNavigation();
-    setSelectedStation(null);
-    setDistance(null);
     onClose();
   };
 
@@ -174,7 +175,6 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
     stopNavigation();
   };
 
-  // Safe region for initial map render
   const getInitialRegion = () => {
     if (location) {
       return {
@@ -185,7 +185,6 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
       };
     }
 
-    // Fallback to a default location if user location not available
     return {
       latitude: 37.78825,
       longitude: -122.4324,
@@ -205,7 +204,7 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
         <View style={styles.container}>
           <View style={{ marginTop: 15 }}>
             <DialogHeader
-              title={"Route Pick"}
+              title={"Pick Station"}
               onClose={handleClose}
               subtitle="Pick Your Ride On Station"
             />
@@ -335,12 +334,28 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
                         gap: 10,
                       }}
                     >
-                      <Text>📍</Text>
+                      <View style={styles.iconContainer}>
+                        <Text>🪙</Text>
+                      </View>
                       <Text style={styles.detailLabel}>Available RC</Text>
                     </View>
-
-                    <Text style={styles.detailValue}>
-                      {distance?.distanceKm?.toFixed(2) || "0.00"} km
+                    <Text style={styles.basicChip}>{user?.rc} RC</Text>
+                  </View>
+                  <View style={styles.coinDetailItem}>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 10,
+                      }}
+                    >
+                      <View style={styles.iconContainer}>
+                        <Text>🪙</Text>
+                      </View>
+                      <Text style={styles.detailLabel}>RC Fee</Text>
+                    </View>
+                    <Text style={styles.basicChip}>
+                      {Math.round(distance?.distanceKm * RC_FEE_VALUE)} RC
                     </Text>
                   </View>
                   <View style={styles.stationDetails}>
@@ -374,20 +389,49 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
               </View>
 
               {!isNavigating ? (
-                <View style={{ marginBottom: 40 }}>
-                  <TouchableOpacity
-                    style={styles.navigateButton}
-                    onPress={startNavigation}
+                user?.rc === 0 || !user?.rc ? (
+                  <View style={{ marginBottom: 40 }}>
+                    <TouchableOpacity
+                      style={[
+                        styles.navigateButtonWithoutStretch,
+                        { backgroundColor: "#D9534F" },
+                      ]}
+                    >
+                      <Ionicons name="compass" size={18} color="#fff" />
+                      <Text style={styles.navigateText}>Buy RC</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <View
+                    style={{
+                      marginBottom: 40,
+                      display: "flex",
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      gap: 10,
+                    }}
                   >
-                    <Ionicons name="navigate" size={18} color="#fff" />
-                    <Text style={styles.navigateText}>Start Navigation</Text>
-                  </TouchableOpacity>
-                </View>
+                    <TouchableOpacity
+                      style={styles.navigateButton}
+                      onPress={startNavigation}
+                    >
+                      <Ionicons name="navigate" size={18} color="#fff" />
+                      <Text style={styles.navigateText}>Start Navigation</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.navigateButtonClose}
+                      onPress={() => setSelectedStation(null)}
+                    >
+                      <Ionicons name="close" size={18} color="#fff" />
+                      <Text style={styles.navigateText}>Cancel</Text>
+                    </TouchableOpacity>
+                  </View>
+                )
               ) : (
                 <View style={{ marginBottom: 40 }}>
                   <TouchableOpacity
                     style={[
-                      styles.navigateButton,
+                      styles.navigateButtonWithoutStretch,
                       { backgroundColor: "#D9534F" },
                     ]}
                     onPress={stopNavigation}
@@ -459,6 +503,28 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 10,
     marginTop: 10,
+    flex: 1,
+    alignSelf: "stretch",
+  },
+  navigateButtonClose: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "gray",
+    borderRadius: 8,
+    paddingVertical: 10,
+    marginTop: 10,
+    flex: 1,
+    alignSelf: "stretch",
+  },
+  navigateButtonWithoutStretch: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: THEME_COLOR,
+    borderRadius: 8,
+    paddingVertical: 10,
+    marginTop: 10,
   },
   navigateText: {
     color: "#fff",
@@ -482,6 +548,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    marginTop: 4,
   },
   stationInfoDetails: {
     flexDirection: "row",
@@ -515,6 +582,20 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#2e7d32",
   },
+  basicChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#2e7d32",
+    backgroundColor: "#e8f5e9",
+    borderWidth: 1,
+    borderColor: "#c8e6c9",
+    alignSelf: "flex-start",
+  },
   iconContainer: {
     width: 24,
     height: 24,
@@ -525,15 +606,14 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   coinDetailItem: {
-    margin: 8,
+    margin: 4,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: "#f8f9fa",
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 20,
-    marginHorizontal: 4,
     borderWidth: 1,
     borderColor: THEME_COLOR,
   },
