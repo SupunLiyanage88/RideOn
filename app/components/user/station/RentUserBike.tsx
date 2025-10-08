@@ -1,4 +1,5 @@
 import { fetchBikeStation } from "@/api/bikeStation";
+import { getRouteDistance } from "@/utils/distance.matrix.utils";
 import { useDebounce } from "@/utils/useDebounce.utils";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
@@ -17,30 +18,11 @@ import MapViewDirections from "react-native-maps-directions";
 import DialogHeader from "../../DialogHeader";
 
 const THEME_COLOR = "#083A4C";
-const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || ""; // ← Replace this
+const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "";
+
 type DialogProps = {
   visible: boolean;
   onClose: () => void;
-};
-// --- Fetch bike stations ---
-
-// --- Distance calculator ---
-const getDistance = (
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number
-) => {
-  const R = 6371e3;
-  const φ1 = (lat1 * Math.PI) / 180;
-  const φ2 = (lat2 * Math.PI) / 180;
-  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
-  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
-
-  const a =
-    Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
 };
 
 const RentUserBike = ({ visible, onClose }: DialogProps) => {
@@ -49,6 +31,8 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
   const [selectedStation, setSelectedStation] = useState<any>(null);
   const [distance, setDistance] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isNavigating, setIsNavigating] = useState(false);
+  const locationSubscription = useRef<Location.LocationSubscription | null>(null);
   const debouncedQuery = useDebounce(searchQuery, 500);
 
   // --- Fetch current location ---
@@ -56,38 +40,82 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") return;
-
       const current = await Location.getCurrentPositionAsync({});
       setLocation({
         latitude: current.coords.latitude,
         longitude: current.coords.longitude,
       });
     })();
+
+    return () => {
+      if (locationSubscription.current) {
+        locationSubscription.current.remove();
+      }
+    };
   }, []);
 
   // --- Fetch stations ---
   const {
     data: bikeStationData,
     isFetching: isBikeStationLoading,
-    refetch: researchBikeStation,
   } = useQuery({
     queryKey: ["station-data", debouncedQuery],
     queryFn: ({ queryKey }) => fetchBikeStation({ query: queryKey[1] }),
   });
 
-  console.log("Bike Stations:", bikeStationData);
-  // --- Calculate distance when selected ---
+  // --- Calculate distance when station selected ---
   useEffect(() => {
-    if (location && selectedStation) {
-      const dist = getDistance(
-        location.latitude,
-        location.longitude,
-        selectedStation.latitude,
-        selectedStation.longitude
-      );
-      setDistance(dist / 1000); // convert to km
-    }
+    const fetchDistance = async () => {
+      if (location && selectedStation) {
+        const dist = await getRouteDistance(
+          { latitude: location.latitude, longitude: location.longitude },
+          {
+            latitude: selectedStation.latitude,
+            longitude: selectedStation.longitude,
+          }
+        );
+        setDistance(dist);
+      }
+    };
+    fetchDistance();
   }, [selectedStation, location]);
+
+  // --- Start Navigation (real-time location tracking) ---
+  const startNavigation = async () => {
+    setIsNavigating(true);
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== "granted") return;
+
+    locationSubscription.current = await Location.watchPositionAsync(
+      {
+        accuracy: Location.Accuracy.Highest,
+        distanceInterval: 5, // Update every 5 meters
+      },
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setLocation({ latitude, longitude });
+
+        // Keep map camera following the user smoothly
+        mapRef.current?.animateToRegion(
+          {
+            latitude,
+            longitude,
+            latitudeDelta: 0.005,
+            longitudeDelta: 0.005,
+          },
+          1000
+        );
+      }
+    );
+  };
+
+  const stopNavigation = () => {
+    setIsNavigating(false);
+    if (locationSubscription.current) {
+      locationSubscription.current.remove();
+      locationSubscription.current = null;
+    }
+  };
 
   if (!location) {
     return (
@@ -97,19 +125,20 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
       </View>
     );
   }
-  const handleClose = () => {
-    onClose();
-  };
+
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.container}>
-        <DialogHeader title={"Route Pick"} onClose={handleClose} />
+        <DialogHeader title={"Route Pick"} onClose={onClose} />
+
+        {/* --- MAP VIEW --- */}
         <View style={styles.mapContainer}>
           <MapView
             ref={mapRef}
             style={styles.map}
             provider={PROVIDER_GOOGLE}
             showsUserLocation={true}
+            followsUserLocation={isNavigating}
             showsMyLocationButton={false}
             initialRegion={{
               latitude: location.latitude,
@@ -134,7 +163,11 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
                     latitude: station.latitude,
                     longitude: station.longitude,
                   }}
-                  onPress={() => setSelectedStation(station)}
+                  onPress={() => {
+                    setSelectedStation(station);
+                    setIsNavigating(false);
+                    stopNavigation();
+                  }}
                 >
                   <View
                     style={[
@@ -166,9 +199,15 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
                 apikey={GOOGLE_MAPS_API_KEY}
                 strokeWidth={4}
                 strokeColor={THEME_COLOR}
+                optimizeWaypoints={true}
                 onReady={(result) => {
                   mapRef.current?.fitToCoordinates(result.coordinates, {
-                    edgePadding: { top: 100, bottom: 100, left: 50, right: 50 },
+                    edgePadding: {
+                      top: 100,
+                      bottom: 100,
+                      left: 50,
+                      right: 50,
+                    },
                     animated: true,
                   });
                 }}
@@ -176,6 +215,7 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
             )}
           </MapView>
 
+          {/* --- Recenter --- */}
           <TouchableOpacity
             style={styles.recenterButton}
             onPress={() =>
@@ -194,12 +234,31 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
           </TouchableOpacity>
         </View>
 
+        {/* --- Station Info + Navigation Buttons --- */}
         {selectedStation && (
           <View style={styles.infoBox}>
             <Text style={styles.stationName}>{selectedStation.name}</Text>
             <Text style={styles.stationDistance}>
               Distance: {distance?.toFixed(2)} km
             </Text>
+
+            {!isNavigating ? (
+              <TouchableOpacity
+                style={styles.navigateButton}
+                onPress={startNavigation}
+              >
+                <Ionicons name="navigate" size={18} color="#fff" />
+                <Text style={styles.navigateText}>Start Navigation</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[styles.navigateButton, { backgroundColor: "#D9534F" }]}
+                onPress={stopNavigation}
+              >
+                <Ionicons name="stop-circle" size={18} color="#fff" />
+                <Text style={styles.navigateText}>Stop Navigation</Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
       </View>
@@ -259,5 +318,19 @@ const styles = StyleSheet.create({
   stationDistance: {
     fontSize: 14,
     color: "#555",
+  },
+  navigateButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: THEME_COLOR,
+    borderRadius: 8,
+    paddingVertical: 10,
+    marginTop: 10,
+  },
+  navigateText: {
+    color: "#fff",
+    marginLeft: 8,
+    fontWeight: "600",
   },
 });
