@@ -253,11 +253,6 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
   }, [bikeStationData, selectedStation]);
 
   const RC_FEE_ROUTE = Math.round(distance?.distanceKm * RC_FEE_VALUE);
-  const shouldShowButton =
-    !user?.rc ||
-    (typeof user.rc === "number" &&
-      typeof RC_FEE_ROUTE === "number" &&
-      user.rc < RC_FEE_ROUTE);
   return (
     <Modal
       visible={visible}
@@ -491,7 +486,7 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
               </View>
 
               {!isNavigating ? (
-                user?.rc === 0 || shouldShowButton || !user?.rc ? (
+                user?.rc === 0 || !user?.rc ? (
                   <View style={{ marginBottom: 40 }}>
                     <TouchableOpacity
                       style={[
