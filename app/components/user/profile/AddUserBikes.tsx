@@ -912,7 +912,7 @@ const AddUserBikes = () => {
             <View
               style={{
                 padding: 24,
-                backgroundColor: "#ffffff",
+                backgroundColor: "#083A4C",
                 borderTopWidth: 1,
                 borderTopColor: "#f3f4f6",
               }}
