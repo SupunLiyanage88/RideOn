@@ -32,15 +32,10 @@ const UserBikes = () => {
       <View
         style={{
           flexDirection: "row",
-          alignItems: "center",
+          alignItems: "center",          
           paddingHorizontal: 20,
           paddingVertical: 16,
-          backgroundColor: "white",
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-          elevation: 3,
+          backgroundColor: "transparent",          
         }}
       >
         <TouchableOpacity
@@ -58,6 +53,7 @@ const UserBikes = () => {
             fontWeight: "700",
             color: "#083A4C",
             flex: 1,
+
           }}
         >
           My Bikes

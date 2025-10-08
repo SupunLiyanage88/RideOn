@@ -1,11 +1,13 @@
 import { Bike } from "@/api/bike";
+import { images } from "@/constants/images";
 import React from "react";
 import {
-    Dimensions,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Dimensions,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -42,13 +44,36 @@ const UserBikeCard = ({ bike }: { bike: Bike }) => {
   const isSmallScreen = SCREEN_WIDTH < 375;
   const conditionPercentage = getBikeConditionPercentage(bike.condition);
 
+  // Function to render bike icon based on bike ID
+  const renderBikeIcon = () => {
+    const bikeIdPrefix = bike.bikeId.substring(0, 2).toUpperCase();
+    
+    if (bikeIdPrefix === 'EV') {
+      return (
+        <Image 
+          source={images.evbike} 
+          style={styles.bikeImage} 
+        />
+      );
+    } else if (bikeIdPrefix === 'PD') {
+      return (
+        <Image 
+          source={images.pdbike} 
+          style={styles.bikeImage} 
+        />
+      );
+    } else {
+      return <Text style={styles.bikeIcon}>🚲</Text>;
+    }
+  };
+
   return (
     <View style={[styles.container, { padding: isSmallScreen ? 16 : 20 }]}>
       {/* Header Section with Bike Info */}
       <View style={styles.header}>
         <View style={styles.bikeInfo}>
           <View style={styles.bikeIconContainer}>
-            <Text style={styles.bikeIcon}>🚲</Text>
+            {renderBikeIcon()}
           </View>
           <View style={styles.bikeDetails}>
             <Text
@@ -304,6 +329,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
 
+  bikeImage: {
+    width: 40,
+    height: 40,
+    resizeMode: 'contain',
+  },
+
   bikeDetails: {
     flex: 1,
   },
@@ -473,14 +504,14 @@ const styles = StyleSheet.create({
   },
 
   actionButton: {
-    backgroundColor: "#37A77D",
+    backgroundColor: "#083A4C",
     borderRadius: 12,
     paddingHorizontal: 20,
     paddingVertical: 14,
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#37A77D",
+    shadowColor: "#083A4C",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
