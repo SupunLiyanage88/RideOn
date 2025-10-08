@@ -16,7 +16,6 @@ import ProfileHeader from "../components/user/profile/ProfileHeader";
 import QuickActionCard from "../components/user/profile/QuickActionCard";
 
 
-
 const LogoutButton = () => {
   const router = useRouter();
 
@@ -72,6 +71,8 @@ const LogoutButton = () => {
 };
 
 const Me = () => {
+  const router = useRouter();
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#F8FAFB" }}>
       <ScrollView 
@@ -87,16 +88,16 @@ const Me = () => {
           marginBottom: 32
         }}>
           <QuickActionCard
-            icon="🚲"
+            icon="bicycle"
             title="My Bikes"
             color="#37A77D"
-            onPress={() => console.log("My Bikes")}
-          />
+            onPress={() => router.push("/components/user/profile/UserBikes")}
+          />          
           <QuickActionCard
-            icon="➕"
+            icon="plus"
             title="Add Bike"
             color="#083A4C"
-            onPress={() => console.log("Add Bike")}
+            onPress={() => router.push("/components/user/profile/AddUserBikes")}
           />
         </View>
 

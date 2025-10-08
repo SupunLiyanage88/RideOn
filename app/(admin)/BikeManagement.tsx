@@ -159,7 +159,7 @@ const BikeManagement = () => {
             </View>
             {isBikeSearchLoading && (
               <View style={{ paddingBottom: 24, margin: 8 }}>
-                <Loader textStyle={{ fontSize: 20 }} showText={false} />
+                <Loader showText={false} />
               </View>
             )}
             {bikeSearchData?.map((bike: Bike) => (

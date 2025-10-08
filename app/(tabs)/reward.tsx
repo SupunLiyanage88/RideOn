@@ -1,338 +1,340 @@
-import { fetchSubscriptionPackages } from '@/api/subscription'; // Import the function from api/subscription
-import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
-import { useNavigation } from '@react-navigation/native';
-import React, { useEffect, useState } from 'react';
-import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  activateUserPackage,
+  Package as AdminPackage,
+  fetchActiveUserPackages,
+  fetchPackages,
+  fetchUserRcTotal,
+} from "@/api/package";
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  Alert,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import PackageCardRider from "../components/user/package/PackageCardRider";
+import SegmentedTabs from "../components/user/package/SegmentedTabs";
+import RCBalanceHeader from "../components/user/package/RCBalanceHeader";
+import PurchaseConfirmModal, {PurchaseConfirmData,} from "../components/user/package/PurchaseConfirmModal";
 
-// Define the shape of the package
-interface Package {
+type AvailablePackage = AdminPackage & {
+  activationCount?: number;
+  createdAt?: string;
+  timePeriod?: number;
+};
+
+type ActiveUserPackage = {
   _id: string;
   name: string;
-  rc: string;
-  price: string;
-  recommended: boolean;
-  icon: string;
+  price: number;
   description: string;
-  isActive: boolean;
-}
+  rc: number;
+  timePeriod: number;
+  icon: string;
+  activatedAt: string;
+  expiresAt: string;
+  daysRemaining: number;
+};
+
+type Tab = "Available" | "Active";
 
 const Reward = () => {
-  const [activeTab, setActiveTab] = useState('Available');
-  const [packages, setPackages] = useState<Package[]>([]); // Use the Package type for the state
+  const [activeTab, setActiveTab] = useState<Tab>("Available");
+  const [available, setAvailable] = useState<AvailablePackage[]>([]);
+  const [active, setActive] = useState<ActiveUserPackage[]>([]);
   const [loading, setLoading] = useState(false);
-  const navigation = useNavigation();
+  const [search, setSearch] = useState("");
+  const [userRc, setUserRc] = useState<number>(0);
+
+  // confirm modal state
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [selected, setSelected] = useState<PurchaseConfirmData | null>(null);
 
   useEffect(() => {
-    const fetchPackages = async () => {
-      setLoading(true); // Start loading before the API call
-
+    const load = async () => {
+      setLoading(true);
       try {
-        const token = await AsyncStorage.getItem('token'); // Retrieve token from AsyncStorage
-
+        const token = await AsyncStorage.getItem("token");
         if (!token) {
-          console.log("No token found in AsyncStorage");
-          setLoading(false); // Stop loading if no token is found
+          setAvailable([]);
+          setActive([]);
+          setUserRc(0);
           return;
         }
-
-        // Fetch subscription packages using the new API function
-        const fetchedPackages = await fetchSubscriptionPackages(token); // Call the API function
-        setPackages(fetchedPackages); // Set the fetched packages
-        setLoading(false); // Stop loading after data is fetched
+        const [allPkgs, activePkgs, rcTotal] = await Promise.all([
+          fetchPackages().catch(() => []),
+          fetchActiveUserPackages().catch(() => []),
+          fetchUserRcTotal().catch(() => 0),
+        ]);
+        setAvailable(Array.isArray(allPkgs) ? allPkgs : []);
+        setActive(Array.isArray(activePkgs) ? activePkgs : []);
+        setUserRc(rcTotal);
       } catch (err) {
-        console.error('Error fetching packages:', err); // Log the error
-        setLoading(false); // Stop loading on error
+        console.error("Reward init error:", err);
+        setAvailable([]);
+        setActive([]);
+        setUserRc(0);
+      } finally {
+        setLoading(false);
       }
     };
-
-    fetchPackages(); // Call the fetchPackages function on component mount
+    load();
   }, []);
 
+  const listShown = activeTab === "Available" ? available : active;
+
+  const filtered = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return listShown as any[];
+    return (listShown as any[]).filter((p: any) =>
+      (p.name || "").toLowerCase().includes(term)
+    );
+  }, [listShown, search]);
+
+  // Open modal with details
+const openConfirm = (id: string) => {
+  const pkg = available.find((p) => p._id === id);
+  if (!pkg) return;
+  setSelected({
+    id: pkg._id,
+    name: pkg.name,
+    rc: pkg.rc,
+    price: pkg.price,
+    timePeriod: pkg.timePeriod,
+    icon: pkg.icon,
+    description: pkg.description,     
+    recommended: pkg.recommended,     
+  });
+  setConfirmOpen(true);
+};
+
+  // Confirm -> do the purchase then refresh lists
+  const confirmBuy = async (id: string) => {
+    try {
+      setLoading(true);
+      const resp = await activateUserPackage(id);
+      const [activePkgs, rc] = await Promise.all([
+        fetchActiveUserPackages().catch(() => []),
+        fetchUserRcTotal().catch(() => 0),
+      ]);
+      setActive(activePkgs);
+      setUserRc(rc);
+      Alert.alert("Success", resp?.message || "Package activated successfully");
+      setActiveTab("Active");
+    } catch (e: any) {
+      console.error("activate error:", e?.response?.data || e?.message);
+      Alert.alert("Error", e?.response?.data?.message || "Activation failed");
+    } finally {
+      setConfirmOpen(false);
+      setSelected(null);
+      setLoading(false);
+    }
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f5f5f5" />
+    <SafeAreaView edges={["left", "right"]} style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerText}>RC Packages</Text>
+        <Text style={styles.title}>RC Packages</Text>
+        <Text style={styles.subtitle}>Explore and manage your packages</Text>
       </View>
 
-      {/* Toggle Buttons */}
-      <View style={styles.toggleContainer}>
-        <TouchableOpacity
-          style={[
-            styles.toggleButton,
-            activeTab === 'Available' ? styles.activeToggle : styles.inactiveToggle,
-          ]}
-          onPress={() => setActiveTab('Available')}
-        >
-          <Text
-            style={[
-              styles.toggleText,
-              activeTab === 'Available' ? styles.activeToggleText : styles.inactiveToggleText,
-            ]}
-          >
-            Available
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.toggleButton,
-            activeTab === 'Active' ? styles.activeToggle : styles.inactiveToggle,
-          ]}
-          onPress={() => setActiveTab('Active')}
-        >
-          <Text
-            style={[
-              styles.toggleText,
-              activeTab === 'Active' ? styles.activeToggleText : styles.inactiveToggleText,
-            ]}
-          >
-            Active
-          </Text>
-        </TouchableOpacity>
-      </View>
+      {/* RC Balance Header Component */}
+      <RCBalanceHeader userRc={userRc} />
 
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search RC Packages"
-          placeholderTextColor="#999"
+      {/* Tabs */}
+      <View style={{ paddingHorizontal: 16, marginTop: 8 }}>
+        <SegmentedTabs
+          options={[
+            { key: "Available", label: "Available" },
+            { key: "Active", label: "Active" },
+          ]}
+          activeKey={activeTab}
+          onChange={(k) => setActiveTab(k as Tab)}
         />
       </View>
 
-      {/* Package List */}
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      {/* Search */}
+      <View style={styles.searchWrap}>
+        <Ionicons name="search" size={18} color="#6B7280" />
+        <TextInput
+          style={styles.searchInput}
+          placeholder={`Search ${activeTab.toLowerCase()} packages`}
+          placeholderTextColor="#9CA3AF"
+          value={search}
+          onChangeText={setSearch}
+          autoCorrect={false}
+        />
+        {search.length > 0 && (
+          <Ionicons
+            name="close-circle"
+            size={18}
+            color="#9CA3AF"
+            onPress={() => setSearch("")}
+          />
+        )}
+      </View>
+
+      {/* List */}
+      <ScrollView
+        contentContainerStyle={{
+          paddingHorizontal: 16,
+          paddingTop: 12,
+          paddingBottom: 103,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
         {loading ? (
-          <Text>Loading...</Text>
+          <View style={styles.centerMessage}>
+            <Ionicons name="reload-circle" size={48} color="#6B7280" />
+            <Text style={styles.messageText}>Loading packages...</Text>
+          </View>
+        ) : filtered.length === 0 ? (
+          <View style={styles.centerMessage}>
+            <Ionicons
+              name={search ? "search-outline" : "gift-outline"}
+              size={48}
+              color="#9CA3AF"
+            />
+            <Text style={styles.messageTitle}>
+              {search ? "No matches found" : `No ${activeTab.toLowerCase()} packages`}
+            </Text>
+            <Text style={styles.messageSubtitle}>
+              {search
+                ? `Try a different search term`
+                : activeTab === "Available"
+                ? "Check back later for new packages"
+                : "Purchase packages to see them here"}
+            </Text>
+          </View>
+        ) : activeTab === "Available" ? (
+          (filtered as AvailablePackage[]).map((p) => (
+            <PackageCardRider
+              key={p._id}
+              theme="light"
+              variant="available"
+              id={p._id}
+              name={p.name}
+              rc={p.rc}
+              price={p.price}
+              timePeriod={p.timePeriod}
+              icon={p.icon}
+              recommended={p.recommended}
+              onBuy={openConfirm}
+            />
+          ))
         ) : (
-          packages.map((pkg) => (
-            <View key={pkg._id} style={styles.packageCard}>
-              {pkg.recommended && (
-                <View style={styles.recommendedBadge}>
-                  <Text style={styles.recommendedText}>Recommended</Text>
-                </View>
-              )}
-
-              <View style={styles.packageContent}>
-                <View style={styles.packageInfo}>
-                  <Text style={styles.packageName}>{pkg.name}</Text>
-                  <Text style={styles.packageRC}>{pkg.rc}</Text>
-                  <Text style={styles.packagePrice}>{pkg.price}</Text>
-                </View>
-
-                <View style={styles.packageRight}>
-                  <View style={styles.iconContainer}>
-                    <Text style={styles.packageIcon}>{pkg.icon}</Text>
-                  </View>
-                  <TouchableOpacity style={styles.buyButton}>
-                    <Text style={styles.buyButtonText}>Buy</Text>
-                  </TouchableOpacity>
-                  <Ionicons name="chevron-forward" size={20} color="#666" style={styles.chevron} />
-                </View>
-              </View>
-            </View>
+          (filtered as ActiveUserPackage[]).map((p) => (
+            <PackageCardRider
+              key={p._id}
+              theme="light"
+              variant="active"
+              id={p._id}
+              name={p.name}
+              rc={p.rc}
+              price={p.price}
+              icon={p.icon}
+              daysRemaining={p.daysRemaining}
+            />
           ))
         )}
       </ScrollView>
 
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="qr-code" size={24} color="#666" />
-          <Text style={styles.navText}>Scan</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="card" size={24} color="#4CAF50" />
-          <Text style={[styles.navText, { color: '#4CAF50' }]}>VC</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="home" size={24} color="#666" />
-          <Text style={styles.navText}>Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="car" size={24} color="#666" />
-          <Text style={styles.navText}>SOS</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="person" size={24} color="#666" />
-          <Text style={styles.navText}>Me</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Confirmation Modal */}
+      <PurchaseConfirmModal
+        visible={confirmOpen}
+        data={selected}
+        busy={loading}
+        onClose={() => {
+          setConfirmOpen(false);
+          setSelected(null);
+        }}
+        onConfirm={confirmBuy}
+      />
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f0f0f0',
+  safeArea: {
+    flex: 10,
+    backgroundColor: "#FFFFFF",
   },
   header: {
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    backgroundColor: '#f0f0f0',
+    paddingTop: 40,
+    paddingBottom: 0,
+    paddingHorizontal: 16,
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
   },
-  headerText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
+  title: {
+    color: "#0F172A",
+    fontSize: 26,
+    fontWeight: "900",
+    letterSpacing: 0.3,
   },
-  toggleContainer: {
-    flexDirection: 'row',
-    marginHorizontal: 20,
-    marginBottom: 15,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 25,
-    padding: 4,
+  subtitle: {
+    color: "#6B7280",
+    fontSize: 13,
+    marginTop: 4,
+    fontWeight: "500",
   },
-  toggleButton: {
-    flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-    alignItems: 'center',
-  },
-  activeToggle: {
-    backgroundColor: '#4CAF50',
-  },
-  inactiveToggle: {
-    backgroundColor: 'transparent',
-  },
-  toggleText: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  activeToggleText: {
-    color: 'white',
-  },
-  inactiveToggleText: {
-    color: '#666',
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: 20,
-    marginBottom: 20,
-    backgroundColor: '#2C5F6F',
-    borderRadius: 25,
-    paddingHorizontal: 15,
+  searchWrap: {
+    marginHorizontal: 16,
+    marginTop: 12,
+    backgroundColor: "#F3F4F6",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    paddingHorizontal: 14,
     paddingVertical: 12,
-  },
-  searchIcon: {
-    marginRight: 10,
-    color: 'white',
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
-    color: 'white',
+    color: "#111827",
+    fontSize: 14,
+    fontWeight: "500",
   },
-  scrollView: {
-    flex: 1,
-    paddingHorizontal: 20,
+  centerMessage: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 60,
+    paddingHorizontal: 32,
   },
-  packageCard: {
-    backgroundColor: '#2C5F6F',
-    borderRadius: 15,
-    marginBottom: 15,
-    overflow: 'hidden',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+  messageText: {
+    color: "#6B7280",
+    fontSize: 15,
+    marginTop: 12,
+    fontWeight: "500",
   },
-  recommendedBadge: {
-    position: 'absolute',
-    top: 15,
-    right: 15,
-    backgroundColor: '#4CAF50',
-    borderRadius: 15,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    zIndex: 1,
-  },
-  recommendedText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  packageContent: {
-    flexDirection: 'row',
-    padding: 20,
-    alignItems: 'center',
-  },
-  packageInfo: {
-    flex: 1,
-  },
-  packageName: {
+  messageTitle: {
+    color: "#374151",
     fontSize: 18,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 5,
+    fontWeight: "700",
+    marginTop: 16,
   },
-  packageRC: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 3,
-  },
-  packagePrice: {
-    fontSize: 14,
-    color: '#B0B0B0',
-  },
-  packageRight: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 15,
-  },
-  packageIcon: {
-    fontSize: 24,
-  },
-  buyButton: {
-    backgroundColor: '#1E4A54',
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    marginBottom: 10,
-  },
-  buyButtonText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  chevron: {
-    color: 'white',
-    opacity: 0.7,
-  },
-  bottomNav: {
-    flexDirection: 'row',
-    backgroundColor: '#2C5F6F',
-    paddingVertical: 10,
-    paddingBottom: 20,
-  },
-  navItem: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 5,
-  },
-  navText: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
+  messageSubtitle: {
+    color: "#9CA3AF",
+    fontSize: 13,
+    marginTop: 6,
+    textAlign: "center",
+    fontWeight: "500",
   },
 });
 
