@@ -4,6 +4,7 @@ import { bikeSchema } from "./bike";
 export const bikeStationSchema = z.object({
   _id: z.string(),
   stationName: z.string(),
+  stationId: z.string(),
   stationLocation: z.string(),
   bikeCount: z.string(),
   bikes: bikeSchema,
@@ -55,6 +56,12 @@ export async function fetchBikeStation({ query }: { query: string }) {
   const res = await axios.get(`/api/bike-station/search?keyword=${query}`);
   return res.data;
 }
+
+export async function fetchBikeStationById(id: String) {
+  const res = await axios.get(`/api/bike-station/bike-id/${id}`);
+  return res.data;
+}
+
 export async function getAllBikeStations() {
   const res = await axios.get("/api/bike-station");
   return res.data;

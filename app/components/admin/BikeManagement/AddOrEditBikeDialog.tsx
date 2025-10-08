@@ -1,6 +1,7 @@
-import { Bike, saveBike } from "@/api/bike";
+import { Bike, saveBike, updateBike } from "@/api/bike";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
@@ -38,8 +39,18 @@ const AddOrEditBikeDialog = ({
     formState: { errors },
   } = useForm<Bike>({
     defaultValues: defaultValues,
+    mode: "onChange",
   });
+
+  // Reset form when modal opens/closes or defaultValues changes
+  useEffect(() => {
+    if (visible) {
+      reset(defaultValues || {});
+    }
+  }, [visible, defaultValues, reset]);
+
   const queryClient = useQueryClient();
+  
   const { mutate: saveBikeMutation, isPending } = useMutation({
     mutationFn: saveBike,
     onSuccess: async (data: any) => {
@@ -56,9 +67,34 @@ const AddOrEditBikeDialog = ({
     },
   });
 
+  const { mutate: updateBikeMutation, isPending: isUpdating } = useMutation({
+    mutationFn: updateBike,
+    onSuccess: () => {
+      alert("Bike Update Successfull");
+      reset();
+      onClose();
+      queryClient.invalidateQueries({
+        queryKey: ["bike-data"],
+      });
+    },
+    onError: (data) => {
+      alert("Bike Update Failed");
+      console.log(data);
+    },
+  });
+
   const handleSaveStation = (data: Bike) => {
-    console.log(data);
-    saveBikeMutation(data);
+    if (defaultValues) {
+      const updatedData = { ...data, _id: defaultValues._id };
+      if (!updatedData._id) {
+        alert("Bike ID Missing");
+        return;
+      }
+      updateBikeMutation(updatedData);
+    } else {
+      console.log("Data", data);
+      saveBikeMutation(data);
+    }
   };
 
   const fuelTypes = [
@@ -639,47 +675,37 @@ const AddOrEditBikeDialog = ({
                 >
                   <Pressable
                     onPress={onClose}
+                    disabled={isPending || isUpdating}
                     style={({ pressed }) => ({
                       flex: 1,
                       borderRadius: 16,
                       paddingVertical: 18,
                       alignItems: "center",
                       justifyContent: "center",
-                      backgroundColor: "#f3f4f6",
-                      opacity: pressed ? 0.8 : 1,
+                      backgroundColor: "#D9D9D9",
+                      opacity: (isPending || isUpdating) ? 0.7 : pressed ? 0.8 : 1,
                     })}
                   >
                     <Text
                       style={{
-                        backgroundColor: "#D9D9D9",
-                        paddingHorizontal: 15,
-                        paddingVertical: 15,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        borderRadius: 16,
+                        color: "black",
+                        fontSize: 16,
+                        fontWeight: "700",
+                        letterSpacing: 0.3,
                       }}
                     >
-                      <Text
-                        style={{
-                          color: "black",
-                          fontSize: 16,
-                          fontWeight: "700",
-                          letterSpacing: 0.3,
-                        }}
-                      >
-                        Cancel
-                      </Text>
+                      Cancel
                     </Text>
                   </Pressable>
 
                   <Pressable
                     onPress={handleSubmit(handleSaveStation)}
-                    disabled={isPending}
+                    disabled={isPending || isUpdating}
                     style={({ pressed }) => ({
                       flex: 2,
                       borderRadius: 16,
                       backgroundColor: "#0B4057",
-                      opacity: isPending ? 0.7 : pressed ? 0.9 : 1,
+                      opacity: (isPending || isUpdating) ? 0.7 : pressed ? 0.9 : 1,
                       shadowColor: "#0B4057",
                       shadowOffset: {
                         width: 0,
@@ -701,7 +727,7 @@ const AddOrEditBikeDialog = ({
                         borderRadius: 16,
                       }}
                     >
-                      {isPending ? (
+                      {(isPending || isUpdating) ? (
                         <ActivityIndicator color="#fff" size="small" />
                       ) : (
                         <>

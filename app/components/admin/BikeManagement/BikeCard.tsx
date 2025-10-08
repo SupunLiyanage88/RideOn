@@ -1,5 +1,4 @@
-import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface BikeCardProps {
   title: string;
@@ -17,78 +16,83 @@ const BikeCard: React.FC<BikeCardProps> = ({
   conditionPercentage,
   conditionText,
   conditionColor,
-  imageSource,
-  onPress
+  onPress,
 }) => {
+  const titleColor = title.toLowerCase().includes("electric")
+    ? "#10B981"
+    : title.toLowerCase().includes("pedal")
+      ? "#3B82F6"
+      : "#333";
   return (
-    <TouchableOpacity 
-      onPress={onPress} 
-      style={styles.container}
-    >
-      <View style={styles.contentContainer}>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.count}>{count}</Text>
-        <Text style={styles.conditionLabel}>{conditionPercentage} of bikes are in</Text>
-        <Text style={[styles.conditionText, { color: conditionColor }]}>
+    <TouchableOpacity onPress={onPress} style={styles.container}>
+      <View style={styles.headerRow}>
+        <Text style={[styles.title, { color: titleColor }]}>{title}</Text>
+        <View style={styles.statusDot} />
+      </View>
+
+      <Text style={styles.count}>{count}</Text>
+
+      <Text style={styles.conditionText}>
+        {conditionPercentage} of bikes are in{" "}
+        <Text style={[styles.conditionHighlight, { color: conditionColor }]}>
           {conditionText}
         </Text>
-      </View>
-      <View style={styles.imageContainer}>
-        <Image
-          source={imageSource}
-          style={styles.image}
-          resizeMode="contain"
-        />
-      </View>
-      <View style={styles.iconContainer}>
-        <FontAwesome6 name="angle-right" size={20} color="black" />
-      </View>
+      </Text>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    backgroundColor: 'white',
-    marginVertical: 8,
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    borderRadius: 24,
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 20,
+    margin: 8,
+    flex: 1, // ✅ makes it flexible in a row
+    minWidth: "45%", // ✅ ensures two cards fit side by side
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    position: "relative",
   },
-  contentContainer: {
-    flex: 1,
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
   },
   title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#969696',
-    width: 120,
+    fontSize: 15,
+    fontWeight: "800",
+    color: "#777",
+  },
+  statusDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#10B981",
   },
   count: {
-    fontSize: 56,
-    marginTop: 8,
-    fontWeight: 'bold',
-  },
-  conditionLabel: {
-    fontSize: 12,
+    fontSize: 50,
+    fontWeight: "800",
+    color: "#000",
+    marginBottom: 6,
   },
   conditionText: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 13,
+    color: "#555",
   },
-  imageContainer: {
-    marginLeft: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+  conditionHighlight: {
+    fontWeight: "600",
   },
   image: {
-    width: 208,
-    height: 128,
-  },
-  iconContainer: {
-    marginLeft: 'auto',
-    alignSelf: 'center',
+    position: "absolute",
+    right: 10,
+    bottom: 10,
+    width: 100,
+    height: 80,
   },
 });
 

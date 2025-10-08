@@ -1,3 +1,4 @@
+import { Bike } from "@/api/bike";
 import { images } from "@/constants/images";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -8,6 +9,7 @@ interface BikeCardProps {
   bikeModel?: string;
   distance?: number;
   condition?: number;
+  ownedBy?: Bike;
   onPress?: () => void;
 }
 
@@ -17,6 +19,7 @@ const BikeGetCard: React.FC<BikeCardProps> = ({
   bikeModel,
   distance,
   condition,
+  ownedBy,
   onPress,
 }) => {
   const imageSource =
@@ -28,44 +31,44 @@ const BikeGetCard: React.FC<BikeCardProps> = ({
 
   // Get condition status and color
   const getConditionStatus = (condition?: number) => {
-    if (!condition) return { status: 'Unknown', color: '#9CA3AF' };
-    if (condition >= 80) return { status: 'Excellent', color: '#10B981' };
-    if (condition >= 60) return { status: 'Good', color: '#F59E0B' };
-    if (condition >= 40) return { status: 'Fair', color: '#F97316' };
-    return { status: 'Poor', color: '#EF4444' };
+    if (!condition) return { status: "Unknown", color: "#9CA3AF" };
+    if (condition >= 80) return { status: "Excellent", color: "#10B981" };
+    if (condition >= 60) return { status: "Good", color: "#F59E0B" };
+    if (condition >= 40) return { status: "Fair", color: "#F97316" };
+    return { status: "Poor", color: "#EF4444" };
   };
 
   const conditionInfo = getConditionStatus(condition);
-
-  // Get fuel type badge color
   const getFuelTypeBadgeColor = (type?: string) => {
     switch (type?.toLowerCase()) {
-      case 'electric':
-        return '#10B981';
-      case 'pedal':
-        return '#3B82F6';
+      case "electric":
+        return "#10B981";
+      case "pedal":
+        return "#3B82F6";
       default:
-        return '#6B7280';
+        return "#6B7280";
     }
   };
 
   return (
-    <TouchableOpacity 
-      onPress={onPress} 
+    <TouchableOpacity
+      onPress={onPress}
       style={styles.container}
       activeOpacity={0.8}
     >
       <View style={styles.cardHeader}>
         <View style={styles.bikeIdContainer}>
           <Text style={styles.bikeIdLabel}>ID</Text>
-          <Text style={styles.bikeId}>{bikeId || 'N/A'}</Text>
+          <Text style={styles.bikeId}>{bikeId || "N/A"}</Text>
         </View>
-        <View style={[
-          styles.fuelTypeBadge, 
-          { backgroundColor: getFuelTypeBadgeColor(fuelType) }
-        ]}>
+        <View
+          style={[
+            styles.fuelTypeBadge,
+            { backgroundColor: getFuelTypeBadgeColor(fuelType) },
+          ]}
+        >
           <Text style={styles.fuelTypeText}>
-            {fuelType?.toUpperCase() || 'UNKNOWN'}
+            {fuelType?.toUpperCase() || "UNKNOWN"}
           </Text>
         </View>
       </View>
@@ -80,9 +83,28 @@ const BikeGetCard: React.FC<BikeCardProps> = ({
         </View>
 
         <View style={styles.infoContainer}>
-          <View style={styles.infoSection}>
-            <Text style={styles.sectionTitle}>Model</Text>
-            <Text style={styles.sectionValue}>{bikeModel || 'Unknown Model'}</Text>
+          {/* Updated responsive row */}
+          <View style={styles.infoRow}>
+            <View style={styles.infoSection}>
+              <Text style={styles.sectionTitle}>Model</Text>
+              <Text
+                style={styles.sectionValue}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {bikeModel || "Unknown Model"}
+              </Text>
+            </View>
+            <View style={styles.infoSection}>
+              <Text style={styles.sectionTitle}>Own By</Text>
+              <Text
+                style={styles.sectionValue}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {ownedBy?.createdBy?.userName || "Unknown Owner"}
+              </Text>
+            </View>
           </View>
 
           <View style={styles.statsContainer}>
@@ -95,14 +117,28 @@ const BikeGetCard: React.FC<BikeCardProps> = ({
             </View>
 
             <View style={styles.statItem}>
-              <FontAwesome6 name="wrench" size={16} color={conditionInfo.color} />
+              <FontAwesome6
+                name="wrench"
+                size={16}
+                color={conditionInfo.color}
+              />
               <View style={styles.statInfo}>
                 <Text style={styles.statLabel}>Condition</Text>
                 <View style={styles.conditionContainer}>
-                  <Text style={[styles.conditionValue, { color: conditionInfo.color }]}>
+                  <Text
+                    style={[
+                      styles.conditionValue,
+                      { color: conditionInfo.color },
+                    ]}
+                  >
                     {condition || 0}%
                   </Text>
-                  <Text style={[styles.conditionStatus, { color: conditionInfo.color }]}>
+                  <Text
+                    style={[
+                      styles.conditionStatus,
+                      { color: conditionInfo.color },
+                    ]}
+                  >
                     {conditionInfo.status}
                   </Text>
                 </View>
@@ -111,7 +147,6 @@ const BikeGetCard: React.FC<BikeCardProps> = ({
           </View>
         </View>
       </View>
-
     </TouchableOpacity>
   );
 };
@@ -183,8 +218,15 @@ const styles = StyleSheet.create({
   infoContainer: {
     flex: 1,
   },
-  infoSection: {
+  infoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 12,
+    gap: 8,
+  },
+  infoSection: {
+    flex: 1,
+    minWidth: 0,
   },
   sectionTitle: {
     fontSize: 12,
@@ -196,6 +238,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#1F2937",
+    overflow: "hidden",
   },
   statsContainer: {
     flexDirection: "row",
