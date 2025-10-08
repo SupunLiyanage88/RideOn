@@ -1,11 +1,11 @@
 import { Bike } from "@/api/bike";
 import { fetchBikeStationById } from "@/api/bikeStation";
 import { Ionicons } from "@expo/vector-icons";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  ActivityIndicator,
   RefreshControl,
   ScrollView,
   StatusBar,
@@ -16,6 +16,8 @@ import {
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
+import DialogHeader from "../../DialogHeader";
+import Loader from "../../Loader";
 import RentUserBike from "./RentUserBike";
 
 export default function StationDetail() {
@@ -61,27 +63,11 @@ export default function StationDetail() {
     }
   };
 
-  if (isLoading) {
+  if (error || !stationData || isLoading) {
     return (
-      <SafeAreaView style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#2563eb" />
-        <Text style={styles.loadingText}>Loading station details...</Text>
-      </SafeAreaView>
-    );
-  }
-
-  if (error || !stationData) {
-    return (
-      <SafeAreaView style={styles.centerContainer}>
-        <Ionicons name="alert-circle" size={64} color="#ef4444" />
-        <Text style={styles.errorTitle}>Failed to load station</Text>
-        <TouchableOpacity
-          style={styles.retryButton}
-          onPress={() => router.back()}
-        >
-          <Text style={styles.retryButtonText}>Go Back</Text>
-        </TouchableOpacity>
-      </SafeAreaView>
+      <View style={{ padding: 24, marginTop: 40 }}>
+        <Loader textStyle={{ fontSize: 20 }} showText={false} />
+      </View>
     );
   }
   const pedalCount =
@@ -92,9 +78,13 @@ export default function StationDetail() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
+
+      <DialogHeader
+        title={`Available Bikes ${stationData?.stationName}`}
+        subtitle="Pick Your Ride On Station"
+      />
       <View style={styles.header}>
         <View style={styles.headerContainer}>
-          {/* Left: Text Info */}
           <View style={styles.headerTextBox}>
             <Text style={styles.stationName}>{stationData.stationName}</Text>
             <View style={styles.locationRow}>
@@ -106,7 +96,6 @@ export default function StationDetail() {
             <Text style={styles.stationId}>{stationData.stationId}</Text>
           </View>
 
-          {/* Right: Small Map Preview */}
           <MapView
             style={styles.miniMap}
             initialRegion={{
@@ -115,7 +104,7 @@ export default function StationDetail() {
               latitudeDelta: 0.005,
               longitudeDelta: 0.005,
             }}
-            pointerEvents="none" // disable interaction
+            pointerEvents="none"
           >
             <Marker
               coordinate={{
@@ -128,29 +117,24 @@ export default function StationDetail() {
 
         <View style={styles.statsContainer}>
           <View style={styles.statCard}>
-            <Ionicons name="bicycle-outline" size={22} color="#2563eb" />
+            <MaterialIcons name="event-available" size={22} color="#2563eb" />
             <Text style={styles.statValue}>{pedalCount + electricCount}</Text>
 
             <Text style={styles.statLabel}>Total Bikes</Text>
           </View>
           <View style={styles.statCard}>
-            <Ionicons
-              name="checkmark-circle-outline"
-              size={22}
-              color="#10b981"
-            />
+            <Ionicons name="bicycle-outline" size={22} color="#f59e0b" />
             <Text style={styles.statValue}>{electricCount}</Text>
             <Text style={styles.statLabel}>Pedal Bikes</Text>
           </View>
           <View style={styles.statCard}>
-            <Ionicons name="close-circle-outline" size={22} color="#ef4444" />
+            <Ionicons name="flash" size={22} color="#10b981" />
             <Text style={styles.statValue}>{pedalCount}</Text>
             <Text style={styles.statLabel}>Electric Bikes</Text>
           </View>
         </View>
       </View>
 
-      {/* Bikes */}
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContainer}
@@ -282,7 +266,6 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
     padding: 20,
-    paddingTop: 50,
   },
   headerContainer: {
     flexDirection: "row",
@@ -292,7 +275,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 12,
     borderColor: "#083A4C",
-    borderWidth: 0.5,
+    borderWidth: 1,
     shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowRadius: 5,
@@ -341,7 +324,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     shadowColor: "#000",
     borderColor: "#083A4C",
-    borderWidth: 0.5,
+    borderWidth: 1,
     shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 3,
@@ -390,7 +373,7 @@ const styles = StyleSheet.create({
   bikeModel: { fontSize: 17, fontWeight: "700", color: "#1e293b" },
   bikeId: { fontSize: 13, color: "#64748b" },
   availableTag: {
-    backgroundColor: "#10b981",
+    backgroundColor: "#083A4C",
     borderRadius: 20,
     paddingHorizontal: 10,
     paddingVertical: 5,
@@ -416,7 +399,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   rentButton: {
-    backgroundColor: "#2563eb",
+    backgroundColor: "#083A4C",
     borderRadius: 14,
     paddingVertical: 14,
     flexDirection: "row",
