@@ -1,6 +1,6 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { z } from "zod";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export enum Role {
   ADMIN = "Admin",
@@ -14,7 +14,8 @@ export const userSchema = z.object({
   mobile: z.string(),
   password: z.string(),
   confirmPassword: z.string().optional(),
-  role: z.enum(Role)
+  role: z.enum(Role),
+  rc: z.number(),
 });
 
 export type User = z.infer<typeof userSchema>;

@@ -3,6 +3,7 @@ import { fetchBikeStationById } from "@/api/bikeStation";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useState } from "react";
 import {
   ActivityIndicator,
   RefreshControl,
@@ -15,10 +16,13 @@ import {
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
+import RentUserBike from "./RentUserBike";
 
 export default function StationDetail() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [bikeId, setBikeId] = useState<String | null>(null);
 
   const {
     data: stationData,
@@ -232,7 +236,13 @@ export default function StationDetail() {
                 </View>
               </View>
 
-              <TouchableOpacity style={styles.rentButton}>
+              <TouchableOpacity
+                style={styles.rentButton}
+                onPress={() => {
+                  setModalVisible(true);
+                  setBikeId(bike._id);
+                }}
+              >
                 <Text style={styles.rentButtonText}>Rent This Bike</Text>
                 <Ionicons name="arrow-forward" size={18} color="#fff" />
               </TouchableOpacity>
@@ -240,6 +250,11 @@ export default function StationDetail() {
           ))
         )}
       </ScrollView>
+      <RentUserBike
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        defaultBikeId={bikeId || undefined}
+      />
     </SafeAreaView>
   );
 }
