@@ -4,10 +4,12 @@ import { useDebounce } from "@/utils/useDebounce.utils";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import * as Location from "expo-location";
+import * as Notifications from "expo-notifications";
 import React, { useEffect, useRef, useState } from "react";
 import {
     ActivityIndicator,
     Modal,
+    Platform,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -20,6 +22,25 @@ import DialogHeader from "../../DialogHeader";
 const THEME_COLOR = "#083A4C";
 const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "";
 
+// --- Configure Notifications (required once globally) ---
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+    shouldShowBanner: true, // ✅ required in SDK 51+
+    shouldShowList: true, // ✅ required in SDK 51+
+  }),
+});
+
+if (Platform.OS === "android") {
+  Notifications.setNotificationChannelAsync("navigation", {
+    name: "Navigation",
+    importance: Notifications.AndroidImportance.HIGH,
+    vibrationPattern: [0, 250, 250, 250],
+    lightColor: "#FF231F7C",
+  });
+}
+
 type DialogProps = {
   visible: boolean;
   onClose: () => void;
@@ -29,12 +50,75 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
   const mapRef = useRef<MapView | null>(null);
   const [location, setLocation] = useState<any>(null);
   const [selectedStation, setSelectedStation] = useState<any>(null);
-  const [distance, setDistance] = useState<number | null>(null);
+  const [distance, setDistance] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isNavigating, setIsNavigating] = useState(false);
-  const locationSubscription = useRef<Location.LocationSubscription | null>(null);
+  const locationSubscription = useRef<Location.LocationSubscription | null>(
+    null
+  );
   const debouncedQuery = useDebounce(searchQuery, 500);
 
+  const sendNavigationNotification = async (
+    title: string,
+    body: string,
+    latitude: number,
+    longitude: number
+  ) => {
+    try {
+      const mapImageUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${latitude},${longitude}&zoom=15&size=600x300&markers=color:red%7C${latitude},${longitude}&key=${GOOGLE_MAPS_API_KEY}`;
+      console.log(mapImageUrl);
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title,
+          body,
+          sound: false,
+          attachments: [
+            {
+              identifier: "map-image",
+              url: mapImageUrl,
+              type: "image/png",
+            },
+          ],
+          data: { latitude, longitude },
+        },
+        trigger: null,
+      });
+    } catch (err) {
+      console.error("❌ Failed to send notification:", err);
+    }
+  };
+  useEffect(() => {
+    const setupNotifications = async () => {
+      const { status: existingStatus } =
+        await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+
+      if (existingStatus !== "granted") {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+
+      if (finalStatus !== "granted") {
+        console.log("❌ Notification permission not granted");
+        return;
+      }
+
+      // ✅ Android channel setup for persistent notification
+      if (Platform.OS === "android") {
+        await Notifications.setNotificationChannelAsync("navigation", {
+          name: "Navigation",
+          importance: Notifications.AndroidImportance.HIGH,
+          vibrationPattern: [0, 250, 250, 250],
+          lightColor: "#0B4057",
+          lockscreenVisibility:
+            Notifications.AndroidNotificationVisibility.PUBLIC,
+          sound: "default",
+        });
+      }
+    };
+
+    setupNotifications();
+  }, []);
   // --- Fetch current location ---
   useEffect(() => {
     (async () => {
@@ -55,10 +139,7 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
   }, []);
 
   // --- Fetch stations ---
-  const {
-    data: bikeStationData,
-    isFetching: isBikeStationLoading,
-  } = useQuery({
+  const { data: bikeStationData, isFetching: isBikeStationLoading } = useQuery({
     queryKey: ["station-data", debouncedQuery],
     queryFn: ({ queryKey }) => fetchBikeStation({ query: queryKey[1] }),
   });
@@ -74,6 +155,7 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
             longitude: selectedStation.longitude,
           }
         );
+        console.log(dist);
         setDistance(dist);
       }
     };
@@ -86,6 +168,15 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") return;
 
+    if (selectedStation) {
+      await sendNavigationNotification(
+        "🚴 Navigation Started",
+        `Heading to ${selectedStation.stationId}`,
+        selectedStation.latitude,
+        selectedStation.longitude
+      );
+    }
+
     locationSubscription.current = await Location.watchPositionAsync(
       {
         accuracy: Location.Accuracy.Highest,
@@ -95,7 +186,6 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
         const { latitude, longitude } = pos.coords;
         setLocation({ latitude, longitude });
 
-        // Keep map camera following the user smoothly
         mapRef.current?.animateToRegion(
           {
             latitude,
@@ -109,12 +199,20 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
     );
   };
 
-  const stopNavigation = () => {
+  // --- Stop Navigation ---
+  const stopNavigation = async () => {
     setIsNavigating(false);
     if (locationSubscription.current) {
       locationSubscription.current.remove();
       locationSubscription.current = null;
     }
+
+    await sendNavigationNotification(
+      "🛑 Navigation Stopped",
+      "You’ve ended navigation.",
+      0,
+      0
+    );
   };
 
   if (!location) {
@@ -239,9 +337,12 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
           <View style={styles.infoBox}>
             <Text style={styles.stationName}>{selectedStation.name}</Text>
             <Text style={styles.stationDistance}>
-              Distance: {distance?.toFixed(2)} km
+              Distance: {distance?.distanceKm?.toFixed(2)} km
             </Text>
-
+            <Text style={styles.stationDistance}>
+              Duration:{" "}
+              {`${distance?.ConvertedHours}h ${distance?.ConvertedMinutes}min`}
+            </Text>
             {!isNavigating ? (
               <TouchableOpacity
                 style={styles.navigateButton}
@@ -255,7 +356,7 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
                 style={[styles.navigateButton, { backgroundColor: "#D9534F" }]}
                 onPress={stopNavigation}
               >
-                <Ionicons name="stop-circle" size={18} color="#fff" />
+                <Ionicons name="compass" size={18} color="#fff" />
                 <Text style={styles.navigateText}>Stop Navigation</Text>
               </TouchableOpacity>
             )}
