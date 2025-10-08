@@ -375,7 +375,7 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
               </View>
 
               {!isNavigating ? (
-                <View style={{ marginBottom: 40 }}>
+                <View>
                   <TouchableOpacity
                     style={styles.navigateButton}
                     onPress={startNavigation}
