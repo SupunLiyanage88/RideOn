@@ -19,7 +19,7 @@ interface HeaderProps {
 
 const PageHeader = ({
   title = "Add Your Bike",
-  subtitle = "Share your bike with the community",
+  subtitle,
   progressPercentage = 0,
   onBackPress,
   showBackButton = true,

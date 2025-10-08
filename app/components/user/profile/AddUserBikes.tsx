@@ -154,15 +154,14 @@ const AddUserBikes = () => {
         <View
           style={{
             paddingHorizontal: 20,
-            paddingTop: 10,
-            paddingBottom: 20,
+            paddingTop: 15,
+            paddingBottom: 25,
             backgroundColor: "#F8FAFB",
           }}
         >
           {/* Header Row */}
           <PageHeader
             title="Add Your Bike"
-            subtitle={"Share your bike with the community"}
             progressPercentage={Math.round(getProgressPercentage())}
             onBackPress={() => router.back()}
           />
