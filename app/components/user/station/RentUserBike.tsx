@@ -11,7 +11,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
@@ -56,11 +56,11 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
           setLocationError("Location permission denied");
           return;
         }
-        
+
         const current = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.Balanced,
         });
-        
+
         if (isMounted) {
           setLocation({
             latitude: current.coords.latitude,
@@ -184,7 +184,7 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
         longitudeDelta: 0.01,
       };
     }
-    
+
     // Fallback to a default location if user location not available
     return {
       latitude: 37.78825,
@@ -195,9 +195,9 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
   };
 
   return (
-    <Modal 
-      visible={visible} 
-      transparent 
+    <Modal
+      visible={visible}
+      transparent
       animationType="slide"
       onRequestClose={handleClose}
     >
@@ -363,10 +363,9 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
                       <View>
                         <Text style={styles.detailLabel}>Duration</Text>
                         <Text style={styles.detailValue}>
-                          {distance ? 
-                            `${distance.ConvertedHours}h ${distance.ConvertedMinutes}min` : 
-                            "Calculating..."
-                          }
+                          {distance
+                            ? `${distance.ConvertedHours}h ${distance.ConvertedMinutes}min`
+                            : "Calculating..."}
                         </Text>
                       </View>
                     </View>
@@ -375,7 +374,7 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
               </View>
 
               {!isNavigating ? (
-                <View>
+                <View style={{ marginBottom: 40 }}>
                   <TouchableOpacity
                     style={styles.navigateButton}
                     onPress={startNavigation}
@@ -385,16 +384,18 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
                   </TouchableOpacity>
                 </View>
               ) : (
-                <TouchableOpacity
-                  style={[
-                    styles.navigateButton,
-                    { backgroundColor: "#D9534F" },
-                  ]}
-                  onPress={stopNavigation}
-                >
-                  <Ionicons name="compass" size={18} color="#fff" />
-                  <Text style={styles.navigateText}>Stop Navigation</Text>
-                </TouchableOpacity>
+                <View style={{ marginBottom: 40 }}>
+                  <TouchableOpacity
+                    style={[
+                      styles.navigateButton,
+                      { backgroundColor: "#D9534F" },
+                    ]}
+                    onPress={stopNavigation}
+                  >
+                    <Ionicons name="compass" size={18} color="#fff" />
+                    <Text style={styles.navigateText}>Stop Navigation</Text>
+                  </TouchableOpacity>
+                </View>
               )}
             </View>
           )}
