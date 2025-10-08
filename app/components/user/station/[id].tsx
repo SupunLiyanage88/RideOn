@@ -3,6 +3,7 @@ import { fetchBikeStationById } from "@/api/bikeStation";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useState } from "react";
 import {
   ActivityIndicator,
   RefreshControl,
@@ -19,6 +20,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function StationDetail() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const [modalVisible, setModalVisible] = useState(false);
 
   const {
     data: stationData,
@@ -232,7 +234,9 @@ export default function StationDetail() {
                 </View>
               </View>
 
-              <TouchableOpacity style={styles.rentButton}>
+              <TouchableOpacity style={styles.rentButton}
+                onPress={() => setModalVisible(true)}
+              >
                 <Text style={styles.rentButtonText}>Rent This Bike</Text>
                 <Ionicons name="arrow-forward" size={18} color="#fff" />
               </TouchableOpacity>
