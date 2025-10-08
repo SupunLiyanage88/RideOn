@@ -18,6 +18,7 @@ import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 import { SafeAreaView } from "react-native-safe-area-context";
 import DialogHeader from "../../DialogHeader";
+import SearchInput from "../../SearchBarQuery";
 
 const THEME_COLOR = "#083A4C";
 const RC_FEE_VALUE = 10;
@@ -87,10 +88,13 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
     };
   }, []);
 
-  const { data: bikeStationData, isFetching: isBikeStationLoading } = useQuery({
+  const {
+    data: bikeStationData,
+    isFetching: isBikeStationLoading,
+    refetch: researchBikeStation,
+  } = useQuery({
     queryKey: ["station-data", debouncedQuery],
     queryFn: ({ queryKey }) => fetchBikeStation({ query: queryKey[1] }),
-    enabled: visible,
   });
 
   useEffect(() => {
@@ -192,6 +196,15 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
       longitudeDelta: 0.01,
     };
   };
+  const handleSearch = async (query: string) => {
+    console.log("Searching for:", query);
+    setSearchQuery(query);
+    try {
+      await researchBikeStation();
+    } catch (error) {
+      console.error("Search failed:", error);
+    }
+  };
 
   return (
     <Modal
@@ -209,6 +222,24 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
               subtitle="Pick Your Ride On Station"
             />
           </View>
+
+          {!selectedStation && (
+            <View
+              style={{
+                marginTop: 5,
+                marginBottom: 15,
+                paddingHorizontal: 20,
+              }}
+            >
+              <SearchInput
+                placeholder="Search Stations..."
+                value={searchQuery}
+                onChange={setSearchQuery}
+                onSearch={handleSearch}
+                isSearching={isBikeStationLoading}
+              />
+            </View>
+          )}
 
           <View style={styles.mapContainer}>
             {locationError ? (
@@ -274,15 +305,17 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
                       strokeColor={THEME_COLOR}
                       optimizeWaypoints={true}
                       onReady={(result) => {
-                        mapRef.current?.fitToCoordinates(result.coordinates, {
-                          edgePadding: {
-                            top: 100,
-                            bottom: 100,
-                            left: 50,
-                            right: 50,
-                          },
-                          animated: true,
-                        });
+                        if (selectedStation) {
+                          mapRef.current?.fitToCoordinates(result.coordinates, {
+                            edgePadding: {
+                              top: 100,
+                              bottom: 100,
+                              left: 50,
+                              right: 50,
+                            },
+                            animated: true,
+                          });
+                        }
                       }}
                       onError={(errorMessage) => {
                         console.error("Directions error:", errorMessage);
