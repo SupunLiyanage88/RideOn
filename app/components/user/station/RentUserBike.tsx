@@ -4,15 +4,14 @@ import { useDebounce } from "@/utils/useDebounce.utils";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import * as Location from "expo-location";
-import * as Notifications from "expo-notifications";
 import React, { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Modal,
-  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
@@ -22,35 +21,24 @@ import DialogHeader from "../../DialogHeader";
 const THEME_COLOR = "#083A4C";
 const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "";
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
-
-if (Platform.OS === "android") {
-  Notifications.setNotificationChannelAsync("navigation", {
-    name: "Navigation",
-    importance: Notifications.AndroidImportance.HIGH,
-    vibrationPattern: [0, 250, 250, 250],
-    lightColor: "#FF231F7C",
-  });
-}
-
 type DialogProps = {
   visible: boolean;
   onClose: () => void;
 };
 
+// Add proper type for location
+interface Coordinate {
+  latitude: number;
+  longitude: number;
+}
+
 const RentUserBike = ({ visible, onClose }: DialogProps) => {
   const mapRef = useRef<MapView | null>(null);
-  const [location, setLocation] = useState<any>(null);
+  const [location, setLocation] = useState<Coordinate | null>(null);
   const [selectedStation, setSelectedStation] = useState<any>(null);
   const [distance, setDistance] = useState<any | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
   const locationSubscription = useRef<Location.LocationSubscription | null>(
     null
   );
@@ -58,81 +46,41 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedQuery = useDebounce(searchQuery, 500);
 
-  const sendNavigationNotification = async (
-    title: string,
-    body: string,
-    latitude: number,
-    longitude: number
-  ) => {
-    try {
-      const mapImageUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${latitude},${longitude}&zoom=15&size=600x300&markers=color:red%7C${latitude},${longitude}&key=${GOOGLE_MAPS_API_KEY}`;
-      console.log(mapImageUrl);
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title,
-          body,
-          sound: false,
-          attachments: [
-            {
-              identifier: "map-image",
-              url: mapImageUrl,
-              type: "image/png",
-            },
-          ],
-          data: { latitude, longitude },
-        },
-        trigger: null,
-      });
-    } catch (err) {
-      console.error("❌ Failed to send notification:", err);
-    }
-  };
   useEffect(() => {
-    const setupNotifications = async () => {
-      const { status: existingStatus } =
-        await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
+    let isMounted = true;
 
-      if (existingStatus !== "granted") {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-
-      if (finalStatus !== "granted") {
-        console.log("❌ Notification permission not granted");
-        return;
-      }
-
-      if (Platform.OS === "android") {
-        await Notifications.setNotificationChannelAsync("navigation", {
-          name: "Navigation",
-          importance: Notifications.AndroidImportance.HIGH,
-          vibrationPattern: [0, 250, 250, 250],
-          lightColor: "#0B4057",
-          lockscreenVisibility:
-            Notifications.AndroidNotificationVisibility.PUBLIC,
-          sound: "default",
-        });
-      }
-    };
-
-    setupNotifications();
-  }, []);
-
-  useEffect(() => {
     (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") return;
-      const current = await Location.getCurrentPositionAsync({});
-      setLocation({
-        latitude: current.coords?.latitude,
-        longitude: current.coords?.longitude,
-      });
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          setLocationError("Location permission denied");
+          return;
+        }
+        
+        const current = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        
+        if (isMounted) {
+          setLocation({
+            latitude: current.coords.latitude,
+            longitude: current.coords.longitude,
+          });
+          setLocationError(null);
+        }
+      } catch (error) {
+        console.error("Error getting location:", error);
+        if (isMounted) {
+          setLocationError("Failed to get location");
+        }
+      }
     })();
 
     return () => {
+      isMounted = false;
       if (locationSubscription.current) {
         locationSubscription.current.remove();
+        locationSubscription.current = null;
       }
     };
   }, []);
@@ -140,181 +88,232 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
   const { data: bikeStationData, isFetching: isBikeStationLoading } = useQuery({
     queryKey: ["station-data", debouncedQuery],
     queryFn: ({ queryKey }) => fetchBikeStation({ query: queryKey[1] }),
+    enabled: visible, // Only fetch when modal is visible
   });
 
   useEffect(() => {
     const fetchDistance = async () => {
       if (location && selectedStation) {
-        const dist = await getRouteDistance(
-          { latitude: location?.latitude, longitude: location?.longitude },
-          {
-            latitude: selectedStation?.latitude,
-            longitude: selectedStation?.longitude,
-          }
-        );
-        console.log(dist);
-        setDistance(dist);
+        try {
+          const dist = await getRouteDistance(
+            { latitude: location.latitude, longitude: location.longitude },
+            {
+              latitude: selectedStation.latitude,
+              longitude: selectedStation.longitude,
+            }
+          );
+          setDistance(dist);
+        } catch (error) {
+          console.error("Error fetching distance:", error);
+        }
       }
     };
     fetchDistance();
   }, [selectedStation, location]);
 
   const startNavigation = async () => {
-    setIsNavigating(true);
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== "granted") return;
-
-    if (selectedStation) {
-      await sendNavigationNotification(
-        "🚴 Navigation Started",
-        `Heading to ${selectedStation.stationId}`,
-        selectedStation?.latitude,
-        selectedStation?.longitude
-      );
-    }
-
-    locationSubscription.current = await Location.watchPositionAsync(
-      {
-        accuracy: Location.Accuracy.Highest,
-        distanceInterval: 5,
-      },
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
-        setLocation({ latitude, longitude });
-
-        mapRef.current?.animateToRegion(
-          {
-            latitude,
-            longitude,
-            latitudeDelta: 0.005,
-            longitudeDelta: 0.005,
-          },
-          1000
-        );
+    try {
+      setIsNavigating(true);
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        setLocationError("Location permission required for navigation");
+        return;
       }
-    );
+
+      // Stop any existing subscription
+      if (locationSubscription.current) {
+        locationSubscription.current.remove();
+        locationSubscription.current = null;
+      }
+
+      locationSubscription.current = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.High,
+          distanceInterval: 5,
+          timeInterval: 1000,
+        },
+        (pos) => {
+          const { latitude, longitude } = pos.coords;
+          setLocation({ latitude, longitude });
+
+          mapRef.current?.animateToRegion(
+            {
+              latitude,
+              longitude,
+              latitudeDelta: 0.005,
+              longitudeDelta: 0.005,
+            },
+            1000
+          );
+        }
+      );
+    } catch (error) {
+      console.error("Error starting navigation:", error);
+      setIsNavigating(false);
+    }
   };
 
   const stopNavigation = async () => {
-    if (selectedStation) {
-      setSelectedStation(null);
-    }
+    setIsNavigating(false);
     if (locationSubscription.current) {
       locationSubscription.current.remove();
       locationSubscription.current = null;
     }
-    await sendNavigationNotification(
-      "🛑 Navigation Stopped",
-      "You’ve ended navigation.",
-      0,
-      0
-    );
+  };
+
+  const handleClose = () => {
+    stopNavigation();
+    setSelectedStation(null);
+    setDistance(null);
+    onClose();
+  };
+
+  const handleStationSelect = (station: any) => {
+    setSelectedStation(station);
+    setIsNavigating(false);
+    stopNavigation();
+  };
+
+  // Safe region for initial map render
+  const getInitialRegion = () => {
+    if (location) {
+      return {
+        latitude: location.latitude,
+        longitude: location.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      };
+    }
+    
+    // Fallback to a default location if user location not available
+    return {
+      latitude: 37.78825,
+      longitude: -122.4324,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.01,
+    };
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide">
+    <Modal 
+      visible={visible} 
+      transparent 
+      animationType="slide"
+      onRequestClose={handleClose}
+    >
       <SafeAreaView edges={["left", "right"]} style={{ flex: 1 }}>
         <View style={styles.container}>
           <View style={{ marginTop: 15 }}>
             <DialogHeader
               title={"Route Pick"}
-              onClose={onClose}
+              onClose={handleClose}
               subtitle="Pick Your Ride On Station"
             />
           </View>
 
           <View style={styles.mapContainer}>
-            <MapView
-              ref={mapRef}
-              style={styles.map}
-              provider={PROVIDER_GOOGLE}
-              showsUserLocation={true}
-              followsUserLocation={isNavigating}
-              showsMyLocationButton={false}
-              initialRegion={{
-                latitude: location?.latitude,
-                longitude: location?.longitude,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01,
-              }}
-            >
-              {!isBikeStationLoading &&
-                bikeStationData?.map((station: any) => (
-                  <Marker
-                    key={station._id}
-                    coordinate={{
-                      latitude: station?.latitude,
-                      longitude: station?.longitude,
-                    }}
-                    onPress={() => {
-                      setSelectedStation(station);
-                      setIsNavigating(false);
-                      stopNavigation();
-                    }}
-                  >
-                    <View
-                      style={[
-                        styles.customMarker,
-                        selectedStation?._id === station._id &&
-                          styles.selectedMarker,
-                      ]}
-                    >
-                      <Ionicons
-                        name="bicycle"
-                        size={20}
-                        color={
-                          selectedStation?._id === station._id
-                            ? "#fff"
-                            : THEME_COLOR
-                        }
-                      />
-                    </View>
-                  </Marker>
-                ))}
+            {locationError ? (
+              <View style={styles.centered}>
+                <Text style={styles.errorText}>{locationError}</Text>
+              </View>
+            ) : !location ? (
+              <View style={styles.centered}>
+                <ActivityIndicator size="large" color={THEME_COLOR} />
+                <Text>Getting your location...</Text>
+              </View>
+            ) : (
+              <>
+                <MapView
+                  ref={mapRef}
+                  style={styles.map}
+                  provider={PROVIDER_GOOGLE}
+                  showsUserLocation={true}
+                  followsUserLocation={isNavigating}
+                  showsMyLocationButton={false}
+                  initialRegion={getInitialRegion()}
+                  onMapReady={() => console.log("Map ready")}
+                >
+                  {!isBikeStationLoading &&
+                    bikeStationData?.map((station: any) => (
+                      <Marker
+                        key={station._id}
+                        coordinate={{
+                          latitude: station.latitude,
+                          longitude: station.longitude,
+                        }}
+                        onPress={() => handleStationSelect(station)}
+                      >
+                        <View
+                          style={[
+                            styles.customMarker,
+                            selectedStation?._id === station._id &&
+                              styles.selectedMarker,
+                          ]}
+                        >
+                          <Ionicons
+                            name="bicycle"
+                            size={20}
+                            color={
+                              selectedStation?._id === station._id
+                                ? "#fff"
+                                : THEME_COLOR
+                            }
+                          />
+                        </View>
+                      </Marker>
+                    ))}
 
-              {selectedStation && (
-                <MapViewDirections
-                  origin={location}
-                  destination={{
-                    latitude: selectedStation?.latitude,
-                    longitude: selectedStation?.longitude,
-                  }}
-                  apikey={GOOGLE_MAPS_API_KEY}
-                  strokeWidth={4}
-                  strokeColor={THEME_COLOR}
-                  optimizeWaypoints={true}
-                  onReady={(result) => {
-                    mapRef.current?.fitToCoordinates(result.coordinates, {
-                      edgePadding: {
-                        top: 100,
-                        bottom: 100,
-                        left: 50,
-                        right: 50,
-                      },
-                      animated: true,
-                    });
-                  }}
-                />
-              )}
-            </MapView>
+                  {selectedStation && location && (
+                    <MapViewDirections
+                      origin={location}
+                      destination={{
+                        latitude: selectedStation.latitude,
+                        longitude: selectedStation.longitude,
+                      }}
+                      apikey={GOOGLE_MAPS_API_KEY}
+                      strokeWidth={4}
+                      strokeColor={THEME_COLOR}
+                      optimizeWaypoints={true}
+                      onReady={(result) => {
+                        mapRef.current?.fitToCoordinates(result.coordinates, {
+                          edgePadding: {
+                            top: 100,
+                            bottom: 100,
+                            left: 50,
+                            right: 50,
+                          },
+                          animated: true,
+                        });
+                      }}
+                      onError={(errorMessage) => {
+                        console.error("Directions error:", errorMessage);
+                      }}
+                    />
+                  )}
+                </MapView>
 
-            <TouchableOpacity
-              style={styles.recenterButton}
-              onPress={() =>
-                mapRef.current?.animateToRegion(
-                  {
-                    latitude: location?.latitude,
-                    longitude: location?.longitude,
-                    latitudeDelta: 0.01,
-                    longitudeDelta: 0.01,
-                  },
-                  800
-                )
-              }
-            >
-              <Ionicons name="locate" size={24} color={THEME_COLOR} />
-            </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.recenterButton}
+                  onPress={() => {
+                    if (location) {
+                      mapRef.current?.animateToRegion(
+                        {
+                          latitude: location.latitude,
+                          longitude: location.longitude,
+                          latitudeDelta: 0.01,
+                          longitudeDelta: 0.01,
+                        },
+                        800
+                      );
+                    }
+                  }}
+                >
+                  <Ionicons name="locate" size={24} color={THEME_COLOR} />
+                </TouchableOpacity>
+              </>
+            )}
           </View>
+
           {selectedStation && (
             <View style={styles.infoBox}>
               <View style={styles.stationCard}>
@@ -329,13 +328,19 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
                   </View>
 
                   <View style={styles.coinDetailItem}>
-                    <View style={{ flexDirection: "row", alignItems: "center" ,gap:10}}>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 10,
+                      }}
+                    >
                       <Text>📍</Text>
                       <Text style={styles.detailLabel}>Available RC</Text>
                     </View>
 
                     <Text style={styles.detailValue}>
-                      {distance?.distanceKm?.toFixed(2)} km
+                      {distance?.distanceKm?.toFixed(2) || "0.00"} km
                     </Text>
                   </View>
                   <View style={styles.stationDetails}>
@@ -346,7 +351,7 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
                       <View>
                         <Text style={styles.detailLabel}>Distance</Text>
                         <Text style={styles.detailValue}>
-                          {distance?.distanceKm?.toFixed(2)} km
+                          {distance?.distanceKm?.toFixed(2) || "0.00"} km
                         </Text>
                       </View>
                     </View>
@@ -358,7 +363,10 @@ const RentUserBike = ({ visible, onClose }: DialogProps) => {
                       <View>
                         <Text style={styles.detailLabel}>Duration</Text>
                         <Text style={styles.detailValue}>
-                          {`${distance?.ConvertedHours}h ${distance?.ConvertedMinutes}min`}
+                          {distance ? 
+                            `${distance.ConvertedHours}h ${distance.ConvertedMinutes}min` : 
+                            "Calculating..."
+                          }
                         </Text>
                       </View>
                     </View>
@@ -438,7 +446,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderColor: "#ddd",
   },
-
   stationDistance: {
     fontSize: 14,
     color: "#555",
@@ -457,7 +464,6 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontWeight: "600",
   },
-
   stationCard: {
     backgroundColor: "#FFFFFF",
     borderRadius: 24,
@@ -471,7 +477,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-
   stationDetails: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -530,5 +535,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
     borderWidth: 1,
     borderColor: THEME_COLOR,
+  },
+  errorText: {
+    color: "red",
+    textAlign: "center",
+    margin: 16,
   },
 });
