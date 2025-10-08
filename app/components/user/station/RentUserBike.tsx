@@ -119,6 +119,20 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
     fetchDistance();
   }, [selectedStation, location]);
 
+  useEffect(() => {
+    if (!selectedStation && location && mapRef.current) {
+      mapRef.current.animateToRegion(
+        {
+          latitude: location.latitude,
+          longitude: location.longitude,
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.05,
+        },
+        500
+      );
+    }
+  }, [selectedStation, location]);
+
   const startNavigation = async () => {
     try {
       setIsNavigating(true);
@@ -186,18 +200,19 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
       return {
         latitude: location.latitude,
         longitude: location.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
+        latitudeDelta: 0.05,
+        longitudeDelta: 0.05,
       };
     }
 
     return {
       latitude: 37.78825,
       longitude: -122.4324,
-      latitudeDelta: 0.01,
-      longitudeDelta: 0.01,
+      latitudeDelta: 0.05,
+      longitudeDelta: 0.05,
     };
   };
+
   const handleSearch = async (query: string) => {
     console.log("Searching for:", query);
     setSearchQuery(query);
@@ -207,6 +222,35 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
       console.error("Search failed:", error);
     }
   };
+
+  const fitAllStations = () => {
+    if (bikeStationData?.length > 0 && mapRef.current && !selectedStation) {
+      const coordinates = bikeStationData.map((station: any) => ({
+        latitude: station.latitude,
+        longitude: station.longitude,
+      }));
+
+      if (location) {
+        coordinates.push({
+          latitude: location.latitude,
+          longitude: location.longitude,
+        });
+      }
+
+      mapRef.current.fitToCoordinates(coordinates, {
+        edgePadding: { top: 100, bottom: 100, left: 50, right: 50 },
+        animated: true,
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (bikeStationData?.length > 0 && !selectedStation) {
+      setTimeout(() => {
+        fitAllStations();
+      }, 500);
+    }
+  }, [bikeStationData, selectedStation]);
 
   return (
     <Modal
@@ -263,7 +307,14 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
                   followsUserLocation={isNavigating}
                   showsMyLocationButton={false}
                   initialRegion={getInitialRegion()}
-                  onMapReady={() => console.log("Map ready")}
+                  onMapReady={() => {
+                    console.log("Map ready");
+                    if (!selectedStation) {
+                      setTimeout(() => {
+                        fitAllStations();
+                      }, 1000);
+                    }
+                  }}
                 >
                   {!isBikeStationLoading &&
                     bikeStationData?.map((station: any) => (
@@ -329,7 +380,9 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
                 <TouchableOpacity
                   style={styles.recenterButton}
                   onPress={() => {
-                    if (location) {
+                    if (location && !selectedStation) {
+                      fitAllStations();
+                    } else if (location) {
                       mapRef.current?.animateToRegion(
                         {
                           latitude: location.latitude,
@@ -344,6 +397,16 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
                 >
                   <Ionicons name="locate" size={24} color={THEME_COLOR} />
                 </TouchableOpacity>
+
+                {!selectedStation && bikeStationData?.length > 0 && (
+                  <TouchableOpacity
+                    style={styles.fitAllButton}
+                    onPress={fitAllStations}
+                  >
+                    <Ionicons name="expand" size={20} color={THEME_COLOR} />
+                    <Text style={styles.fitAllText}>Show All Stations</Text>
+                  </TouchableOpacity>
+                )}
               </>
             )}
           </View>
@@ -493,6 +556,7 @@ const styles = StyleSheet.create({
   },
   mapContainer: {
     flex: 1,
+    position: "relative",
   },
   map: {
     flex: 1,
@@ -510,6 +574,24 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     padding: 10,
     elevation: 5,
+  },
+  fitAllButton: {
+    position: "absolute",
+    bottom: 80,
+    right: 20,
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    elevation: 5,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  fitAllText: {
+    marginLeft: 6,
+    fontSize: 12,
+    fontWeight: "600",
+    color: THEME_COLOR,
   },
   customMarker: {
     backgroundColor: "#fff",
