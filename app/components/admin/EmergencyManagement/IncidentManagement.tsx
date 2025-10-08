@@ -4,16 +4,16 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, parse } from "date-fns";
 import React, { useState } from "react";
 import {
-  ActivityIndicator,
   RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import DeleteConfirmationModal from "../../DeleteConfirmationModal";
+import Loader from "../../Loader";
 
 const IncidentManagement = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -94,8 +94,8 @@ const IncidentManagement = () => {
       </View>
 
       {isIncidentDataFetching && !refreshing && (
-        <View >
-          <ActivityIndicator size="large" color="#0B4057" />
+         <View style={{ marginVertical: 25 }}>
+          <Loader showText={false} />
         </View>
       )}
 

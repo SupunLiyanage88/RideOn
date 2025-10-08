@@ -1,9 +1,9 @@
-// ChatIconModal.tsx
 import { MaterialIcons } from "@expo/vector-icons";
-import { FC, useRef, useState } from "react";
+import { FC, useEffect, useRef, useState } from "react";
 import {
   Animated,
   Modal,
+  Platform,
   Text,
   TouchableOpacity,
   View,
@@ -22,20 +22,34 @@ interface ChatIconModalProps {
   hideChatButton?: boolean;
 }
 
-export const ChatIconModal: FC<ChatIconModalProps> = ({ hideChatButton = false }) => {
+export const ChatIconModal: FC<ChatIconModalProps> = ({
+  hideChatButton = false,
+}) => {
   const [chatVisible, setChatVisible] = useState<boolean>(false);
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const slideAnim = useRef(new Animated.Value(0)).current;
+  const collapseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const toggleExpand = () => {
     const newIsExpanded = !isExpanded;
     setIsExpanded(newIsExpanded);
-    
     Animated.timing(slideAnim, {
       toValue: newIsExpanded ? 1 : 0,
       duration: ANIMATION_DURATION,
       useNativeDriver: true,
     }).start();
+
+    if (newIsExpanded) {
+      if (collapseTimer.current) clearTimeout(collapseTimer.current);
+      collapseTimer.current = setTimeout(() => {
+        setIsExpanded(false);
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: ANIMATION_DURATION,
+          useNativeDriver: true,
+        }).start();
+      }, 2000);
+    }
   };
 
   const handleCollapsedIconPress = () => {
@@ -44,13 +58,12 @@ export const ChatIconModal: FC<ChatIconModalProps> = ({ hideChatButton = false }
 
   const handleExpandedIconPress = () => {
     setChatVisible(true);
+    if (collapseTimer.current) clearTimeout(collapseTimer.current);
   };
 
   const handleCloseChat = () => {
     setChatVisible(false);
-    if (isExpanded) {
-      toggleExpand();
-    }
+    if (isExpanded) toggleExpand();
   };
 
   const slideTranslateX = slideAnim.interpolate({
@@ -67,6 +80,11 @@ export const ChatIconModal: FC<ChatIconModalProps> = ({ hideChatButton = false }
     inputRange: [0, 1],
     outputRange: [1, 0],
   });
+  useEffect(() => {
+    return () => {
+      if (collapseTimer.current) clearTimeout(collapseTimer.current);
+    };
+  }, []);
 
   if (hideChatButton) {
     return null;
@@ -79,14 +97,16 @@ export const ChatIconModal: FC<ChatIconModalProps> = ({ hideChatButton = false }
         style={{
           transform: [{ translateX: slideTranslateX }],
           position: "absolute",
-          bottom: 100,
+          bottom: 120,
           right: !isExpanded ? 10 : 20,
           zIndex: 100,
         }}
       >
         <TouchableOpacity
           activeOpacity={0.9}
-          onPress={isExpanded ? handleExpandedIconPress : handleCollapsedIconPress}
+          onPress={
+            isExpanded ? handleExpandedIconPress : handleCollapsedIconPress
+          }
           style={{
             width: ICON_CONTAINER_SIZE,
             height: ICON_CONTAINER_SIZE,
@@ -101,66 +121,37 @@ export const ChatIconModal: FC<ChatIconModalProps> = ({ hideChatButton = false }
             elevation: 4,
           }}
         >
-          {/* Back Arrow Icon (visible when collapsed) */}
-          <Animated.View 
-            style={{ 
-              opacity: arrowOpacity, 
-              position: "absolute", 
-              left: 16
+          <Animated.View
+            style={{
+              opacity: arrowOpacity,
+              position: "absolute",
+              left: 16,
+            }}
+          >
+            <MaterialIcons name="arrow-back-ios" size={20} color="white" />
+          </Animated.View>
+
+          <Animated.View
+            style={{
+              opacity: mainIconOpacity,
+              position: "absolute",
             }}
           >
             <MaterialIcons
-              name="arrow-back-ios"
-              size={20}
+              name="support-agent"
+              size={ICON_SIZE}
               color="white"
             />
           </Animated.View>
-
-          {/* Chat Icon (visible when expanded) */}
-          <Animated.View 
-            style={{ 
-              opacity: mainIconOpacity, 
-              position: "absolute" 
-            }}
-          >
-            <MaterialIcons name="support-agent" size={ICON_SIZE} color="white" />
-          </Animated.View>
         </TouchableOpacity>
-
-        {/* Close Button (visible when expanded) */}
-        <Animated.View
-          style={{
-            position: "absolute",
-            top: -5,
-            right: -5,
-            opacity: mainIconOpacity,
-          }}
-        >
-          <TouchableOpacity
-            onPress={toggleExpand}
-            style={{
-              backgroundColor: "white",
-              borderRadius: 12,
-              padding: 4,
-              elevation: 6,
-              shadowColor: "#000",
-              shadowOpacity: 0.3,
-              shadowOffset: { width: 0, height: 2 },
-              shadowRadius: 3,
-            }}
-          >
-            <MaterialIcons name="close" size={16} color="#333" />
-          </TouchableOpacity>
-        </Animated.View>
       </Animated.View>
 
-      {/* Chat Modal */}
       <Modal
         visible={chatVisible}
         animationType="slide"
         onRequestClose={handleCloseChat}
       >
-        <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
+        <SafeAreaView edges={["left", "right"]} style={{ flex: 1 }}>
           <View
             style={{
               flexDirection: "row",
@@ -169,6 +160,8 @@ export const ChatIconModal: FC<ChatIconModalProps> = ({ hideChatButton = false }
               padding: 15,
               borderBottomWidth: 1,
               borderColor: "#ddd",
+              marginTop: Platform.OS === "ios" ? 40 : 40,
+              marginBottom: Platform.OS === "ios" ? 0 : 40,
             }}
           >
             <Text style={{ fontSize: 18, fontWeight: "600" }}>RideBot</Text>
@@ -187,3 +180,5 @@ export const ChatIconModal: FC<ChatIconModalProps> = ({ hideChatButton = false }
     </>
   );
 };
+
+export default ChatIconModal;
