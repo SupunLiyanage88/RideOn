@@ -78,7 +78,7 @@ const IncidentScreenDialog = ({ visible, onClose, defaultValues }: DialogProps) 
       alert("Incident Save successful");
       reset();
       onClose();
-      queryClient.invalidateQueries({ queryKey: ["incident-data"] });
+      queryClient.invalidateQueries({ queryKey: ["incident-user-data"] });
     },
     onError: (data) => {
       alert("Incident Save failed");
@@ -92,7 +92,7 @@ const IncidentScreenDialog = ({ visible, onClose, defaultValues }: DialogProps) 
       alert("Incident Updated Successful");
       reset();
       onClose();
-      queryClient.invalidateQueries({ queryKey: ["incident-data"] });
+      queryClient.invalidateQueries({ queryKey: ["incident-user-data"] });
     },
     onError: (data) => {
       alert("Incident Update failed");
