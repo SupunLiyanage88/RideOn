@@ -6,6 +6,8 @@ export const bikeSchema = z.object({
   _id: z.string(),
   bikeModel: z.string(),
   bikeId: z.string(),
+  imageUrl: z.string(),
+  image: z.file(),
   fuelType: z.string(),
   distance: z.string(),
   condition: z.string(),
@@ -13,6 +15,7 @@ export const bikeSchema = z.object({
   assigned: z.boolean(),
   rentApproved: z.boolean(),
   rentRejected: z.boolean(),
+  userAggrement: z.boolean(),
   createdBy: userSchema
 });
 
@@ -24,8 +27,33 @@ export async function saveBike(data: Bike) {
   return res.data;
 }
 
-export async function saveBikeByUser(data: Bike) {
-  const res = await axios.post("/api/bike/user-bikes", data);
+export async function saveBikeByUser(data: any) {
+  // Create FormData for multipart upload
+  const formData = new FormData();
+  
+  // Append text fields
+  formData.append('bikeModel', data.bikeModel);
+  formData.append('fuelType', data.fuelType);
+  formData.append('distance', data.distance);
+  formData.append('condition', data.condition);
+  formData.append('availability', data.availability.toString());
+  formData.append('assigned', data.assigned.toString());
+  formData.append('rentApproved', data.rentApproved.toString());
+  
+  // Append image file if present
+  if (data.image) {
+    formData.append('image', {
+      uri: data.image.uri,
+      type: data.image.type,
+      name: data.image.name,
+    } as any);
+  }
+
+  const res = await axios.post("/api/bike/user-bikes", formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
   return res.data;
 }
 
