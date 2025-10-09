@@ -64,10 +64,10 @@ const RegisterScreen = () => {
                     value: true,
                     message: "User Name is required",
                   },
-                  maxLength: {
-                    value: 4,
-                    message: "User Name must be at least 4 digits",
-                  },
+                  // maxLength: {
+                  //   value: 4,
+                  //   message: "User Name must be at least 4 digits",
+                  // },
                 })}
               />
               <HelperText

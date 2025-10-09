@@ -11,6 +11,7 @@ export const bikeSchema = z.object({
   condition: z.string(),
   availability: z.boolean(),
   assigned: z.boolean(),
+  rentApproved: z.boolean(),
   createdBy: userSchema
 });
 
@@ -19,6 +20,11 @@ export type Bike = z.infer<typeof bikeSchema>;
 // Create
 export async function saveBike(data: Bike) {
   const res = await axios.post("/api/bike", data);
+  return res.data;
+}
+
+export async function saveBikeByUser(data: Bike) {
+  const res = await axios.post("/api/bike/user-bikes", data);
   return res.data;
 }
 
@@ -55,5 +61,10 @@ export async function deleteBike(id: string) {
 // Search Bikes
 export async function searchBikes({ query } : {query: String}) {
   const res = await axios.get(`/api/bike/search?query=${query}`);
+  return res.data;
+}
+
+export async function getBikesByUser() {
+  const res = await axios.get(`/api/bike/user-bikes`);
   return res.data;
 }
