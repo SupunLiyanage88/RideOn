@@ -42,6 +42,7 @@ const IncidentManagement = () => {
       alert("Incident deleted successfully");
       setDeleteDialogOpen(false);
       queryClient.invalidateQueries({ queryKey: ["incident-data"] });
+      queryClient.invalidateQueries({ queryKey: ["incident-user-data"] });
     },
     onError: (error) => {
       alert("Failed to delete incident");

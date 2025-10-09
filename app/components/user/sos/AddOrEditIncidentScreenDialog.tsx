@@ -307,10 +307,11 @@ const IncidentScreenDialog = ({ visible, onClose, defaultValues }: DialogProps) 
               />
             </View>
 
-            <View style={{ backgroundColor: "#FFFFFF", borderRadius: 24, paddingHorizontal: 14 }}>
+            <View style={{ backgroundColor: "#FFFFFF", borderRadius: 24, paddingHorizontal: 14 , marginBottom: 16 }}>
               <Controller
                 control={control}
                 name="stopRide"
+                defaultValue={defaultValues?.stopRide}
                 render={({ field: { value, onChange } }) => (
                   <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 8 }}>
                     <Text style={{ fontWeight: "700", marginTop: 8 }}>Do you need to stop the ride?</Text>
