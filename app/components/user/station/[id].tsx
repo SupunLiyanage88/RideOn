@@ -95,8 +95,8 @@ export default function StationDetail() {
       <StatusBar barStyle="dark-content" />
 
       <DialogHeader
-        title={`Available Bikes ${stationData?.stationName}`}
-        subtitle="Pick Your Ride On Station"
+        title={`${stationData?.stationName}`}
+        subtitle={`Available Bikes`}
       />
       <View style={styles.header}>
         <View style={styles.headerContainer}>

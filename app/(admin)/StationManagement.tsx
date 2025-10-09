@@ -8,6 +8,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useState } from "react";
 import {
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -19,9 +20,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AddBtn from "../components/AddBtn";
 import AddOrEditBikeStationDialog from "../components/admin/StationManagement/AddOrEditBikeStationDialog";
 import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
-import Loader from "../components/Loader";
 import SearchInput from "../components/SearchBarQuery";
-
+const THEME_COLOR = "#083A4C";
 const StationManagement = () => {
   const [bikeStationModalVisible, setBikeStationModalVisible] = useState(false);
   const [selectedData, setSelectedData] = useState<BikeStation | null>(null);
@@ -37,6 +37,8 @@ const StationManagement = () => {
     queryKey: ["station-data", debouncedQuery],
     queryFn: ({ queryKey }) => fetchBikeStation({ query: queryKey[1] }),
   });
+
+  console.log("Bike Station Data:", bikeStationData);
   const handleSearch = async (query: string) => {
     console.log("Searching for:", query);
     setSearchQuery(query);
@@ -91,13 +93,33 @@ const StationManagement = () => {
             isSearching={isBikeStationLoading}
           />
         </View>
-        {isBikeStationLoading && (
-          <View style={{ padding: 24, margin: 8 }}>
-            <Loader textStyle={{ fontSize: 20 }} showText={false} />
-          </View>
-        )}
 
-        <ScrollView>
+        {!isBikeStationLoading &&
+          (!bikeStationData || bikeStationData.length === 0) && (
+            <View
+              style={{
+                padding: 24,
+                margin: 8,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <MaterialIcons name="location-off" size={48} color="#9CA3AF" />
+              <Text style={{ marginTop: 12, fontSize: 16, color: "#6B7280" }}>
+                No stations found
+              </Text>
+            </View>
+          )}
+
+        <ScrollView
+          refreshControl={
+            <RefreshControl
+              refreshing={isBikeStationLoading}
+              onRefresh={researchBikeStation}
+              colors={[THEME_COLOR]}
+            />
+          }
+        >
           {bikeStationData?.map((station: any) => (
             <View
               key={station._id}
