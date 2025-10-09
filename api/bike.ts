@@ -12,6 +12,7 @@ export const bikeSchema = z.object({
   availability: z.boolean(),
   assigned: z.boolean(),
   rentApproved: z.boolean(),
+  rentRejected: z.boolean(),
   createdBy: userSchema
 });
 
@@ -72,12 +73,19 @@ export async function getBikesByUser() {
 // Get bikes that need rent approval
 export async function getBikesAwaitingApproval() {
   const allBikes = await getAllBikes();
-  return allBikes.filter((bike: Bike) => !bike.rentApproved);
+  return allBikes.filter((bike: Bike) => !bike.rentApproved && !bike.rentRejected);
 }
 
 // Approve bike rental
 export async function approveBikeRental(bikeId: string) {
   const bike = await getBikeById(bikeId);
   const updatedBike = { ...bike, rentApproved: true };
+  return await updateBike(updatedBike);
+}
+
+// Reject bike rental
+export async function rejectBikeRental(bikeId: string) {
+  const bike = await getBikeById(bikeId);
+  const updatedBike = { ...bike, rentRejected: true };
   return await updateBike(updatedBike);
 }
