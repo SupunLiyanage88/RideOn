@@ -1,5 +1,6 @@
 import { Bike } from "@/api/bike";
 import { fetchBikeStationById } from "@/api/bikeStation";
+import { fetchUserRentBike } from "@/api/rentBike";
 import { Ionicons } from "@expo/vector-icons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useQuery } from "@tanstack/react-query";
@@ -38,6 +39,15 @@ export default function StationDetail() {
     enabled: !!id,
   });
 
+  const {
+    data: rentedBikeData,
+    refetch: refetchRentedBikeData,
+    isLoading: rentedBikeLoading,
+  } = useQuery({
+    queryKey: ["station-rented-bike"],
+    queryFn: fetchUserRentBike,
+  });
+  console.log("Rented Bike Data:", rentedBikeData);
   const getConditionColor = (condition: number) => {
     if (condition >= 80) return "#10b981";
     if (condition >= 50) return "#f59e0b";
@@ -75,6 +85,11 @@ export default function StationDetail() {
   const electricCount =
     stationData.bikes?.filter((b: any) => b.fuelType === "electric").length ||
     0;
+
+  function refreshStationData() {
+    refetchStationData();
+    refetchRentedBikeData();
+  }
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
@@ -86,14 +101,14 @@ export default function StationDetail() {
       <View style={styles.header}>
         <View style={styles.headerContainer}>
           <View style={styles.headerTextBox}>
-            <Text style={styles.stationName}>{stationData.stationName}</Text>
+            <Text style={styles.stationName}>{stationData?.stationName}</Text>
             <View style={styles.locationRow}>
               <Ionicons name="location" size={16} color="red" />
               <Text style={styles.locationText}>
                 {stationData.stationLocation}
               </Text>
             </View>
-            <Text style={styles.stationId}>{stationData.stationId}</Text>
+            <Text style={styles.stationId}>{stationData?.stationId}</Text>
           </View>
 
           <MapView
@@ -141,7 +156,7 @@ export default function StationDetail() {
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
-            onRefresh={refetchStationData}
+            onRefresh={refreshStationData}
           />
         }
       >
@@ -221,13 +236,33 @@ export default function StationDetail() {
               </View>
 
               <TouchableOpacity
-                style={styles.rentButton}
+                style={[
+                  styles.rentButton,
+                  {
+                    backgroundColor:
+                      rentedBikeData?.isRented === true &&
+                      rentedBikeData?.bikeId?._id !== bike._id
+                        ? "gray"
+                        : "#083A4C",
+                  },
+                ]}
                 onPress={() => {
                   setModalVisible(true);
                   setBikeId(bike._id);
                 }}
+                disabled={
+                  rentedBikeData?.isRented === true &&
+                  rentedBikeData?.bikeId?._id !== bike._id
+                }
               >
-                <Text style={styles.rentButtonText}>Rent This Bike</Text>
+                <Text style={styles.rentButtonText}>
+                  {!rentedBikeData
+                    ? "Rent This Bike"
+                    : rentedBikeData?.isRented === true &&
+                        rentedBikeData?.bikeId?._id !== bike._id
+                      ? "Unavailable"
+                      : "Go To Navigation"}
+                </Text>
                 <Ionicons name="arrow-forward" size={18} color="#fff" />
               </TouchableOpacity>
             </View>
