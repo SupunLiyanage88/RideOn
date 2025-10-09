@@ -1,5 +1,5 @@
 import { fetchBikeStation } from "@/api/bikeStation";
-import { saveRentBike } from "@/api/rentBike";
+import { fetchUserRentBike, saveRentBike } from "@/api/rentBike";
 import UseCurrentUser from "@/hooks/useCurrentUser";
 import { getRouteDistance } from "@/utils/distance.matrix.utils";
 import { useDebounce } from "@/utils/useDebounce.utils";
@@ -50,9 +50,8 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
     null
   );
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [navigationSet, setNavigationSet] = useState(false);
 
-  console.log("Selected Station:", selectedStation);
-  console.log("BikeId:", defaultBikeId);
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedQuery = useDebounce(searchQuery, 500);
 
@@ -63,15 +62,22 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
 
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["current-user"] });
+        queryClient.invalidateQueries({ queryKey: ["station-rented-bike"] });
         startNavigation();
         setDeleteDialogOpen(false);
       },
       onError: (data) => {
         alert("Bike Rent failed");
-        console.log(data);
       },
     });
-
+  const {
+    data: rentedBikeData,
+    refetch: refetchRentedBikeData,
+    isLoading: rentedBikeLoading,
+  } = useQuery({
+    queryKey: ["station-rented-bike"],
+    queryFn: fetchUserRentBike,
+  });
   useEffect(() => {
     let isMounted = true;
 
@@ -120,16 +126,26 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
     queryFn: ({ queryKey }) => fetchBikeStation({ query: queryKey[1] }),
   });
 
+  console.log("Rented Bike Data:", rentedBikeData);
   useEffect(() => {
     const fetchDistance = async () => {
-      if (location && selectedStation) {
+      if (location && (selectedStation || rentedBikeData)) {
         try {
+          const destination = selectedStation
+            ? {
+                latitude: selectedStation.latitude,
+                longitude: selectedStation.longitude,
+              }
+            : {
+                latitude: rentedBikeData.latitude,
+                longitude: rentedBikeData.longitude,
+              };
           const dist = await getRouteDistance(
-            { latitude: location.latitude, longitude: location.longitude },
             {
-              latitude: selectedStation.latitude,
-              longitude: selectedStation.longitude,
-            }
+              latitude: location.latitude,
+              longitude: location.longitude,
+            },
+            destination
           );
           setDistance(dist);
         } catch (error) {
@@ -138,7 +154,7 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
       }
     };
     fetchDistance();
-  }, [selectedStation, location]);
+  }, [selectedStation, location, rentedBikeData]);
 
   useEffect(() => {
     if (!selectedStation && location && mapRef.current) {
@@ -236,7 +252,6 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
   };
 
   const handleSearch = async (query: string) => {
-    console.log("Searching for:", query);
     setSearchQuery(query);
     try {
       await researchBikeStation();
@@ -285,10 +300,25 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
       expiresAt: distance?.durationSeconds,
       distance: distance?.distanceKm,
       duration: distance?.durationSeconds,
+      latitude: data?.latitude,
+      longitude: data?.longitude,
       rcPrice: RC_FEE_ROUTE,
     };
     saveRentBikeMutation(submitData);
+    setNavigationSet(false);
+    setSelectedStation(null);
   }
+  const destination = selectedStation
+    ? {
+        latitude: selectedStation.latitude,
+        longitude: selectedStation.longitude,
+      }
+    : rentedBikeData
+      ? {
+          latitude: rentedBikeData.latitude,
+          longitude: rentedBikeData.longitude,
+        }
+      : undefined;
 
   return (
     <Modal
@@ -310,7 +340,7 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
             />
           </View>
 
-          {!selectedStation && (
+          {(selectedStation || !rentedBikeData) && (
             <View
               style={{
                 marginTop: 5,
@@ -349,7 +379,6 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
                   showsMyLocationButton={false}
                   initialRegion={getInitialRegion()}
                   onMapReady={() => {
-                    console.log("Map ready");
                     if (!selectedStation) {
                       setTimeout(() => {
                         fitAllStations();
@@ -365,7 +394,11 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
                           latitude: station.latitude,
                           longitude: station.longitude,
                         }}
-                        onPress={() => handleStationSelect(station)}
+                        onPress={() => {
+                          if (!isNavigating && !rentedBikeData) {
+                            handleStationSelect(station);
+                          }
+                        }}
                       >
                         <View
                           style={[
@@ -387,29 +420,24 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
                       </Marker>
                     ))}
 
-                  {selectedStation && location && (
+                  {destination && location && (
                     <MapViewDirections
                       origin={location}
-                      destination={{
-                        latitude: selectedStation.latitude,
-                        longitude: selectedStation.longitude,
-                      }}
+                      destination={destination}
                       apikey={GOOGLE_MAPS_API_KEY}
                       strokeWidth={4}
                       strokeColor={THEME_COLOR}
                       optimizeWaypoints={true}
                       onReady={(result) => {
-                        if (selectedStation) {
-                          mapRef.current?.fitToCoordinates(result.coordinates, {
-                            edgePadding: {
-                              top: 100,
-                              bottom: 100,
-                              left: 50,
-                              right: 50,
-                            },
-                            animated: true,
-                          });
-                        }
+                        mapRef.current?.fitToCoordinates(result.coordinates, {
+                          edgePadding: {
+                            top: 100,
+                            bottom: 100,
+                            left: 50,
+                            right: 50,
+                          },
+                          animated: true,
+                        });
                       }}
                       onError={(errorMessage) => {
                         console.error("Directions error:", errorMessage);
@@ -439,62 +467,57 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
                   <Ionicons name="locate" size={24} color={THEME_COLOR} />
                 </TouchableOpacity>
 
-                {!selectedStation && bikeStationData?.length > 0 && (
-                  <TouchableOpacity
-                    style={styles.fitAllButton}
-                    onPress={fitAllStations}
-                  >
-                    <Ionicons name="expand" size={20} color={THEME_COLOR} />
-                    <Text style={styles.fitAllText}>Show All Stations</Text>
-                  </TouchableOpacity>
-                )}
+                <TouchableOpacity
+                  style={styles.fitAllButton}
+                  onPress={fitAllStations}
+                >
+                  <Ionicons name="expand" size={20} color={THEME_COLOR} />
+                  <Text style={styles.fitAllText}>Show All Stations</Text>
+                </TouchableOpacity>
               </>
             )}
           </View>
 
-          {selectedStation && (
+          {(selectedStation || rentedBikeData) && (
             <View style={styles.infoBox}>
               <View style={styles.stationCard}>
                 <View>
-                  <View style={styles.stationInfoDetails}>
-                    <Text style={styles.stationName}>
-                      {selectedStation.stationId}
-                    </Text>
-                    <Text style={styles.stationName}>
-                      {selectedStation.stationName}
-                    </Text>
-                  </View>
-
-                  <View style={styles.coinDetailItem}>
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 10,
-                      }}
-                    >
-                      <View style={styles.iconContainer}>
-                        <Text>🪙</Text>
+                  {((!rentedBikeData && navigationSet) || selectedStation) && (
+                    <View style={styles.coinDetailItem}>
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 10,
+                        }}
+                      >
+                        <View style={styles.iconContainer}>
+                          <Text>🪙</Text>
+                        </View>
+                        <Text style={styles.detailLabel}>Available RC</Text>
                       </View>
-                      <Text style={styles.detailLabel}>Available RC</Text>
+                      <Text style={styles.basicChip}>{user?.rc} RC</Text>
                     </View>
-                    <Text style={styles.basicChip}>{user?.rc} RC</Text>
-                  </View>
-                  <View style={styles.coinDetailItem}>
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 10,
-                      }}
-                    >
-                      <View style={styles.iconContainer}>
-                        <Text>🪙</Text>
+                  )}
+                  {((!rentedBikeData && navigationSet) || selectedStation) && (
+                    <View style={styles.coinDetailItem}>
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 10,
+                        }}
+                      >
+                        <View style={styles.iconContainer}>
+                          <Text>🪙</Text>
+                        </View>
+                        <Text style={styles.detailLabel}>RC Fee</Text>
                       </View>
-                      <Text style={styles.detailLabel}>RC Fee</Text>
+                      <Text style={styles.basicChip}>
+                        {RC_FEE_ROUTE || 0} RC
+                      </Text>
                     </View>
-                    <Text style={styles.basicChip}>{RC_FEE_ROUTE} RC</Text>
-                  </View>
+                  )}
                   <View style={styles.stationDetails}>
                     <View style={styles.detailItem}>
                       <View style={styles.iconContainer}>
@@ -516,7 +539,7 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
                         <Text style={styles.detailLabel}>Duration</Text>
                         <Text style={styles.detailValue}>
                           {distance
-                            ? `${distance.ConvertedHours}h ${distance.ConvertedMinutes}min`
+                            ? `${distance.ConvertedHours || 0}h ${distance.ConvertedMinutes || 0}min`
                             : "Calculating..."}
                         </Text>
                       </View>
@@ -525,8 +548,25 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
                 </View>
               </View>
 
-              {!isNavigating ? (
-                user?.rc === 0 || shouldShowButton || !user?.rc ? (
+              {rentedBikeData ? (
+                <View style={{ marginBottom: 40 }}>
+                  <TouchableOpacity
+                    style={[
+                      styles.navigateButtonWithoutStretch,
+                      {
+                        backgroundColor:
+                          distance?.distanceKm < 3 ? "#D9534F" : "gray",
+                      },
+                    ]}
+                    disabled={distance?.distanceKm > 3}
+                    onPress={stopNavigation}
+                  >
+                    <Ionicons name="compass" size={18} color="#fff" />
+                    <Text style={styles.navigateText}>Stop Navigation</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : !isNavigating ? (
+                !user?.rc || user.rc === 0 || shouldShowButton ? (
                   <View style={{ marginBottom: 40 }}>
                     <TouchableOpacity
                       style={[
@@ -542,7 +582,6 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
                   <View
                     style={{
                       marginBottom: 40,
-                      display: "flex",
                       flexDirection: "row",
                       justifyContent: "space-between",
                       gap: 10,
@@ -550,7 +589,9 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
                   >
                     <TouchableOpacity
                       style={styles.navigateButton}
-                      onPress={() => setDeleteDialogOpen(true)}
+                      onPress={() => {
+                        (setDeleteDialogOpen(true), setNavigationSet(true));
+                      }}
                     >
                       <Ionicons name="navigate" size={18} color="#fff" />
                       <Text style={styles.navigateText}>Start Navigation</Text>
@@ -564,20 +605,7 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
                     </TouchableOpacity>
                   </View>
                 )
-              ) : (
-                <View style={{ marginBottom: 40 }}>
-                  <TouchableOpacity
-                    style={[
-                      styles.navigateButtonWithoutStretch,
-                      { backgroundColor: "#D9534F" },
-                    ]}
-                    onPress={stopNavigation}
-                  >
-                    <Ionicons name="compass" size={18} color="#fff" />
-                    <Text style={styles.navigateText}>Stop Navigation</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
+              ) : null}
             </View>
           )}
         </View>
