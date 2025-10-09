@@ -1,8 +1,9 @@
 import { saveBikeByUser } from "@/api/bike";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
@@ -15,7 +16,7 @@ import {
   ScrollView,
   Text,
   TextInput,
-  View
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import HelperText from "../../HelperText";
@@ -36,6 +37,15 @@ const AddUserBikes = () => {
   const queryClient = useQueryClient();
   const [focusedField, setFocusedField] = useState<string | null>(null);
 
+  // Animation values
+  const progressAnim = React.useRef(new Animated.Value(0)).current;
+  const [fuelTypeScale] = useState({
+    Electric: new Animated.Value(1),
+    Pedal: new Animated.Value(1),
+  });
+  const [submitButtonScale] = useState(new Animated.Value(1));
+  const checkmarkOpacity = React.useRef(new Animated.Value(0)).current;
+
   const {
     control,
     handleSubmit,
@@ -53,6 +63,94 @@ const AddUserBikes = () => {
   });
 
   const watchedValues = watch();
+
+  // Animate progress bar
+  useEffect(() => {
+    const progress = getProgressPercentage();
+    Animated.timing(progressAnim, {
+      toValue: progress,
+      duration: 500,
+      useNativeDriver: false,
+    }).start();
+  }, [watchedValues]);
+
+  // Animate checkmark when field is valid
+  useEffect(() => {
+    const hasValidFields =
+      Object.keys(errors).length === 0 &&
+      watchedValues.bikeModel &&
+      watchedValues.fuelType &&
+      watchedValues.distance !== "0" &&
+      watchedValues.condition;
+
+    Animated.timing(checkmarkOpacity, {
+      toValue: hasValidFields ? 1 : 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [watchedValues, errors]);
+
+  const animateFuelType = (type: string) => {
+    // Reset all scales first
+    Object.values(fuelTypeScale).forEach((scale) => {
+      Animated.spring(scale, {
+        toValue: 1,
+        friction: 3,
+        useNativeDriver: true,
+      }).start();
+    });
+
+    // Animate selected type
+    Animated.spring(fuelTypeScale[type as keyof typeof fuelTypeScale], {
+      toValue: 1.02,
+      friction: 3,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const animateSubmitPress = (isPressed: boolean) => {
+    Animated.spring(submitButtonScale, {
+      toValue: isPressed ? 0.98 : 1,
+      friction: 3,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  useEffect(() => {
+    const checkFirstTimeVisit = async () => {
+      try {
+        const hasSeenTerms = await AsyncStorage.getItem("hasSeenBikeTerms");
+
+        if (!hasSeenTerms) {
+          // Show terms alert
+          Alert.alert(
+            "Welcome to Bike Sharing! 🚴‍♂️",
+            "By adding your bike to RideOn, you agree to our Terms & Conditions and acknowledge that:\n\n• Your bike will be professionally inspected\n• You'll earn revenue when others rent your bike\n• RideOn maintains insurance coverage\n• You can remove your bike anytime\n• Bike placement is at RideOn's discretion",
+            [
+              {
+                text: "I Agree",
+                onPress: async () => {
+                  await AsyncStorage.setItem("hasSeenBikeTerms", "true");
+                },
+              },
+              {
+                text: "Decline",
+                onPress: async () => {
+                  router.back();
+                  await AsyncStorage.setItem("hasSeenBikeTerms", "true");
+                  await AsyncStorage.multiRemove(["hasSeenBikeTerms"]);
+                },
+              },
+            ]
+          );
+        }
+      } catch (error) {
+        console.log("Error checking terms agreement:", error);
+      }
+    };
+
+    checkFirstTimeVisit();
+  }, []);
 
   const { mutate: saveBikeMutation, isPending } = useMutation({
     mutationFn: saveBikeByUser,
@@ -178,7 +276,10 @@ const AddUserBikes = () => {
               style={{
                 height: "100%",
                 backgroundColor: "#083A4C",
-                width: `${getProgressPercentage()}%`,
+                width: progressAnim.interpolate({
+                  inputRange: [0, 100],
+                  outputRange: ["0%", "100%"],
+                }),
                 borderRadius: 2,
               }}
             />
@@ -198,6 +299,7 @@ const AddUserBikes = () => {
           contentInsetAdjustmentBehavior="never"
         >
           <HowItWorks />
+
           {/* Bike Model Input */}
           <View style={{ marginBottom: 24, marginTop: 10 }}>
             <View
@@ -236,7 +338,7 @@ const AddUserBikes = () => {
                 },
               }}
               render={({ field: { onChange, value } }) => (
-                <View
+                <Animated.View
                   style={{
                     borderWidth: 2,
                     borderColor: errors.bikeModel
@@ -255,6 +357,11 @@ const AddUserBikes = () => {
                     shadowOpacity: focusedField === "bikeModel" ? 0.15 : 0.05,
                     shadowRadius: focusedField === "bikeModel" ? 8 : 2,
                     elevation: focusedField === "bikeModel" ? 4 : 1,
+                    transform: [
+                      {
+                        scale: focusedField === "bikeModel" ? 1.01 : 1,
+                      },
+                    ],
                   }}
                 >
                   <View
@@ -292,14 +399,28 @@ const AddUserBikes = () => {
                       returnKeyType="next"
                     />
                     {value && (
-                      <Ionicons
-                        name="checkmark-circle"
-                        size={20}
-                        color="#10b981"
-                      />
+                      <Animated.View
+                        style={{
+                          opacity: checkmarkOpacity,
+                          transform: [
+                            {
+                              scale: checkmarkOpacity.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: [0.8, 1],
+                              }),
+                            },
+                          ],
+                        }}
+                      >
+                        <Ionicons
+                          name="checkmark-circle"
+                          size={20}
+                          color="#10b981"
+                        />
+                      </Animated.View>
                     )}
                   </View>
-                </View>
+                </Animated.View>
               )}
             />
             <HelperText
@@ -332,7 +453,7 @@ const AddUserBikes = () => {
                   letterSpacing: -0.2,
                 }}
               >
-                Bike Type
+                Fuel Type
               </Text>
               <Text style={{ color: "#ef4444", marginLeft: 4 }}>*</Text>
             </View>
@@ -345,90 +466,69 @@ const AddUserBikes = () => {
                   {fuelTypes.map((type) => (
                     <Pressable
                       key={type.value}
-                      onPress={() => onChange(type.value)}
-                      style={({ pressed }) => ({
-                        flex: 1,
-                        borderWidth: 2,
-                        borderColor:
-                          value === type.value ? type.color : "#e5e7eb",
-                        borderRadius: 20,
-                        paddingVertical: 20,
-                        paddingHorizontal: 16,
-                        backgroundColor:
-                          value === type.value
-                            ? `${type.color}15`
-                            : pressed
-                              ? "#f9fafb"
-                              : "#ffffff",
-                        alignItems: "center",
-                        shadowColor:
-                          value === type.value ? type.color : "#000",
-                        shadowOffset: {
-                          width: 0,
-                          height: value === type.value ? 4 : 1,
-                        },
-                        shadowOpacity: value === type.value ? 0.2 : 0.05,
-                        shadowRadius: value === type.value ? 8 : 2,
-                        elevation: value === type.value ? 6 : 1,
-                        transform: [{ scale: pressed ? 0.98 : 1 }],
-                      })}
+                      onPress={() => {
+                        onChange(type.value);
+                        animateFuelType(type.value);
+                      }}
+                      style={{ flex: 1 }}
                     >
-                      <View
+                      <Animated.View
                         style={{
-                          backgroundColor:
-                            value === type.value ? type.color : "#f3f4f6",
-                          padding: 12,
+                          flex: 1,
+                          borderWidth: 2,
+                          borderColor:
+                            value === type.value ? type.color : "#e5e7eb",
                           borderRadius: 16,
-                          marginBottom: 12,
+                          paddingVertical: 16,
+                          paddingHorizontal: 12,
+                          backgroundColor:
+                            value === type.value
+                              ? `${type.color}10`
+                              : "#fafafa",
+                          alignItems: "center",
+                          shadowColor:
+                            value === type.value ? type.color : "#000",
+                          shadowOffset: {
+                            width: 0,
+                            height: value === type.value ? 4 : 1,
+                          },
+                          shadowOpacity: value === type.value ? 0.2 : 0.05,
+                          shadowRadius: value === type.value ? 8 : 2,
+                          elevation: value === type.value ? 4 : 1,
+                          transform: [
+                            {
+                              scale:
+                                fuelTypeScale[
+                                  type.value as keyof typeof fuelTypeScale
+                                ],
+                            },
+                          ],
                         }}
                       >
-                        <Text
-                          style={{
-                            fontSize: 24,
-                            opacity: value === type.value ? 1 : 0.7,
-                          }}
-                        >
+                        <Text style={{ fontSize: 24, marginBottom: 8 }}>
                           {type.icon}
                         </Text>
-                      </View>
-                      <Text
-                        style={{
-                          fontSize: 16,
-                          fontWeight: value === type.value ? "800" : "600",
-                          color: value === type.value ? type.color : "#374151",
-                          marginBottom: 4,
-                        }}
-                      >
-                        {type.label}
-                      </Text>
-                      <Text
-                        style={{
-                          fontSize: 12,
-                          color: "#6b7280",
-                          textAlign: "center",
-                          lineHeight: 16,
-                        }}
-                      >
-                        {type.description}
-                      </Text>
-                      {value === type.value && (
-                        <View
+                        <Text
                           style={{
-                            position: "absolute",
-                            top: 8,
-                            right: 8,
-                            backgroundColor: type.color,
-                            borderRadius: 12,
-                            padding: 4,
+                            fontSize: 15,
+                            fontWeight: value === type.value ? "700" : "600",
+                            color:
+                              value === type.value ? type.color : "#6b7280",
                           }}
                         >
-                          <Ionicons
-                            name="checkmark"
-                            size={16}
-                            color="#ffffff"
-                          />
-                        </View>
-                      )}
+                          {type.label}
+                        </Text>
+                        <Text
+                          style={{
+                            fontSize: 12,
+                            color: "#6b7280",
+                            textAlign: "center",
+                            lineHeight: 16,
+                          }}
+                        >
+                          {type.description}
+                        </Text>
+                      </Animated.View>
                     </Pressable>
                   ))}
                 </View>
@@ -464,84 +564,54 @@ const AddUserBikes = () => {
                   letterSpacing: -0.2,
                 }}
               >
-                Total Distance Traveled
+                Total Distance Traveled (You Can Not Edit This)
               </Text>
-              <Text style={{ color: "#ef4444", marginLeft: 4 }}>*</Text>
             </View>
             <Controller
               control={control}
               name="distance"
-              rules={{
-                required: "Distance is required",
-                pattern: {
-                  value: /^[0-9]+$/,
-                  message: "Please enter a valid number",
-                },
-              }}
-              render={({ field: { onChange, value } }) => (
-                <View
+              render={({ field: { value } }) => (
+                <Animated.View
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
                     borderWidth: 2,
-                    borderColor: errors.distance
-                      ? "#fca5a5"
-                      : focusedField === "distance" || value
-                        ? "#083A4C"
-                        : "#e5e7eb",
+                    borderColor: "#e5e7eb",
                     borderRadius: 16,
-                    backgroundColor: errors.distance ? "#fef2f2" : "#ffffff",
-                    shadowColor:
-                      focusedField === "distance" ? "#083A4C" : "#000",
-                    shadowOffset: {
-                      width: 0,
-                      height: focusedField === "distance" ? 4 : 1,
-                    },
-                    shadowOpacity: focusedField === "distance" ? 0.15 : 0.05,
-                    shadowRadius: focusedField === "distance" ? 8 : 2,
-                    elevation: focusedField === "distance" ? 4 : 1,
+                    backgroundColor: "#f9fafb",
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.05,
+                    shadowRadius: 2,
+                    elevation: 1,
                   }}
                 >
-                  <View
-                    style={{
-                      paddingLeft: 18,
-                      paddingVertical: 16,
-                    }}
-                  >
+                  <View style={{ paddingLeft: 18, paddingVertical: 16 }}>
                     <Ionicons
                       name="speedometer-outline"
                       size={20}
-                      color={
-                        value || focusedField === "distance"
-                          ? "#083A4C"
-                          : "#9ca3af"
-                      }
+                      color="#9ca3af"
                     />
                   </View>
+
                   <TextInput
-                    placeholder="Enter distance traveled"
-                    value={value}
-                    keyboardType="number-pad"
-                    onChangeText={onChange}
-                    onFocus={() => setFocusedField("distance")}
-                    onBlur={() => setFocusedField(null)}
+                    value={value?.toString() ?? ""}
+                    editable={false} 
                     style={{
                       flex: 1,
                       paddingHorizontal: 12,
                       paddingVertical: 16,
                       fontSize: 16,
-                      color: "#111827",
+                      color: "#6b7280",
                       fontWeight: "500",
                     }}
+                    placeholder="Enter distance traveled"
                     placeholderTextColor="#9ca3af"
-                    returnKeyType="next"
                   />
+
                   <View
                     style={{
-                      backgroundColor:
-                        value || focusedField === "distance"
-                          ? "#083A4C"
-                          : "#9ca3af",
+                      backgroundColor: "#9ca3af",
                       paddingHorizontal: 16,
                       paddingVertical: 10,
                       borderRadius: 12,
@@ -558,9 +628,10 @@ const AddUserBikes = () => {
                       KM
                     </Text>
                   </View>
-                </View>
+                </Animated.View>
               )}
             />
+
             <HelperText
               visible={!!errors.distance}
               message={errors.distance?.message}
@@ -610,7 +681,7 @@ const AddUserBikes = () => {
                 },
               }}
               render={({ field: { onChange, value } }) => (
-                <View
+                <Animated.View
                   style={{
                     borderWidth: 2,
                     borderColor: errors.condition
@@ -633,6 +704,11 @@ const AddUserBikes = () => {
                     shadowOpacity: focusedField === "condition" ? 0.2 : 0.08,
                     shadowRadius: focusedField === "condition" ? 12 : 4,
                     elevation: focusedField === "condition" ? 6 : 2,
+                    transform: [
+                      {
+                        scale: focusedField === "condition" ? 1.02 : 1,
+                      },
+                    ],
                   }}
                 >
                   {/* Enhanced Condition Value Display */}
@@ -648,7 +724,7 @@ const AddUserBikes = () => {
                         marginBottom: 12,
                       }}
                     >
-                      <View
+                      <Animated.View
                         style={{
                           width: 120,
                           height: 120,
@@ -659,6 +735,11 @@ const AddUserBikes = () => {
                           alignItems: "center",
                           justifyContent: "center",
                           marginBottom: 16,
+                          transform: [
+                            {
+                              scale: focusedField === "condition" ? 1.05 : 1,
+                            },
+                          ],
                         }}
                       >
                         <Text
@@ -680,14 +761,19 @@ const AddUserBikes = () => {
                         >
                           %
                         </Text>
-                      </View>
+                      </Animated.View>
 
-                      <View
+                      <Animated.View
                         style={{
                           backgroundColor: getConditionColor(value || "100"),
                           paddingHorizontal: 20,
                           paddingVertical: 8,
                           borderRadius: 25,
+                          transform: [
+                            {
+                              scale: focusedField === "condition" ? 1.05 : 1,
+                            },
+                          ],
                         }}
                       >
                         <Text
@@ -700,7 +786,7 @@ const AddUserBikes = () => {
                         >
                           {getConditionLabel(value || "100")}
                         </Text>
-                      </View>
+                      </Animated.View>
                     </View>
                   </View>
 
@@ -758,21 +844,36 @@ const AddUserBikes = () => {
                       maxLength={3}
                     />
                     {value && (
-                      <Ionicons
-                        name="checkmark-circle"
-                        size={20}
-                        color={getConditionColor(value)}
-                      />
+                      <Animated.View
+                        style={{
+                          opacity: checkmarkOpacity,
+                          transform: [
+                            {
+                              scale: checkmarkOpacity.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: [0.8, 1],
+                              }),
+                            },
+                          ],
+                        }}
+                      >
+                        <Ionicons
+                          name="checkmark-circle"
+                          size={20}
+                          color={getConditionColor(value)}
+                        />
+                      </Animated.View>
                     )}
                   </View>
 
                   {/* Condition Tips */}
-                  <View
+                  <Animated.View
                     style={{
                       backgroundColor: "#f8f9fa",
                       padding: 16,
                       borderRadius: 12,
                       marginTop: 16,
+                      opacity: focusedField === "condition" ? 1 : 0.8,
                     }}
                   >
                     <Text
@@ -784,11 +885,11 @@ const AddUserBikes = () => {
                       }}
                     >
                       💡 <Text style={{ fontWeight: "600" }}>Tip:</Text> Be
-                      honest about your bike's condition. This helps ensure
-                      fair pricing and happy customers!
+                      honest about your bike's condition. This helps ensure fair
+                      pricing and happy customers!
                     </Text>
-                  </View>
-                </View>
+                  </Animated.View>
+                </Animated.View>
               )}
             />
             <HelperText
@@ -804,7 +905,7 @@ const AddUserBikes = () => {
               padding: 24,
               backgroundColor: "#ffffff",
               borderRadius: 20,
-              marginBottom: 40, // Extra margin to ensure it's fully visible
+              marginBottom: 40,
               shadowColor: "#000",
               shadowOffset: {
                 width: 0,
@@ -817,7 +918,7 @@ const AddUserBikes = () => {
           >
             {/* Form Validation Summary */}
             {!isValid && (
-              <View
+              <Animated.View
                 style={{
                   backgroundColor: "#FEF3C7",
                   padding: 16,
@@ -825,6 +926,10 @@ const AddUserBikes = () => {
                   marginBottom: 16,
                   borderLeftWidth: 4,
                   borderLeftColor: "#F59E0B",
+                  opacity: checkmarkOpacity.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [1, 0],
+                  }),
                 }}
               >
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -844,73 +949,84 @@ const AddUserBikes = () => {
                     Please complete all required fields
                   </Text>
                 </View>
-              </View>
+              </Animated.View>
             )}
 
-            <Pressable
-              onPress={handleSubmit(handleSubmitBike)}
-              disabled={isPending || !isValid}
-              style={{
-                backgroundColor: isPending || !isValid ? "#9ca3af" : "#083A4C",
-                paddingVertical: 16,
-                borderRadius: 16,
-                alignItems: "center",
-                justifyContent: "center",
-                flexDirection: "row",
-                opacity: isPending || !isValid ? 0.6 : 1,
-              }}
+            <Animated.View
+              style={{ transform: [{ scale: submitButtonScale }] }}
             >
-              {isPending ? (
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                  }}
-                >
-                  <ActivityIndicator
-                    size="small"
-                    color="#ffffff"
-                    style={{ marginRight: 12 }}
-                  />
-                  <Text
+              <Pressable
+                onPress={handleSubmit(handleSubmitBike)}
+                onPressIn={() => animateSubmitPress(true)}
+                onPressOut={() => animateSubmitPress(false)}
+                disabled={isPending || !isValid}
+                style={{
+                  backgroundColor:
+                    isPending || !isValid ? "#9ca3af" : "#083A4C",
+                  paddingVertical: 16,
+                  borderRadius: 16,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexDirection: "row",
+                  opacity: isPending || !isValid ? 0.6 : 1,
+                }}
+              >
+                {isPending ? (
+                  <View
                     style={{
-                      color: "white",
-                      fontWeight: "700",
-                      fontSize: 16,
-                      letterSpacing: 0.5,
+                      flexDirection: "row",
+                      alignItems: "center",
                     }}
                   >
-                    SUBMITTING YOUR BIKE...
-                  </Text>
-                </View>
-              ) : (
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <Ionicons
-                    name="rocket"
-                    size={20}
-                    color="#ffffff"
-                    style={{ marginRight: 8 }}
-                  />
-                  <Text
-                    style={{
-                      color: "white",
-                      fontWeight: "700",
-                      fontSize: 16,
-                      letterSpacing: 0.5,
-                    }}
-                  >
-                    SUBMIT BIKE FOR REVIEW
-                  </Text>
-                </View>
-              )}
-            </Pressable>
+                    <ActivityIndicator
+                      size="small"
+                      color="#ffffff"
+                      style={{ marginRight: 12 }}
+                    />
+                    <Text
+                      style={{
+                        color: "white",
+                        fontWeight: "700",
+                        fontSize: 16,
+                        letterSpacing: 0.5,
+                      }}
+                    >
+                      SUBMITTING YOUR BIKE...
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <Ionicons
+                      name="rocket"
+                      size={20}
+                      color="#ffffff"
+                      style={{ marginRight: 8 }}
+                    />
+                    <Text
+                      style={{
+                        color: "white",
+                        fontWeight: "700",
+                        fontSize: 16,
+                        letterSpacing: 0.5,
+                      }}
+                    >
+                      SUBMIT BIKE FOR REVIEW
+                    </Text>
+                  </View>
+                )}
+              </Pressable>
+            </Animated.View>
 
-            <View
+            <Animated.View
               style={{
                 backgroundColor: "#EBF4FF",
                 padding: 16,
                 borderRadius: 12,
                 marginTop: 16,
+                opacity: checkmarkOpacity.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.7, 1],
+                }),
               }}
             >
               <Text
@@ -926,7 +1042,7 @@ const AddUserBikes = () => {
                 community. {"\n"}
                 💰 Start earning rewards when others rent your bike!
               </Text>
-            </View>
+            </Animated.View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
