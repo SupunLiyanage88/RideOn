@@ -158,13 +158,14 @@ export const ChatIconModal: FC<ChatIconModalProps> = ({
               justifyContent: "space-between",
               alignItems: "center",
               padding: 15,
+              paddingHorizontal: 30,
               borderBottomWidth: 1,
               borderColor: "#ddd",
               marginTop: Platform.OS === "ios" ? 40 : 40,
-              marginBottom: Platform.OS === "ios" ? 0 : 40,
+              marginBottom: Platform.OS === "ios" ? 0 : 0,
             }}
           >
-            <Text style={{ fontSize: 18, fontWeight: "600" }}>RideBot</Text>
+            <Text style={{ fontSize: 18, fontWeight: "600", }}>RideBot</Text>
             <TouchableOpacity onPress={handleCloseChat}>
               <MaterialIcons name="close" size={28} color="#333" />
             </TouchableOpacity>
@@ -175,6 +176,7 @@ export const ChatIconModal: FC<ChatIconModalProps> = ({
             }}
             style={{ flex: 1 }}
           />
+          <View style={{marginBottom: 50}}></View>
         </SafeAreaView>
       </Modal>
     </>
