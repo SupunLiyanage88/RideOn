@@ -1,5 +1,7 @@
 import { Bike } from "@/api/bike";
 import { images } from "@/constants/images";
+import { Ionicons } from "@expo/vector-icons";
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from "react";
 import {
   Dimensions,
@@ -47,21 +49,11 @@ const UserBikeCard = ({ bike }: { bike: Bike }) => {
   // Function to render bike icon based on bike ID
   const renderBikeIcon = () => {
     const bikeIdPrefix = bike.bikeId.substring(0, 2).toUpperCase();
-    
-    if (bikeIdPrefix === 'EV') {
-      return (
-        <Image 
-          source={images.evbike} 
-          style={styles.bikeImage} 
-        />
-      );
-    } else if (bikeIdPrefix === 'PD') {
-      return (
-        <Image 
-          source={images.pdbike} 
-          style={styles.bikeImage} 
-        />
-      );
+
+    if (bikeIdPrefix === "EV") {
+      return <Image source={images.evbike} style={styles.bikeImage} />;
+    } else if (bikeIdPrefix === "PD") {
+      return <Image source={images.pdbike} style={styles.bikeImage} />;
     } else {
       return <Text style={styles.bikeIcon}>🚲</Text>;
     }
@@ -72,9 +64,7 @@ const UserBikeCard = ({ bike }: { bike: Bike }) => {
       {/* Header Section with Bike Info */}
       <View style={styles.header}>
         <View style={styles.bikeInfo}>
-          <View style={styles.bikeIconContainer}>
-            {renderBikeIcon()}
-          </View>
+          <View style={styles.bikeIconContainer}>{renderBikeIcon()}</View>
           <View style={styles.bikeDetails}>
             <Text
               style={[styles.bikeModel, { fontSize: isSmallScreen ? 16 : 18 }]}
@@ -144,9 +134,11 @@ const UserBikeCard = ({ bike }: { bike: Bike }) => {
 
       {/* Specs Section */}
       <View style={styles.specsSection}>
-        <View style={styles.specItem}>
+        <View style={[styles.specItem, { alignItems: "center" }]}>
           <View style={styles.specIconContainer}>
-            <Text style={styles.specIcon}>⛽</Text>
+            <View style={styles.specIcon}>
+              <Ionicons name="flash" size={20} color="white" />
+            </View>
           </View>
           <View style={styles.specContent}>
             <Text
@@ -169,7 +161,9 @@ const UserBikeCard = ({ bike }: { bike: Bike }) => {
 
         <View style={styles.specItem}>
           <View style={styles.specIconContainer}>
-            <Text style={styles.specIcon}>📏</Text>
+            <View style={styles.specIcon}>
+              <MaterialCommunityIcons name="map-marker-distance" size={20} color="white" />
+            </View>
           </View>
           <View style={styles.specContent}>
             <Text
@@ -206,7 +200,7 @@ const UserBikeCard = ({ bike }: { bike: Bike }) => {
                 { fontSize: isSmallScreen ? 10 : 11 },
               ]}
             >
-              Assignment
+              Assigned
             </Text>
             <Text
               style={[
@@ -332,7 +326,7 @@ const styles = StyleSheet.create({
   bikeImage: {
     width: 40,
     height: 40,
-    resizeMode: 'contain',
+    resizeMode: "contain",
   },
 
   bikeDetails: {
@@ -431,7 +425,7 @@ const styles = StyleSheet.create({
   specIconContainer: {
     width: 32,
     height: 32,
-    backgroundColor: "#FEF3C7",
+    backgroundColor: "#518192",
     borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
@@ -439,7 +433,8 @@ const styles = StyleSheet.create({
   },
 
   specIcon: {
-    fontSize: 14,
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   specContent: {

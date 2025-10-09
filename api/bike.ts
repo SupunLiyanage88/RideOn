@@ -68,3 +68,16 @@ export async function getBikesByUser() {
   const res = await axios.get(`/api/bike/user-bikes`);
   return res.data;
 }
+
+// Get bikes that need rent approval
+export async function getBikesAwaitingApproval() {
+  const allBikes = await getAllBikes();
+  return allBikes.filter((bike: Bike) => !bike.rentApproved);
+}
+
+// Approve bike rental
+export async function approveBikeRental(bikeId: string) {
+  const bike = await getBikeById(bikeId);
+  const updatedBike = { ...bike, rentApproved: true };
+  return await updateBike(updatedBike);
+}

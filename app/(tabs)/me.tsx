@@ -1,7 +1,6 @@
 import { logout } from "@/api/auth";
-import queryClient from "@/state/queryClient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
@@ -18,12 +17,17 @@ import QuickActionCard from "../components/user/profile/QuickActionCard";
 
 const LogoutButton = () => {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const { mutate: logoutMutation, isPending } = useMutation({
     mutationFn: logout,
     onSuccess: async (data) => {
-      await AsyncStorage.removeItem("token");
+      // Clear all relevant AsyncStorage data
+      await AsyncStorage.multiRemove(["token", "hasSeenBikeTerms"]);
+      
       queryClient.invalidateQueries({ queryKey: ["current-user"] });
+      queryClient.clear(); // Optional: Clear all query cache
+      
       console.log("Logout successful:", data);
       router.replace("/(auth)/registerScreen");
     },
