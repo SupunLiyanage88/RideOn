@@ -1,4 +1,5 @@
-import { Bike, getAllBikes } from "@/api/bike";
+import { Bike } from "@/api/bike";
+import { getAvailableBikes } from "@/api/bikeStation";
 import { useQuery } from "@tanstack/react-query";
 import Checkbox from "expo-checkbox";
 import React, { useEffect, useState } from "react";
@@ -36,7 +37,7 @@ const AddBikeModal = ({
 }: AddBikeModalProps) => {
   const { data: bikeData, isFetching: isBikeLoading } = useQuery({
     queryKey: ["bike-data"],
-    queryFn: getAllBikes,
+    queryFn: getAvailableBikes,
   });
 
   const [selected, setSelected] = useState<Bike[]>([]);

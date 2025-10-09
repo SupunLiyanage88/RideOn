@@ -66,3 +66,8 @@ export async function getAllBikeStations() {
   const res = await axios.get("/api/bike-station");
   return res.data;
 }
+
+export async function getAvailableBikes() {
+  const res = await axios.get("/api/bike/available-bikes");
+  return res.data;
+}
