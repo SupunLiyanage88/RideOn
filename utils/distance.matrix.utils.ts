@@ -37,6 +37,7 @@ export const getRouteDistance = async (
       const minutes = Math.floor((durationSeconds % 3600) / 60);
       const returnData = {
         distanceKm,
+        durationSeconds,
         ConvertedHours: hours,
         ConvertedMinutes: minutes,
       };

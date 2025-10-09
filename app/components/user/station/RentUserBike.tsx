@@ -1,9 +1,10 @@
 import { fetchBikeStation } from "@/api/bikeStation";
+import { saveRentBike } from "@/api/rentBike";
 import UseCurrentUser from "@/hooks/useCurrentUser";
 import { getRouteDistance } from "@/utils/distance.matrix.utils";
 import { useDebounce } from "@/utils/useDebounce.utils";
-import { Ionicons } from "@expo/vector-icons";
-import { useQuery } from "@tanstack/react-query";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Location from "expo-location";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -18,6 +19,7 @@ import {
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 import { SafeAreaView } from "react-native-safe-area-context";
+import ConfirmationModal from "../../ConfirmationModal";
 import DialogHeader from "../../DialogHeader";
 import SearchInput from "../../SearchBarQuery";
 
@@ -47,10 +49,28 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
   const locationSubscription = useRef<Location.LocationSubscription | null>(
     null
   );
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
   console.log("Selected Station:", selectedStation);
   console.log("BikeId:", defaultBikeId);
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedQuery = useDebounce(searchQuery, 500);
+
+  const queryClient = useQueryClient();
+  const { mutate: saveRentBikeMutation, isPending: savingRentBike } =
+    useMutation({
+      mutationFn: saveRentBike,
+
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["current-user"] });
+        startNavigation();
+        setDeleteDialogOpen(false);
+      },
+      onError: (data) => {
+        alert("Bike Rent failed");
+        console.log(data);
+      },
+    });
 
   useEffect(() => {
     let isMounted = true;
@@ -136,6 +156,7 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
 
   const startNavigation = async () => {
     try {
+      setDeleteDialogOpen(true);
       setIsNavigating(true);
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
@@ -255,6 +276,20 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
 
   const RC_FEE_ROUTE = Math.round(distance?.distanceKm * RC_FEE_VALUE);
   const shouldShowButton = RC_FEE_ROUTE > (user?.rc || 0);
+
+  function saveBike(data: any) {
+    const submitData = {
+      ...data,
+      bikeId: defaultBikeId,
+      selectedStationId: data._id,
+      expiresAt: distance?.durationSeconds,
+      distance: distance?.distanceKm,
+      duration: distance?.durationSeconds,
+      rcPrice: RC_FEE_ROUTE,
+    };
+    saveRentBikeMutation(submitData);
+  }
+
   return (
     <Modal
       visible={visible}
@@ -515,7 +550,7 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
                   >
                     <TouchableOpacity
                       style={styles.navigateButton}
-                      onPress={startNavigation}
+                      onPress={() => setDeleteDialogOpen(true)}
                     >
                       <Ionicons name="navigate" size={18} color="#fff" />
                       <Text style={styles.navigateText}>Start Navigation</Text>
@@ -546,6 +581,45 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
             </View>
           )}
         </View>
+        {deleteDialogOpen && (
+          <ConfirmationModal
+            open={deleteDialogOpen}
+            values={RC_FEE_ROUTE}
+            title="Rent Bike Confirmation"
+            content={
+              <View
+                style={{
+                  backgroundColor: "#FFEDD5",
+                  width: "100%",
+                  borderRadius: 8,
+                  padding: 12,
+                  borderWidth: 1,
+                  borderColor: "#DC2626",
+                }}
+              >
+                <Text style={{ color: "#4B5563" }}>
+                  Are you sure you want to Rent This Bike?{"\n"}
+                </Text>
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <MaterialIcons
+                    name="warning-amber"
+                    size={20}
+                    color="orange"
+                  />
+                  <Text style={{ color: "#EF4444", fontWeight: "500" }}>
+                    This action is not reversible.
+                  </Text>
+                </View>
+              </View>
+            }
+            handleClose={() => setDeleteDialogOpen(false)}
+            deleteFunc={async () => {
+              saveBike(selectedStation);
+            }}
+            onSuccess={() => {}}
+            handleReject={() => {}}
+          />
+        )}
       </SafeAreaView>
     </Modal>
   );
