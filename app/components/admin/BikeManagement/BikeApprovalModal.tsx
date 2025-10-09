@@ -1,5 +1,6 @@
 import { Bike, approveBikeRental, rejectBikeRental } from "@/api/bike";
 import { images } from "@/constants/images";
+import { addNotification } from "@/utils/notifications";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import React from "react";
@@ -32,9 +33,22 @@ const BikeApprovalModal: React.FC<BikeApprovalModalProps> = ({
 
   const approveMutation = useMutation({
     mutationFn: approveBikeRental,
-    onSuccess: () => {
+    onSuccess: async (data, bikeId) => {
       queryClient.invalidateQueries({ queryKey: ["bikes-awaiting-approval"] });
       queryClient.invalidateQueries({ queryKey: ["bike-data"] });
+      
+      // Find the bike that was approved
+      const approvedBike = bikes.find(bike => bike._id === bikeId);
+      if (approvedBike) {
+        // Add notification for the bike owner
+        await addNotification({
+          title: "🎉 Bike Approved!",
+          message: `Congratulations! Your ${approvedBike.bikeModel} has been approved for rental. You can now start earning by renting it out!`,
+          type: 'bike_approved',
+          bikeId: approvedBike._id,
+        });
+      }
+      
       Alert.alert("Success", "Bike rental approved successfully!");
     },
     onError: (error) => {
@@ -45,9 +59,22 @@ const BikeApprovalModal: React.FC<BikeApprovalModalProps> = ({
 
   const rejectMutation = useMutation({
     mutationFn: rejectBikeRental,
-    onSuccess: () => {
+    onSuccess: async (data, bikeId) => {
       queryClient.invalidateQueries({ queryKey: ["bikes-awaiting-approval"] });
       queryClient.invalidateQueries({ queryKey: ["bike-data"] });
+      
+      // Find the bike that was rejected
+      const rejectedBike = bikes.find(bike => bike._id === bikeId);
+      if (rejectedBike) {
+        // Add notification for the bike owner
+        await addNotification({
+          title: "❌ Bike Rental Rejected",
+          message: `We're sorry, but your ${rejectedBike.bikeModel} rental request has been rejected. Please check the bike condition and resubmit with a clear photo.`,
+          type: 'bike_rejected',
+          bikeId: rejectedBike._id,
+        });
+      }
+      
       Alert.alert("Success", "Bike rental rejected successfully!");
     },
     onError: (error) => {
@@ -56,10 +83,11 @@ const BikeApprovalModal: React.FC<BikeApprovalModalProps> = ({
     },
   });
 
-  const handleApprove = (bikeId: string) => {
+  const handleApprove = (bikeId: string, bike: Bike) => {
+    const hasPhoto = bike.imageUrl ? "✅ Photo verified" : "⚠️ No photo provided";
     Alert.alert(
       "Confirm Approval",
-      "Are you sure you want to approve this bike for rental?",
+      `Are you sure you want to approve this bike for rental?\n\n📸 ${hasPhoto}\n🚴 Model: ${bike.bikeModel}\n📊 Condition: ${bike.condition}/100`,
       [
         {
           text: "Cancel",
@@ -73,10 +101,11 @@ const BikeApprovalModal: React.FC<BikeApprovalModalProps> = ({
     );
   };
 
-  const handleReject = (bikeId: string) => {
+  const handleReject = (bikeId: string, bike: Bike) => {
+    const photoStatus = bike.imageUrl ? "Photo provided" : "No photo provided";
     Alert.alert(
       "Confirm Rejection",
-      "Are you sure you want to reject this bike for rental?",
+      `Are you sure you want to reject this bike rental request?\n\n🚴 Model: ${bike.bikeModel}\n📸 ${photoStatus}\n📊 Condition: ${bike.condition}/100\n\nThe owner will be notified of the rejection.`,
       [
         {
           text: "Cancel",
@@ -140,6 +169,23 @@ const BikeApprovalModal: React.FC<BikeApprovalModalProps> = ({
                     {bike.fuelType.charAt(0).toUpperCase() + bike.fuelType.slice(1)}
                   </Text>
                 </View>
+                {/* Photo Status Badge */}
+                <View style={[
+                  styles.photoBadge, 
+                  { backgroundColor: bike.imageUrl ? "#ECFDF5" : "#FEF2F2" }
+                ]}>
+                  <FontAwesome6 
+                    name={bike.imageUrl ? "camera" : "camera-slash"} 
+                    size={10} 
+                    color={bike.imageUrl ? "#10B981" : "#EF4444"} 
+                  />
+                  <Text style={[
+                    styles.photoBadgeText, 
+                    { color: bike.imageUrl ? "#10B981" : "#EF4444" }
+                  ]}>
+                    {bike.imageUrl ? "Photo" : "No Photo"}
+                  </Text>
+                </View>
               </View>
             </View>
           </View>
@@ -151,6 +197,49 @@ const BikeApprovalModal: React.FC<BikeApprovalModalProps> = ({
               <Text style={styles.conditionScore}>{bike.condition}/100</Text>
             </View>
           </View>
+        </View>
+
+        {/* User Uploaded Bike Photo Section */}
+        <View style={styles.userPhotoSection}>
+          <View style={styles.photoHeader}>
+            <FontAwesome6 name="camera" size={16} color="#374151" />
+            <Text style={styles.photoHeaderText}>Owner's Photo (Proof of Condition)</Text>
+          </View>
+          {bike.imageUrl ? (
+            <TouchableOpacity 
+              style={styles.photoContainer}
+              onPress={() => {
+                Alert.alert(
+                  "Bike Photo",
+                  `Full view of ${bike.bikeModel}\n\nCondition reported: ${bike.condition}/100\nOwner: ${bike.createdBy?.userName}`,
+                  [{ text: "Close", style: "cancel" }]
+                );
+              }}
+              activeOpacity={0.8}
+            >
+              <Image 
+                source={{ uri: bike.imageUrl }} 
+                style={styles.userUploadedImage}
+                resizeMode="cover"
+              />
+              <View style={styles.photoOverlay}>
+                <View style={styles.photoVerificationBadge}>
+                  <FontAwesome6 name="camera" size={12} color="#FFFFFF" />
+                  <Text style={styles.photoVerificationText}>User Uploaded</Text>
+                </View>
+              </View>
+              <View style={styles.tapToViewIndicator}>
+                <FontAwesome6 name="expand" size={12} color="#FFFFFF" />
+                <Text style={styles.tapToViewText}>Tap to enlarge</Text>
+              </View>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.noPhotoContainer}>
+              <FontAwesome6 name="camera-slash" size={24} color="#9CA3AF" />
+              <Text style={styles.noPhotoText}>No photo uploaded</Text>
+              <Text style={styles.noPhotoSubtext}>Owner didn't provide condition photo</Text>
+            </View>
+          )}
         </View>
 
         {/* Stats Row */}
@@ -184,7 +273,7 @@ const BikeApprovalModal: React.FC<BikeApprovalModalProps> = ({
               (approveMutation.isPending || rejectMutation.isPending) &&
                 styles.buttonDisabled,
             ]}
-            onPress={() => handleReject(bike._id)}
+            onPress={() => handleReject(bike._id, bike)}
             disabled={approveMutation.isPending || rejectMutation.isPending}
           >
             <FontAwesome6 name="xmark" size={16} color="#FFFFFF" />
@@ -199,7 +288,7 @@ const BikeApprovalModal: React.FC<BikeApprovalModalProps> = ({
               (approveMutation.isPending || rejectMutation.isPending) &&
                 styles.buttonDisabled,
             ]}
-            onPress={() => handleApprove(bike._id)}
+            onPress={() => handleApprove(bike._id, bike)}
             disabled={approveMutation.isPending || rejectMutation.isPending}
           >
             <FontAwesome6 name="check" size={16} color="#FFFFFF" />
@@ -406,6 +495,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
   },
+  photoBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  photoBadgeText: {
+    fontSize: 11,
+    fontWeight: "600",
+  },
   conditionBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -517,6 +618,100 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "700",
+  },
+  // User Photo Section Styles
+  userPhotoSection: {
+    backgroundColor: "#F8F9FA",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  photoHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+    gap: 8,
+  },
+  photoHeaderText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#374151",
+  },
+  photoContainer: {
+    position: "relative",
+    borderRadius: 12,
+    overflow: "hidden",
+    backgroundColor: "#FFFFFF",
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  userUploadedImage: {
+    width: "100%",
+    height: 200,
+    backgroundColor: "#F3F4F6",
+  },
+  photoOverlay: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+  },
+  photoVerificationBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(16, 185, 129, 0.9)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  photoVerificationText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  tapToViewIndicator: {
+    position: "absolute",
+    bottom: 12,
+    left: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  tapToViewText: {
+    fontSize: 11,
+    fontWeight: "500",
+    color: "#FFFFFF",
+  },
+  noPhotoContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 32,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "#E5E7EB",
+    borderStyle: "dashed",
+  },
+  noPhotoText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#6B7280",
+    marginTop: 8,
+  },
+  noPhotoSubtext: {
+    fontSize: 14,
+    color: "#9CA3AF",
+    marginTop: 4,
+    textAlign: "center",
   },
 });
 

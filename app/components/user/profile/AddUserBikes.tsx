@@ -1,7 +1,9 @@
 import { saveBikeByUser } from "@/api/bike";
+import { addNotification } from "@/utils/notifications";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -10,6 +12,7 @@ import {
   Alert,
   Animated,
   Dimensions,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -30,6 +33,13 @@ interface BikeFormData {
   fuelType: string;
   distance: string;
   condition: string;
+  image?: any;
+}
+
+interface ImagePart {
+  uri: string;
+  name: string;
+  type: string;
 }
 
 const AddUserBikes = () => {
@@ -45,6 +55,11 @@ const AddUserBikes = () => {
   });
   const [submitButtonScale] = useState(new Animated.Value(1));
   const checkmarkOpacity = React.useRef(new Animated.Value(0)).current;
+
+  // Image picker states
+  const [pickedImage, setPickedImage] = useState<ImagePart | null>(null);
+  const [previewUri, setPreviewUri] = useState<string | null>(null);
+  const [imageScale] = useState(new Animated.Value(1));
 
   const {
     control,
@@ -81,14 +96,15 @@ const AddUserBikes = () => {
       watchedValues.bikeModel &&
       watchedValues.fuelType &&
       watchedValues.distance !== "0" &&
-      watchedValues.condition;
+      watchedValues.condition &&
+      pickedImage;
 
     Animated.timing(checkmarkOpacity, {
       toValue: hasValidFields ? 1 : 0,
       duration: 300,
       useNativeDriver: true,
     }).start();
-  }, [watchedValues, errors]);
+  }, [watchedValues, errors, pickedImage]);
 
   const animateFuelType = (type: string) => {
     // Reset all scales first
@@ -158,6 +174,13 @@ const AddUserBikes = () => {
       queryClient.invalidateQueries({ queryKey: ["user-bikes"] });
       console.log("User bike submission successful:", data);
 
+      // Add a notification for the user about bike submission
+      await addNotification({
+        title: "📝 Bike Submitted for Review",
+        message: "Your bike has been submitted successfully! Our team will review it within 24-48 hours. You'll get notified once it's approved.",
+        type: 'general',
+      });
+
       Alert.alert(
         "Bike Submitted Successfully! 🚴‍♂️",
         "Your bike has been submitted for review. The RideOn team will approve it and assign it to a station within 24-48 hours. You'll receive a notification once it's ready!",
@@ -166,6 +189,8 @@ const AddUserBikes = () => {
             text: "Great!",
             onPress: () => {
               reset();
+              setPickedImage(null);
+              setPreviewUri(null);
               router.back();
             },
           },
@@ -184,8 +209,18 @@ const AddUserBikes = () => {
   });
 
   const handleSubmitBike = (data: BikeFormData) => {
+    if (!pickedImage) {
+      Alert.alert(
+        "Image Required", 
+        "Please upload an image of your bike as proof of condition.", 
+        [{ text: "OK" }]
+      );
+      return;
+    }
+
     const formattedData = {
       ...data,
+      image: pickedImage,
       availability: true,
       assigned: false,
       rentApproved: false,
@@ -214,13 +249,61 @@ const AddUserBikes = () => {
     },
   ];
 
+  // Image picker functionality
+  const handlePickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permission Required", "Please allow access to your photo library to upload bike images.", [
+        { text: "OK" }
+      ]);
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+      allowsMultipleSelection: false,
+      allowsEditing: true,
+      aspect: [4, 3],
+    });
+
+    if (!result.canceled) {
+      const asset = result.assets[0];
+      const name = asset.fileName || asset.uri.split("/").pop() || `bike_${Date.now()}.jpg`;
+      const type = asset.mimeType || (name.toLowerCase().endsWith(".png") ? "image/png" : "image/jpeg");
+
+      const file: ImagePart = { uri: asset.uri, name, type };
+      setPickedImage(file);
+      setPreviewUri(asset.uri);
+
+      // Animate the image container
+      Animated.spring(imageScale, {
+        toValue: 1.05,
+        friction: 3,
+        useNativeDriver: true,
+      }).start(() => {
+        Animated.spring(imageScale, {
+          toValue: 1,
+          friction: 3,
+          useNativeDriver: true,
+        }).start();
+      });
+    }
+  };
+
   const getProgressPercentage = () => {
     const fields = ["bikeModel", "fuelType", "distance", "condition"];
     const filledFields = fields.filter((field) => {
       const value = watchedValues[field as keyof BikeFormData];
       return value && value.trim() !== "" && value !== "0";
     });
-    return (filledFields.length / fields.length) * 100;
+    
+    // Add image to progress calculation
+    const totalFields = fields.length + 1; // +1 for image
+    const baseProgress = filledFields.length;
+    const imageProgress = pickedImage ? 1 : 0;
+    
+    return ((baseProgress + imageProgress) / totalFields) * 100;
   };
 
   const getConditionColor = (value: string) => {
@@ -240,6 +323,9 @@ const AddUserBikes = () => {
     if (numValue >= 40) return "Poor";
     return "Very Poor";
   };
+
+  // Complete form validation including image
+  const isFormComplete = isValid && pickedImage;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#F8FAFB" }}>
@@ -539,6 +625,191 @@ const AddUserBikes = () => {
               message={errors.fuelType?.message}
               type="error"
             />
+          </View>
+
+          {/* Image Upload Section */}
+          <View style={{ marginBottom: 24 }}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginBottom: 10,
+              }}
+            >
+              <Ionicons
+                name="camera"
+                size={20}
+                color="#083A4C"
+                style={{ marginRight: 8 }}
+              />
+              <Text
+                style={{
+                  fontSize: 15,
+                  fontWeight: "600",
+                  color: "#111827",
+                  letterSpacing: -0.2,
+                }}
+              >
+                Bike Image (Proof of Condition)
+              </Text>
+              <Text style={{ color: "#ef4444", marginLeft: 4 }}>*</Text>
+            </View>
+
+            <Animated.View
+              style={{
+                transform: [{ scale: imageScale }],
+              }}
+            >
+              <Pressable
+                onPress={handlePickImage}
+                style={{
+                  borderWidth: 2,
+                  borderColor: pickedImage ? "#10b981" : "#e5e7eb",
+                  borderRadius: 16,
+                  backgroundColor: pickedImage ? "#f0fdf4" : "#fafafa",
+                  padding: 20,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  minHeight: 200,
+                  shadowColor: pickedImage ? "#10b981" : "#000",
+                  shadowOffset: {
+                    width: 0,
+                    height: pickedImage ? 4 : 1,
+                  },
+                  shadowOpacity: pickedImage ? 0.2 : 0.05,
+                  shadowRadius: pickedImage ? 8 : 2,
+                  elevation: pickedImage ? 4 : 1,
+                }}
+              >
+                {previewUri ? (
+                  <View style={{ alignItems: "center", width: "100%" }}>
+                    <Image
+                      source={{ uri: previewUri }}
+                      style={{
+                        width: "100%",
+                        height: 150,
+                        borderRadius: 12,
+                        marginBottom: 12,
+                      }}
+                      resizeMode="cover"
+                    />
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        backgroundColor: "#10b981",
+                        paddingHorizontal: 12,
+                        paddingVertical: 6,
+                        borderRadius: 20,
+                      }}
+                    >
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={16}
+                        color="#ffffff"
+                        style={{ marginRight: 6 }}
+                      />
+                      <Text
+                        style={{
+                          color: "#ffffff",
+                          fontSize: 12,
+                          fontWeight: "600",
+                        }}
+                      >
+                        Image Selected
+                      </Text>
+                    </View>
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        color: "#6b7280",
+                        marginTop: 8,
+                        textAlign: "center",
+                      }}
+                    >
+                      Tap to change image
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={{ alignItems: "center" }}>
+                    <View
+                      style={{
+                        width: 80,
+                        height: 80,
+                        borderRadius: 40,
+                        backgroundColor: "#f3f4f6",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginBottom: 16,
+                      }}
+                    >
+                      <Ionicons name="camera" size={32} color="#9ca3af" />
+                    </View>
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: "600",
+                        color: "#374151",
+                        marginBottom: 8,
+                      }}
+                    >
+                      Upload Bike Image
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        color: "#6b7280",
+                        textAlign: "center",
+                        lineHeight: 20,
+                      }}
+                    >
+                      Take a clear photo of your bike {"\n"}
+                      to show its current condition
+                    </Text>
+                    <View
+                      style={{
+                        backgroundColor: "#083A4C",
+                        paddingHorizontal: 20,
+                        paddingVertical: 10,
+                        borderRadius: 25,
+                        marginTop: 16,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: "#ffffff",
+                          fontSize: 14,
+                          fontWeight: "600",
+                        }}
+                      >
+                        Choose Image
+                      </Text>
+                    </View>
+                  </View>
+                )}
+              </Pressable>
+            </Animated.View>
+
+            <View
+              style={{
+                backgroundColor: "#EBF4FF",
+                padding: 16,
+                borderRadius: 12,
+                marginTop: 12,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 13,
+                  color: "#374151",
+                  textAlign: "center",
+                  lineHeight: 18,
+                  fontWeight: "500",
+                }}
+              >
+                📸 Tips: Take a well-lit photo showing the overall condition of your bike. This helps build trust with potential renters and ensures accurate condition assessment.
+              </Text>
+            </View>
           </View>
 
           {/* Distance Input */}
@@ -917,7 +1188,7 @@ const AddUserBikes = () => {
             }}
           >
             {/* Form Validation Summary */}
-            {!isValid && (
+            {!isFormComplete && (
               <Animated.View
                 style={{
                   backgroundColor: "#FEF3C7",
@@ -947,6 +1218,7 @@ const AddUserBikes = () => {
                     }}
                   >
                     Please complete all required fields
+                    {!pickedImage && " and upload bike image"}
                   </Text>
                 </View>
               </Animated.View>
@@ -959,16 +1231,16 @@ const AddUserBikes = () => {
                 onPress={handleSubmit(handleSubmitBike)}
                 onPressIn={() => animateSubmitPress(true)}
                 onPressOut={() => animateSubmitPress(false)}
-                disabled={isPending || !isValid}
+                disabled={isPending || !isFormComplete}
                 style={{
                   backgroundColor:
-                    isPending || !isValid ? "#9ca3af" : "#083A4C",
+                    isPending || !isFormComplete ? "#9ca3af" : "#083A4C",
                   paddingVertical: 16,
                   borderRadius: 16,
                   alignItems: "center",
                   justifyContent: "center",
                   flexDirection: "row",
-                  opacity: isPending || !isValid ? 0.6 : 1,
+                  opacity: isPending || !isFormComplete ? 0.6 : 1,
                 }}
               >
                 {isPending ? (
