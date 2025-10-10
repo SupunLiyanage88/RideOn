@@ -4,30 +4,33 @@ import { useQuery } from "@tanstack/react-query";
 import haversine from "haversine-distance";
 import React, { useEffect, useRef, useState } from "react";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import MapView, { Callout, Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyBDLI8FJtPpOWZXhrPshg3Ux00ZPL5FPhc";
 const THEME_COLOR = "#083A4C";
 
-const MAX_DEVIATION_METERS = 150; // how far user can be from route (150m)
+// 🚨 Set maximum deviation to 1 km
+const MAX_DEVIATION_METERS = 1000;
 
 const BikeSecurity = () => {
   const mapRef = useRef<MapView>(null);
   const [routes, setRoutes] = useState<{ [key: string]: any[] }>({});
+  const alertedBikes = useRef<Set<string>>(new Set()); // prevent repeated alerts
 
   const {
     data: rentedBikeData = [],
     refetch: refetchRentedBikeData,
-    isLoading,
     isFetching,
   } = useQuery({
     queryKey: ["station-rented-bike-all"],
     queryFn: fetchAllUsersRentBike,
-    refetchInterval: 60000,
+    refetchInterval: 60000, // every 60s
   });
 
-  // 🚨 Check for deviation from route
+  console.log("Rented Bikes Data:", rentedBikeData);
+
+  // 🚨 Detect deviation from route
   useEffect(() => {
     if (!rentedBikeData || rentedBikeData.length === 0) return;
 
@@ -40,41 +43,45 @@ const BikeSecurity = () => {
         longitude: rental.userLongitude,
       };
 
-      // Find minimum distance from user to any segment of the route
       let minDist = Infinity;
       for (let i = 0; i < routeCoords.length - 1; i++) {
-        const a = routeCoords[i];
-        const b = routeCoords[i + 1];
-
-        // Approximate by comparing user distance to segment ends
-        const distToA = haversine(userPos, a);
-        const distToB = haversine(userPos, b);
-        minDist = Math.min(minDist, distToA, distToB);
+        const start = routeCoords[i];
+        const end = routeCoords[i + 1];
+        const mid = {
+          latitude: (start.latitude + end.latitude) / 2,
+          longitude: (start.longitude + end.longitude) / 2,
+        };
+        const dist = haversine(userPos, mid);
+        if (dist < minDist) minDist = dist;
       }
 
-      if (minDist > MAX_DEVIATION_METERS) {
+      // 🚨 If user is >1km away from route
+      if (minDist > MAX_DEVIATION_METERS && !alertedBikes.current.has(rental._id)) {
+        alertedBikes.current.add(rental._id);
         Alert.alert(
-          "⚠️ Off Route Detected",
+          "🚨 Theft Alert",
           `User: ${rental.userId.userName}\nBike: ${rental.bikeId.bikeId}\nDeviation: ${(minDist / 1000).toFixed(2)} km`
         );
       }
     });
   }, [rentedBikeData, routes]);
 
-
-
   return (
     <View style={styles.container}>
-      {/* Refresh control / refetch loader */}
+      {/* 🔄 Refresh Button */}
       <View style={styles.topBar} pointerEvents="box-none">
         <TouchableOpacity
           style={styles.refreshBtn}
           onPress={() => refetchRentedBikeData()}
           disabled={isFetching}
         >
-          <Text style={styles.refreshText}>{isFetching ? "Refreshing..." : "Refresh"}</Text>
+          <Text style={styles.refreshText}>
+            {isFetching ? "Refreshing..." : "Refresh"}
+          </Text>
         </TouchableOpacity>
       </View>
+
+      {/* 🗺️ Map View */}
       <MapView
         ref={mapRef}
         style={styles.map}
@@ -91,33 +98,82 @@ const BikeSecurity = () => {
           const user = rental.userId;
           const station = rental.selectedStationId;
 
-          const userLocation = {
-            latitude: rental.userLatitude,
-            longitude: rental.userLongitude,
+          // From where the bike started
+          const fromLocation = {
+            latitude: rental.fromLatitude,
+            longitude: rental.fromLongitude,
           };
+
+          // Station assigned to the user
           const stationLocation = {
             latitude: rental.latitude,
             longitude: rental.longitude,
           };
 
+          // Current user position
+          const userLocation = {
+            latitude: rental.userLatitude,
+            longitude: rental.userLongitude,
+          };
+
           return (
             <React.Fragment key={rental._id}>
+              {/* 📍 Station Marker */}
               <Marker coordinate={stationLocation}>
                 <View style={[styles.marker, { backgroundColor: "#1E90FF" }]}>
                   <Ionicons name="bicycle" size={18} color="#fff" />
                 </View>
+                <Callout style={styles.callout}>
+                  <View style={styles.calloutContent}>
+                    <Text style={styles.calloutTitle}>Station Details</Text>
+                    <Text style={styles.calloutText}>
+                      <Text style={styles.calloutLabel}>Station ID: </Text>
+                      {station?.stationId || "N/A"}
+                    </Text>
+                    <Text style={styles.calloutText}>
+                      <Text style={styles.calloutLabel}>Name: </Text>
+                      {station?.stationName || "Unknown Station"}
+                    </Text>
+                    <Text style={styles.calloutText}>
+                      <Text style={styles.calloutLabel}>Location: </Text>
+                      {station?.stationLocation || "N/A"}
+                    </Text>
+                  </View>
+                </Callout>
               </Marker>
 
+              {/* 👤 User Marker */}
               <Marker coordinate={userLocation}>
                 <View style={[styles.marker, { backgroundColor: "#2ECC71" }]}>
                   <Ionicons name="person" size={18} color="#fff" />
                 </View>
+                <Callout style={styles.callout}>
+                  <View style={styles.calloutContent}>
+                    <Text style={styles.calloutTitle}>User Details</Text>
+                    <Text style={styles.calloutText}>
+                      <Text style={styles.calloutLabel}>Name: </Text>
+                      {user.userName}
+                    </Text>
+                    <Text style={styles.calloutText}>
+                      <Text style={styles.calloutLabel}>Email: </Text>
+                      {user.email}
+                    </Text>
+                    <Text style={styles.calloutText}>
+                      <Text style={styles.calloutLabel}>Bike ID: </Text>
+                      {rental.bikeId.bikeId}
+                    </Text>
+                    <Text style={styles.calloutText}>
+                      <Text style={styles.calloutLabel}>Station: </Text>
+                      {station?.stationName || "Unknown"}
+                    </Text>
+                  </View>
+                </Callout>
               </Marker>
 
-              {/* 🚴 Route */}
+              {/* 🛣️ Route Path */}
               <MapViewDirections
-                origin={stationLocation}
-                destination={userLocation}
+                origin={fromLocation}
+                destination={stationLocation}
                 apikey={GOOGLE_MAPS_API_KEY}
                 strokeWidth={3}
                 strokeColor={THEME_COLOR}
@@ -150,11 +206,6 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
-  centered: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   marker: {
     padding: 6,
     borderRadius: 20,
@@ -177,5 +228,39 @@ const styles = StyleSheet.create({
   refreshText: {
     color: "#fff",
     fontWeight: "600",
+  },
+  callout: {
+    minWidth: 250,
+    padding: 0,
+  },
+  calloutContent: {
+    padding: 12,
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  calloutTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: THEME_COLOR,
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  calloutText: {
+    fontSize: 12,
+    color: "#333",
+    marginBottom: 4,
+    lineHeight: 16,
+  },
+  calloutLabel: {
+    fontWeight: "600",
+    color: THEME_COLOR,
   },
 });
