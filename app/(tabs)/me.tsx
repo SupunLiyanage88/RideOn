@@ -1,29 +1,27 @@
 import { logout } from "@/api/auth";
-import { getUnreadCount } from "@/utils/notifications";
+import {
+  cleanupNotifications,
+  getUnreadCount,
+  initializePushNotifications,
+} from "@/utils/notifications";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useFocusEffect, useRouter } from "expo-router";
-import React, { useCallback, useState } from "react";
-import {
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View
-} from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ModernMenuItem from "../components/user/profile/ModernMenuItem";
 import NotificationModal from "../components/user/profile/NotificationModal";
 import ProfileHeader from "../components/user/profile/ProfileHeader";
 import QuickActionCard from "../components/user/profile/QuickActionCard";
 
-
-const NotificationIcon = ({ 
-  notificationCount, 
-  onPress 
-}: { 
-  notificationCount: number; 
-  onPress: () => void; 
+const NotificationIcon = ({
+  notificationCount,
+  onPress,
+}: {
+  notificationCount: number;
+  onPress: () => void;
 }) => {
   return (
     <TouchableOpacity
@@ -42,7 +40,7 @@ const NotificationIcon = ({
       }}
     >
       <Ionicons name="notifications-outline" size={24} color="#083A4C" />
-      
+
       {/* Dynamic notification badge */}
       {notificationCount > 0 && (
         <View
@@ -68,7 +66,7 @@ const NotificationIcon = ({
               fontWeight: "700",
             }}
           >
-            {notificationCount > 99 ? '99+' : notificationCount.toString()}
+            {notificationCount > 99 ? "99+" : notificationCount.toString()}
           </Text>
         </View>
       )}
@@ -85,10 +83,10 @@ const LogoutButton = () => {
     onSuccess: async (data) => {
       // Clear all relevant AsyncStorage data
       await AsyncStorage.multiRemove(["token", "hasSeenBikeTerms"]);
-      
+
       queryClient.invalidateQueries({ queryKey: ["current-user"] });
       queryClient.clear(); // Optional: Clear all query cache
-      
+
       console.log("Logout successful:", data);
       router.replace("/(auth)/registerScreen");
     },
@@ -139,6 +137,36 @@ const Me = () => {
   const router = useRouter();
   const [notificationCount, setNotificationCount] = useState(0);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [pushNotificationReady, setPushNotificationReady] = useState(false);
+
+  // Initialize push notifications on component mount
+  useEffect(() => {
+    const setupPushNotifications = async () => {
+      try {
+        const token = await initializePushNotifications();
+        setPushNotificationReady(!!token);
+
+        if (token) {
+          console.log("Push notifications initialized successfully");
+          // Load initial notification count
+          await loadNotificationCount();
+        } else {
+          console.warn(
+            "Push notifications not available, falling back to storage-only mode"
+          );
+        }
+      } catch (error) {
+        console.error("Error setting up push notifications:", error);
+      }
+    };
+
+    setupPushNotifications();
+
+    // Cleanup on unmount
+    return () => {
+      cleanupNotifications();
+    };
+  }, []);
 
   // Load notification count when screen is focused
   const loadNotificationCount = useCallback(async () => {
@@ -146,14 +174,16 @@ const Me = () => {
       const count = await getUnreadCount();
       setNotificationCount(count);
     } catch (error) {
-      console.error('Error loading notification count:', error);
+      console.error("Error loading notification count:", error);
     }
   }, []);
 
   useFocusEffect(
     useCallback(() => {
-      loadNotificationCount();
-    }, [loadNotificationCount])
+      if (pushNotificationReady) {
+        loadNotificationCount();
+      }
+    }, [loadNotificationCount, pushNotificationReady])
   );
 
   const handleNotificationPress = () => {
@@ -171,23 +201,27 @@ const Me = () => {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#F8FAFB" }}>
       {/* Header with notification icon */}
-      <View style={{
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        paddingHorizontal: 20,
-        paddingTop: 10,
-        paddingBottom: 5,
-      }}>
-        <Text style={{
-          fontSize: 28,
-          fontWeight: "800",
-          color: "#083A4C",
-          letterSpacing: -0.5,
-        }}>
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          paddingHorizontal: 20,
+          paddingTop: 10,
+          paddingBottom: 5,
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 28,
+            fontWeight: "800",
+            color: "#083A4C",
+            letterSpacing: -0.5,
+          }}
+        >
           Profile
         </Text>
-        <NotificationIcon 
+        <NotificationIcon
           notificationCount={notificationCount}
           onPress={handleNotificationPress}
         />
@@ -200,24 +234,26 @@ const Me = () => {
         onNotificationCountChange={handleNotificationCountChange}
       />
 
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={{ padding: 20, paddingTop: 10 }}
         showsVerticalScrollIndicator={false}
       >
         <ProfileHeader />
 
         {/* Quick Actions */}
-        <View style={{ 
-          flexDirection: "row", 
-          gap: 12,
-          marginBottom: 32
-        }}>
+        <View
+          style={{
+            flexDirection: "row",
+            gap: 12,
+            marginBottom: 32,
+          }}
+        >
           <QuickActionCard
             icon="bicycle"
             title="My Bikes"
             color="#37A77D"
             onPress={() => router.push("/components/user/profile/UserBikes")}
-          />          
+          />
           <QuickActionCard
             icon="plus"
             title="Add Bike"
@@ -227,19 +263,21 @@ const Me = () => {
         </View>
 
         {/* Account Section */}
-        <Text style={{
-          fontSize: 12,
-          fontWeight: "800",
-          color: "#083A4C",
-          marginBottom: 16,
-          marginLeft: 4,
-          textTransform: "uppercase",
-          letterSpacing: 1.2,
-          opacity: 0.6,
-        }}>
+        <Text
+          style={{
+            fontSize: 12,
+            fontWeight: "800",
+            color: "#083A4C",
+            marginBottom: 16,
+            marginLeft: 4,
+            textTransform: "uppercase",
+            letterSpacing: 1.2,
+            opacity: 0.6,
+          }}
+        >
           ACCOUNT SETTINGS
         </Text>
-        
+
         <ModernMenuItem
           icon="✏️"
           title="Edit Profile"
@@ -254,20 +292,22 @@ const Me = () => {
         />
 
         {/* Support */}
-        <Text style={{
-          fontSize: 12,
-          fontWeight: "800",
-          color: "#083A4C",
-          marginBottom: 16,
-          marginTop: 24,
-          marginLeft: 4,
-          textTransform: "uppercase",
-          letterSpacing: 1.2,
-          opacity: 0.6,
-        }}>
+        <Text
+          style={{
+            fontSize: 12,
+            fontWeight: "800",
+            color: "#083A4C",
+            marginBottom: 16,
+            marginTop: 24,
+            marginLeft: 4,
+            textTransform: "uppercase",
+            letterSpacing: 1.2,
+            opacity: 0.6,
+          }}
+        >
           SUPPORT
         </Text>
-        
+
         <ModernMenuItem
           icon="❓"
           title="Help Center"
