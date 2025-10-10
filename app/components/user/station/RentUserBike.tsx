@@ -1,4 +1,4 @@
-import { fetchBikeStation } from "@/api/bikeStation";
+import { BikeStation, fetchBikeStation } from "@/api/bikeStation";
 import { fetchObstacleData } from "@/api/obstacle";
 import { fetchUserRentBike, saveRentBike } from "@/api/rentBike";
 import UseCurrentUser from "@/hooks/useCurrentUser";
@@ -33,6 +33,7 @@ type DialogProps = {
   visible: boolean;
   onClose: () => void;
   defaultBikeId?: String;
+  bikeStation?: BikeStation;
 };
 
 interface Coordinate {
@@ -40,7 +41,12 @@ interface Coordinate {
   longitude: number;
 }
 
-const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
+const RentUserBike = ({
+  visible,
+  onClose,
+  defaultBikeId,
+  bikeStation,
+}: DialogProps) => {
   const mapRef = useRef<MapView | null>(null);
   const { user } = UseCurrentUser();
   const [location, setLocation] = useState<Coordinate | null>(null);
@@ -102,8 +108,8 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
 
   const colorForCategory = useMemo(
     () => ({
-      ACCIDENTS: "#D32F2F", 
-      TRAFFIC: "#F57C00", 
+      ACCIDENTS: "#D32F2F",
+      TRAFFIC: "#F57C00",
       ANIMALS: "#8E24AA",
       MUD: "#6D4C41",
       RAIN: "#0288D1",
@@ -196,8 +202,7 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
             destination
           );
           setDistance(dist);
-        } catch (error) {
-        }
+        } catch (error) {}
       }
     };
     fetchDistance();
@@ -301,8 +306,7 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
     setSearchQuery(query);
     try {
       await researchBikeStation();
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   const fitAllStations = () => {
@@ -350,6 +354,8 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
       rcPrice: RC_FEE_ROUTE,
       userLatitude: location?.latitude,
       userLongitude: location?.longitude,
+      fromLatitude: bikeStation?.latitude,
+      fromLongitude: bikeStation?.longitude,
     };
     saveRentBikeMutation(submitData);
     setNavigationSet(false);
@@ -520,8 +526,7 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
                           animated: true,
                         });
                       }}
-                      onError={(errorMessage) => {
-                      }}
+                      onError={(errorMessage) => {}}
                     />
                   )}
                 </MapView>

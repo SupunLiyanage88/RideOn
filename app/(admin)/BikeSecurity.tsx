@@ -11,7 +11,7 @@ const GOOGLE_MAPS_API_KEY = "AIzaSyBDLI8FJtPpOWZXhrPshg3Ux00ZPL5FPhc";
 const THEME_COLOR = "#083A4C";
 
 // 🚨 Set maximum deviation to 1 km
-const MAX_DEVIATION_METERS = 1000;
+const MAX_DEVIATION_METERS = 300;
 
 const BikeSecurity = () => {
   const mapRef = useRef<MapView>(null);
@@ -137,6 +137,29 @@ const BikeSecurity = () => {
                     <Text style={styles.calloutText}>
                       <Text style={styles.calloutLabel}>Location: </Text>
                       {station?.stationLocation || "N/A"}
+                    </Text>
+                  </View>
+                </Callout>
+              </Marker>
+
+              <Marker coordinate={fromLocation}>
+                <View style={[styles.marker, { backgroundColor: "#1E90FF" }]}>
+                  <Ionicons name="bicycle" size={18} color="#fff" />
+                </View>
+                <Callout style={styles.callout}>
+                  <View style={styles.calloutContent}>
+                    <Text style={styles.calloutTitle}>Station Details</Text>
+                    <Text style={styles.calloutText}>
+                      <Text style={styles.calloutLabel}>Station ID: </Text>
+                      {station?.stationId || "N/A"}
+                    </Text>
+                    <Text style={styles.calloutText}>
+                      <Text style={styles.calloutLabel}>Name: </Text>
+                      {station?.stationName || "Unknown Station"}
+                    </Text>
+                    <Text style={styles.calloutText}>
+                      <Text style={styles.calloutLabel}>Location: </Text>
+                      {station?.fromLocation || "N/A"}
                     </Text>
                   </View>
                 </Callout>
