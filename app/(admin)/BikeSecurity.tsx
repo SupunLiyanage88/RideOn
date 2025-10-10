@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import haversine from "haversine-distance";
 import React, { useEffect, useRef, useState } from "react";
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 
@@ -20,6 +20,7 @@ const BikeSecurity = () => {
     data: rentedBikeData = [],
     refetch: refetchRentedBikeData,
     isLoading,
+    isFetching,
   } = useQuery({
     queryKey: ["station-rented-bike-all"],
     queryFn: fetchAllUsersRentBike,
@@ -60,16 +61,20 @@ const BikeSecurity = () => {
     });
   }, [rentedBikeData, routes]);
 
-  if (isLoading) {
-    return (
-      <View style={styles.centered}>
-        <Text>Loading Bike Data...</Text>
-      </View>
-    );
-  }
+
 
   return (
     <View style={styles.container}>
+      {/* Refresh control / refetch loader */}
+      <View style={styles.topBar} pointerEvents="box-none">
+        <TouchableOpacity
+          style={styles.refreshBtn}
+          onPress={() => refetchRentedBikeData()}
+          disabled={isFetching}
+        >
+          <Text style={styles.refreshText}>{isFetching ? "Refreshing..." : "Refresh"}</Text>
+        </TouchableOpacity>
+      </View>
       <MapView
         ref={mapRef}
         style={styles.map}
@@ -153,5 +158,24 @@ const styles = StyleSheet.create({
   marker: {
     padding: 6,
     borderRadius: 20,
+  },
+  topBar: {
+    position: "absolute",
+    top: 12,
+    left: 12,
+    right: 12,
+    zIndex: 100,
+    flexDirection: "row",
+    justifyContent: "flex-end",
+  },
+  refreshBtn: {
+    backgroundColor: "rgba(8,58,76,0.9)",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  refreshText: {
+    color: "#fff",
+    fontWeight: "600",
   },
 });
