@@ -449,9 +449,7 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
                 <TouchableOpacity
                   style={styles.recenterButton}
                   onPress={() => {
-                    if (location && !selectedStation) {
-                      fitAllStations();
-                    } else if (location) {
+                    if (location) {
                       mapRef.current?.animateToRegion(
                         {
                           latitude: location.latitude,
@@ -564,6 +562,14 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
                     <Ionicons name="compass" size={18} color="#fff" />
                     <Text style={styles.navigateText}>Stop Navigation</Text>
                   </TouchableOpacity>
+                  {rentedBikeData && (
+                    <TouchableOpacity
+                      style={[styles.navigateButtonWithoutStretch]}
+                    >
+                      <Ionicons name="warning" size={18} color="#fff" />
+                      <Text style={styles.navigateText}>Add Obstacle</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               ) : !isNavigating ? (
                 !user?.rc || user.rc === 0 || shouldShowButton ? (
@@ -609,6 +615,7 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
             </View>
           )}
         </View>
+
         {deleteDialogOpen && (
           <ConfirmationModal
             open={deleteDialogOpen}
