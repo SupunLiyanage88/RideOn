@@ -1,6 +1,6 @@
 import { getUserIncident, Incident } from "@/api/incident";
 import { Feather, Ionicons } from "@expo/vector-icons";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { format, parse } from "date-fns";
 import React, { useState } from "react";
 import {
@@ -34,8 +34,6 @@ const IncidentScreen = () => {
     queryKey: ["incident-user-data"],
     queryFn: getUserIncident,
   });
-
-  const queryClient = useQueryClient();
 
   React.useEffect(() => {
     Animated.parallel([
@@ -126,6 +124,7 @@ const IncidentScreen = () => {
             iconColor="#FFFFFF"
             iconSize={25}
             onPress={() => {
+              setEditingIncident(null);
               setModalVisible(true);
             }}
           />
@@ -293,8 +292,12 @@ const IncidentScreen = () => {
       </View>
 
       <IncidentScreenDialog
+        key={(editingIncident && editingIncident._id) || "add"}
         visible={modalVisible}
-        onClose={() => setModalVisible(false)}
+        onClose={() => {
+          setModalVisible(false);
+          setEditingIncident(null);
+        }}
         defaultValues={editingIncident || undefined}
       />
     </SafeAreaView>

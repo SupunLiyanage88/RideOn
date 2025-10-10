@@ -23,6 +23,7 @@ export const incidentSchema = z.object({
   description: z.string(),
   date: z.date(),
   time: z.string(),
+  stopRide: z.boolean().optional(),
   createdAt: z.string().or(z.date()),
   user: z.object({
     _id: z.string(),
