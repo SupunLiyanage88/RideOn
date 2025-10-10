@@ -95,6 +95,12 @@ const Admin = () => {
           color="#083A4C"
           onPress={() => router.push("/(admin)/PackageManagement")}
         />
+        <ManagementCard
+          title="Bike Security Management"
+          icon={<Feather name="package" size={24} color="white" />}
+          color="#083A4C"
+          onPress={() => router.push("/(admin)/BikeSecurity")}
+        />
         <View style={{marginBottom:45}}></View>
       </ScrollView>
     </SafeAreaView>

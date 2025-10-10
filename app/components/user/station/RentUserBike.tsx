@@ -348,6 +348,8 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
       latitude: data?.latitude,
       longitude: data?.longitude,
       rcPrice: RC_FEE_ROUTE,
+      userLatitude: location?.latitude,
+      userLongitude: location?.longitude,
     };
     saveRentBikeMutation(submitData);
     setNavigationSet(false);

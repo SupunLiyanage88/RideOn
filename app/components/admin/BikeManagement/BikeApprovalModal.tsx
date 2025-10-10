@@ -1,6 +1,5 @@
 import { Bike, approveBikeRental, rejectBikeRental } from "@/api/bike";
 import { images } from "@/constants/images";
-import { addNotification } from "@/utils/notifications";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import React from "react";
@@ -37,18 +36,6 @@ const BikeApprovalModal: React.FC<BikeApprovalModalProps> = ({
       queryClient.invalidateQueries({ queryKey: ["bikes-awaiting-approval"] });
       queryClient.invalidateQueries({ queryKey: ["bike-data"] });
       
-      // Find the bike that was approved
-      const approvedBike = bikes.find(bike => bike._id === bikeId);
-      if (approvedBike) {
-        // Add notification for the bike owner
-        await addNotification({
-          title: "🎉 Bike Approved!",
-          message: `Congratulations! Your ${approvedBike.bikeModel} has been approved for rental. You can now start earning by renting it out!`,
-          type: 'bike_approved',
-          bikeId: approvedBike._id,
-        });
-      }
-      
       Alert.alert("Success", "Bike rental approved successfully!");
     },
     onError: (error) => {
@@ -65,15 +52,6 @@ const BikeApprovalModal: React.FC<BikeApprovalModalProps> = ({
       
       // Find the bike that was rejected
       const rejectedBike = bikes.find(bike => bike._id === bikeId);
-      if (rejectedBike) {
-        // Add notification for the bike owner
-        await addNotification({
-          title: "❌ Bike Rental Rejected",
-          message: `We're sorry, but your ${rejectedBike.bikeModel} rental request has been rejected. Please check the bike condition and resubmit with a clear photo.`,
-          type: 'bike_rejected',
-          bikeId: rejectedBike._id,
-        });
-      }
       
       Alert.alert("Success", "Bike rental rejected successfully!");
     },
