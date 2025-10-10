@@ -26,3 +26,8 @@ export async function fetchUserRentBike() {
   const res = await axios.get("/api/rent-bike");
   return res.data;
 }
+
+export async function fetchAllUsersRentBike() {
+  const res = await axios.get("/api/rent-bike/all-rented");
+  return res.data;
+}
