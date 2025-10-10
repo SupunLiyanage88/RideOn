@@ -1,10 +1,12 @@
 import { Bike } from "@/api/bike";
 import { fetchBikeStationById } from "@/api/bikeStation";
+import { fetchUserRentBike } from "@/api/rentBike";
 import { Ionicons } from "@expo/vector-icons";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useState } from "react";
 import {
-  ActivityIndicator,
   RefreshControl,
   ScrollView,
   StatusBar,
@@ -15,10 +17,15 @@ import {
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
+import DialogHeader from "../../DialogHeader";
+import Loader from "../../Loader";
+import RentUserBike from "./RentUserBike";
 
 export default function StationDetail() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [bikeId, setBikeId] = useState<String | null>(null);
 
   const {
     data: stationData,
@@ -32,6 +39,15 @@ export default function StationDetail() {
     enabled: !!id,
   });
 
+  const {
+    data: rentedBikeData,
+    refetch: refetchRentedBikeData,
+    isLoading: rentedBikeLoading,
+  } = useQuery({
+    queryKey: ["station-rented-bike"],
+    queryFn: fetchUserRentBike,
+  });
+  console.log("Rented Bike Data:", rentedBikeData);
   const getConditionColor = (condition: number) => {
     if (condition >= 80) return "#10b981";
     if (condition >= 50) return "#f59e0b";
@@ -57,27 +73,11 @@ export default function StationDetail() {
     }
   };
 
-  if (isLoading) {
+  if (error || !stationData || isLoading) {
     return (
-      <SafeAreaView style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#2563eb" />
-        <Text style={styles.loadingText}>Loading station details...</Text>
-      </SafeAreaView>
-    );
-  }
-
-  if (error || !stationData) {
-    return (
-      <SafeAreaView style={styles.centerContainer}>
-        <Ionicons name="alert-circle" size={64} color="#ef4444" />
-        <Text style={styles.errorTitle}>Failed to load station</Text>
-        <TouchableOpacity
-          style={styles.retryButton}
-          onPress={() => router.back()}
-        >
-          <Text style={styles.retryButtonText}>Go Back</Text>
-        </TouchableOpacity>
-      </SafeAreaView>
+      <View style={{ padding: 24, marginTop: 40 }}>
+        <Loader textStyle={{ fontSize: 20 }} showText={false} />
+      </View>
     );
   }
   const pedalCount =
@@ -85,24 +85,32 @@ export default function StationDetail() {
   const electricCount =
     stationData.bikes?.filter((b: any) => b.fuelType === "electric").length ||
     0;
+
+  function refreshStationData() {
+    refetchStationData();
+    refetchRentedBikeData();
+  }
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
+
+      <DialogHeader
+        title={`${stationData?.stationName}`}
+        subtitle={`Available Bikes`}
+      />
       <View style={styles.header}>
         <View style={styles.headerContainer}>
-          {/* Left: Text Info */}
           <View style={styles.headerTextBox}>
-            <Text style={styles.stationName}>{stationData.stationName}</Text>
+            <Text style={styles.stationName}>{stationData?.stationName}</Text>
             <View style={styles.locationRow}>
               <Ionicons name="location" size={16} color="red" />
               <Text style={styles.locationText}>
                 {stationData.stationLocation}
               </Text>
             </View>
-            <Text style={styles.stationId}>{stationData.stationId}</Text>
+            <Text style={styles.stationId}>{stationData?.stationId}</Text>
           </View>
 
-          {/* Right: Small Map Preview */}
           <MapView
             style={styles.miniMap}
             initialRegion={{
@@ -111,7 +119,7 @@ export default function StationDetail() {
               latitudeDelta: 0.005,
               longitudeDelta: 0.005,
             }}
-            pointerEvents="none" // disable interaction
+            pointerEvents="none"
           >
             <Marker
               coordinate={{
@@ -124,36 +132,31 @@ export default function StationDetail() {
 
         <View style={styles.statsContainer}>
           <View style={styles.statCard}>
-            <Ionicons name="bicycle-outline" size={22} color="#2563eb" />
+            <MaterialIcons name="event-available" size={22} color="#2563eb" />
             <Text style={styles.statValue}>{pedalCount + electricCount}</Text>
 
             <Text style={styles.statLabel}>Total Bikes</Text>
           </View>
           <View style={styles.statCard}>
-            <Ionicons
-              name="checkmark-circle-outline"
-              size={22}
-              color="#10b981"
-            />
+            <Ionicons name="bicycle-outline" size={22} color="#f59e0b" />
             <Text style={styles.statValue}>{electricCount}</Text>
             <Text style={styles.statLabel}>Pedal Bikes</Text>
           </View>
           <View style={styles.statCard}>
-            <Ionicons name="close-circle-outline" size={22} color="#ef4444" />
+            <Ionicons name="flash" size={22} color="#10b981" />
             <Text style={styles.statValue}>{pedalCount}</Text>
             <Text style={styles.statLabel}>Electric Bikes</Text>
           </View>
         </View>
       </View>
 
-      {/* Bikes */}
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContainer}
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
-            onRefresh={refetchStationData}
+            onRefresh={refreshStationData}
           />
         }
       >
@@ -232,20 +235,51 @@ export default function StationDetail() {
                 </View>
               </View>
 
-              <TouchableOpacity style={styles.rentButton}>
-                <Text style={styles.rentButtonText}>Rent This Bike</Text>
+              <TouchableOpacity
+                style={[
+                  styles.rentButton,
+                  {
+                    backgroundColor:
+                      rentedBikeData?.isRented === true &&
+                      rentedBikeData?.bikeId?._id !== bike._id
+                        ? "gray"
+                        : "#083A4C",
+                  },
+                ]}
+                onPress={() => {
+                  setModalVisible(true);
+                  setBikeId(bike._id);
+                }}
+                disabled={
+                  rentedBikeData?.isRented === true &&
+                  rentedBikeData?.bikeId?._id !== bike._id
+                }
+              >
+                <Text style={styles.rentButtonText}>
+                  {!rentedBikeData
+                    ? "Rent This Bike"
+                    : rentedBikeData?.isRented === true &&
+                        rentedBikeData?.bikeId?._id !== bike._id
+                      ? "Unavailable"
+                      : "Go To Navigation"}
+                </Text>
                 <Ionicons name="arrow-forward" size={18} color="#fff" />
               </TouchableOpacity>
             </View>
           ))
         )}
       </ScrollView>
+      <RentUserBike
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        defaultBikeId={bikeId || undefined}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f9fafb" },
+  container: { flex: 1, backgroundColor: "#EBEBEB" },
   centerContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   loadingText: { marginTop: 12, color: "#64748b", fontSize: 15 },
   errorTitle: {
@@ -267,7 +301,6 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
     padding: 20,
-    paddingTop: 50,
   },
   headerContainer: {
     flexDirection: "row",
@@ -277,11 +310,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 12,
     borderColor: "#083A4C",
-    borderWidth: 0.5,
+    elevation: 5,
     shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
-    elevation: 3,
   },
   headerTextBox: {
     flex: 1,
@@ -324,12 +357,12 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 14,
     alignItems: "center",
-    shadowColor: "#000",
     borderColor: "#083A4C",
-    borderWidth: 0.5,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowRadius: 5,
   },
   statValue: {
     fontSize: 20,
@@ -352,12 +385,12 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     marginBottom: 20,
-    shadowColor: "#000",
     borderColor: "#083A4C",
-    borderWidth: 0.5,
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
   },
   bikeHeader: {
     flexDirection: "row",
@@ -375,7 +408,7 @@ const styles = StyleSheet.create({
   bikeModel: { fontSize: 17, fontWeight: "700", color: "#1e293b" },
   bikeId: { fontSize: 13, color: "#64748b" },
   availableTag: {
-    backgroundColor: "#10b981",
+    backgroundColor: "#083A4C",
     borderRadius: 20,
     paddingHorizontal: 10,
     paddingVertical: 5,
@@ -401,8 +434,8 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   rentButton: {
-    backgroundColor: "#2563eb",
-    borderRadius: 14,
+    backgroundColor: "#083A4C",
+    borderRadius: 24,
     paddingVertical: 14,
     flexDirection: "row",
     justifyContent: "center",

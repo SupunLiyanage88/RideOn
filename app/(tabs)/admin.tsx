@@ -87,19 +87,13 @@ const Admin = () => {
           title="Payment Management"
           icon={<MaterialIcons name="payment" size={24} color="white" />}
           color="#348AB8"
-          onPress={() => console.log("Payment Management pressed")}
+          onPress={() => router.push("/(admin)/PaymentManagement")}
         />
         <ManagementCard
           title="Package Management"
           icon={<Feather name="package" size={24} color="white" />}
           color="#083A4C"
-          onPress={() => console.log("Package Management pressed")}
-        />
-        <ManagementCard
-          title="Package Management"
-          icon={<Feather name="package" size={24} color="white" />}
-          color="#083A4C"
-          onPress={() => console.log("Package Management pressed")}
+          onPress={() => router.push("/(admin)/PackageManagement")}
         />
         <View style={{marginBottom:45}}></View>
       </ScrollView>

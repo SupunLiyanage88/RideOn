@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import React, { useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Dimensions,
   Linking,
@@ -12,10 +11,11 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Loader from "../../Loader";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -165,7 +165,7 @@ const AccidentManagement = () => {
         </View>
       </View>
 
-      {isFetching && (<ActivityIndicator size="large" color="#0B4057" />)}
+      {isFetching && ( <Loader showText={false} />)}
 
       {!isFetching && (!accidentData || accidentData.length === 0) && (
         <View style={styles.emptyContainer}>
