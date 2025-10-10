@@ -1,6 +1,7 @@
 import { getAllBikeStations } from "@/api/bikeStation";
 import { getAllIncident } from "@/api/incident";
 import { Ionicons } from "@expo/vector-icons";
+import Entypo from '@expo/vector-icons/Entypo';
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -84,6 +85,12 @@ const Admin = () => {
           onPress={() => router.push("/(admin)/EmergencyManagement")}
         />
         <ManagementCard
+          title="Bike Security Management"
+          icon={<Entypo name="shield" size={24} color="white" />}
+          color="#1E1E1E"
+          onPress={() => router.push("/(admin)/BikeSecurity")}
+        />
+        <ManagementCard
           title="Payment Management"
           icon={<MaterialIcons name="payment" size={24} color="white" />}
           color="#348AB8"
@@ -95,12 +102,7 @@ const Admin = () => {
           color="#083A4C"
           onPress={() => router.push("/(admin)/PackageManagement")}
         />
-        <ManagementCard
-          title="Bike Security Management"
-          icon={<Feather name="package" size={24} color="white" />}
-          color="#083A4C"
-          onPress={() => router.push("/(admin)/BikeSecurity")}
-        />
+        
         <View style={{marginBottom:45}}></View>
       </ScrollView>
     </SafeAreaView>

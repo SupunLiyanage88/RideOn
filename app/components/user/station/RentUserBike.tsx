@@ -9,6 +9,7 @@ import * as Location from "expo-location";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Modal,
   Platform,
   StyleSheet,
@@ -26,6 +27,8 @@ import SearchInput from "../../SearchBarQuery";
 const THEME_COLOR = "#083A4C";
 const RC_FEE_VALUE = 10;
 const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "";
+const MAX_DEVIATION_DISTANCE = 1000; // 100 meters maximum deviation allowed
+const DEBUG_MODE = __DEV__; // Enable testing features in development mode
 
 type DialogProps = {
   visible: boolean;
@@ -51,6 +54,9 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
   );
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [navigationSet, setNavigationSet] = useState(false);
+  const [routeCoordinates, setRouteCoordinates] = useState<Coordinate[]>([]);
+  const [lastAlertTime, setLastAlertTime] = useState<number>(0);
+  const [testMode, setTestMode] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedQuery = useDebounce(searchQuery, 500);
@@ -170,6 +176,116 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
     }
   }, [selectedStation, location]);
 
+  // Function to calculate distance between two coordinates using Haversine formula
+  const calculateDistance = (coord1: Coordinate, coord2: Coordinate): number => {
+    const R = 6371000; // Earth's radius in meters
+    const dLat = ((coord2.latitude - coord1.latitude) * Math.PI) / 180;
+    const dLon = ((coord2.longitude - coord1.longitude) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((coord1.latitude * Math.PI) / 180) *
+        Math.cos((coord2.latitude * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  // Function to calculate distance from a point to a line segment
+  const distanceToLineSegment = (
+    point: Coordinate,
+    start: Coordinate,
+    end: Coordinate
+  ): number => {
+    const A = point.latitude - start.latitude;
+    const B = point.longitude - start.longitude;
+    const C = end.latitude - start.latitude;
+    const D = end.longitude - start.longitude;
+
+    const dot = A * C + B * D;
+    const lenSq = C * C + D * D;
+    
+    if (lenSq === 0) {
+      return calculateDistance(point, start);
+    }
+
+    let param = dot / lenSq;
+    
+    let xx, yy;
+    if (param < 0) {
+      xx = start.latitude;
+      yy = start.longitude;
+    } else if (param > 1) {
+      xx = end.latitude;
+      yy = end.longitude;
+    } else {
+      xx = start.latitude + param * C;
+      yy = start.longitude + param * D;
+    }
+
+    return calculateDistance(point, { latitude: xx, longitude: yy });
+  };
+
+  // Function to find minimum distance from current location to route
+  const getDistanceFromRoute = (currentLocation: Coordinate): number => {
+    if (routeCoordinates.length < 2) return 0;
+
+    let minDistance = Infinity;
+    
+    for (let i = 0; i < routeCoordinates.length - 1; i++) {
+      const distance = distanceToLineSegment(
+        currentLocation,
+        routeCoordinates[i],
+        routeCoordinates[i + 1]
+      );
+      minDistance = Math.min(minDistance, distance);
+    }
+
+    return minDistance;
+  };
+
+  // Function to check if user has deviated from path and show alert
+  const checkPathDeviation = (currentLocation: Coordinate) => {
+    if (!isNavigating || routeCoordinates.length === 0) return;
+
+    const distanceFromRoute = getDistanceFromRoute(currentLocation);
+    const currentTime = Date.now();
+
+    // Debug logging
+    console.log(`Distance from route: ${Math.round(distanceFromRoute)}m`);
+
+    // Only show alert if user is more than 100m away and it's been at least 30 seconds since last alert
+    if (distanceFromRoute > MAX_DEVIATION_DISTANCE && currentTime - lastAlertTime > 30000) {
+      console.log("Path deviation detected - showing alert");
+      setLastAlertTime(currentTime);
+      Alert.alert(
+        "Route Deviation Alert",
+        `You are ${Math.round(distanceFromRoute)}m away from the recommended path. Please return to the default route for better navigation.`,
+        [
+          {
+            text: "OK",
+            style: "default",
+          },
+        ],
+        { cancelable: true }
+      );
+    }
+  };
+
+  // Test function to simulate path deviation (DEBUG MODE ONLY)
+  const simulatePathDeviation = () => {
+    if (!DEBUG_MODE || !location) return;
+    
+    // Create a fake location 150m away from current location
+    const fakeLocation: Coordinate = {
+      latitude: location.latitude + 0.0115, // approximately 150m north
+      longitude: location.longitude + 0.0115, // approximately 150m east
+    };
+    
+    console.log("🧪 Testing path deviation with simulated location");
+    checkPathDeviation(fakeLocation);
+  };
+
   const startNavigation = async () => {
     try {
       setDeleteDialogOpen(true);
@@ -193,7 +309,13 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
         },
         (pos) => {
           const { latitude, longitude } = pos.coords;
-          setLocation({ latitude, longitude });
+          const newLocation = { latitude, longitude };
+          setLocation(newLocation);
+
+          // Check for path deviation when navigating
+          if (isNavigating) {
+            checkPathDeviation(newLocation);
+          }
 
           mapRef.current?.animateToRegion(
             {
@@ -214,6 +336,8 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
 
   const stopNavigation = async () => {
     setIsNavigating(false);
+    setRouteCoordinates([]); // Clear route coordinates
+    setLastAlertTime(0); // Reset alert timer
     if (locationSubscription.current) {
       locationSubscription.current.remove();
       locationSubscription.current = null;
@@ -224,6 +348,14 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
   };
 
   const handleClose = () => {
+    // Clean up navigation state when closing
+    setIsNavigating(false);
+    setRouteCoordinates([]);
+    setLastAlertTime(0);
+    if (locationSubscription.current) {
+      locationSubscription.current.remove();
+      locationSubscription.current = null;
+    }
     onClose();
   };
 
@@ -334,12 +466,14 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
         style={{ flex: 1, marginTop: Platform.OS === "ios" ? 40 : 0 }}
       >
         <View style={styles.container}>
+          
           <View style={{ marginTop: 15 }}>
             <DialogHeader
               title={"Pick Station"}
               onClose={handleClose}
               subtitle="Pick Your Ride On Station"
             />
+            
           </View>
 
           {(selectedStation || !rentedBikeData) && (
@@ -431,6 +565,10 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
                       strokeColor={THEME_COLOR}
                       optimizeWaypoints={true}
                       onReady={(result) => {
+                        // Store route coordinates for deviation checking
+                        console.log(`Route loaded with ${result.coordinates.length} coordinate points`);
+                        setRouteCoordinates(result.coordinates);
+                        
                         mapRef.current?.fitToCoordinates(result.coordinates, {
                           edgePadding: {
                             top: 100,
@@ -476,6 +614,17 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
                   <Ionicons name="expand" size={20} color={THEME_COLOR} />
                   <Text style={styles.fitAllText}>Show All Stations</Text>
                 </TouchableOpacity>
+
+                {/* Debug Test Button - Only visible in development mode */}
+                {DEBUG_MODE && isNavigating && routeCoordinates.length > 0 && (
+                  <TouchableOpacity
+                    style={styles.testButton}
+                    onPress={simulatePathDeviation}
+                  >
+                    <Ionicons name="warning" size={16} color="#fff" />
+                    <Text style={styles.testButtonText}>Test Alert</Text>
+                  </TouchableOpacity>
+                )}
               </>
             )}
           </View>
@@ -846,5 +995,23 @@ const styles = StyleSheet.create({
     color: "red",
     textAlign: "center",
     margin: 16,
+  },
+  testButton: {
+    position: "absolute",
+    bottom: 140,
+    right: 20,
+    backgroundColor: "#FF6B35",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    elevation: 5,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  testButtonText: {
+    marginLeft: 6,
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#fff",
   },
 });

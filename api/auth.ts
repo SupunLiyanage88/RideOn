@@ -15,6 +15,7 @@ export const userSchema = z.object({
   password: z.string(),
   confirmPassword: z.string().optional(),
   role: z.enum(Role),
+  userAggrement: z.boolean(),
   rc: z.number(),
 });
 

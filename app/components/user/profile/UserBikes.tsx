@@ -1,3 +1,4 @@
+import { User, validateUser } from "@/api/auth";
 import { getBikesByUser, type Bike } from "@/api/bike";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
@@ -8,15 +9,21 @@ import {
   ScrollView,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Loader from "../../Loader";
 import UserBikeCard from "../../UserBikeCard";
+import UseCurrentUser from "@/hooks/useCurrentUser";
+
 
 const UserBikes = () => {
   const router = useRouter();
-  const { data: bikeStatData, isFetching: isBikeStatLoading, refetch } = useQuery({
+  const {
+    data: bikeStatData,
+    isFetching: isBikeStatLoading,
+    refetch,
+  } = useQuery({
     queryKey: ["bike-stat-user-data"],
     queryFn: getBikesByUser,
   });
@@ -25,17 +32,16 @@ const UserBikes = () => {
     refetch();
   };
 
-
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#F8FAFB" }}>
       {/* Header */}
       <View
         style={{
           flexDirection: "row",
-          alignItems: "center",          
+          alignItems: "center",
           paddingHorizontal: 20,
           paddingVertical: 16,
-          backgroundColor: "transparent",          
+          backgroundColor: "transparent",
         }}
       >
         <TouchableOpacity
@@ -53,7 +59,6 @@ const UserBikes = () => {
             fontWeight: "700",
             color: "#083A4C",
             flex: 1,
-
           }}
         >
           My Bikes
@@ -157,7 +162,10 @@ const UserBikes = () => {
                       color: "#10B981",
                     }}
                   >
-                    {bikeStatData.filter((bike: Bike) => bike.availability).length}
+                    {
+                      bikeStatData.filter((bike: Bike) => bike.availability)
+                        .length
+                    }
                   </Text>
                   <Text
                     style={{
@@ -237,7 +245,8 @@ const UserBikes = () => {
                 paddingHorizontal: 40,
               }}
             >
-              You don't have any bikes registered yet. Contact support to add bikes to your account.
+              You don't have any bikes registered yet. Contact support to add
+              bikes to your account.
             </Text>
           </View>
         )}
