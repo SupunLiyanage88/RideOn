@@ -275,36 +275,6 @@ const Me = () => {
           onPress={() => console.log("Help")}
         />
 
-        {/* Test Notifications (for development) */}
-        {__DEV__ && (
-          <>
-            <Text style={{
-              fontSize: 12,
-              fontWeight: "800",
-              color: "#083A4C",
-              marginBottom: 16,
-              marginTop: 24,
-              marginLeft: 4,
-              textTransform: "uppercase",
-              letterSpacing: 1.2,
-              opacity: 0.6,
-            }}>
-              TESTING (DEV ONLY)
-            </Text>
-            
-            <ModernMenuItem
-              icon="🧪"
-              title="Add Test Notifications"
-              subtitle="Test notification system"
-              onPress={async () => {
-                const { addTestNotifications } = await import("@/utils/testNotifications");
-                await addTestNotifications();
-                await loadNotificationCount();
-              }}
-            />
-          </>
-        )}
-
         <View style={{ marginTop: 16 }}>
           <LogoutButton />
         </View>
