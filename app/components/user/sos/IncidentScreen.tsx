@@ -249,6 +249,7 @@ const IncidentScreen = () => {
                       </View>
                     </View>
 
+                  <View style={{ alignItems: "flex-end" }}>
                     {canEdit && (
                       <TouchableOpacity
                         style={styles.editButton}
@@ -260,6 +261,11 @@ const IncidentScreen = () => {
                         <Feather name="edit-2" size={18} color="#4338CA" />
                       </TouchableOpacity>
                     )}
+
+                    {incident.stopRide && (
+                      <Text style={styles.rideStoppedText}>Ride Stopped</Text>
+                    )}
+                  </View>
                   </View>
 
                   <View style={styles.descriptionContainer}>
@@ -457,6 +463,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginLeft: 6,
     fontWeight: "500",
+  },
+  rideStoppedText: {
+    marginTop: 6,
+    fontSize: 12,
+    color: "#FF3B30",
+    fontWeight: "700",
   },
 });
 
