@@ -86,6 +86,7 @@ const IncidentScreenDialog = ({ visible, onClose, defaultValues }: DialogProps) 
       reset();
       onClose();
       queryClient.invalidateQueries({ queryKey: ["incident-user-data"] });
+      queryClient.invalidateQueries({ queryKey: ["station-rented-bike"] });
     },
     onError: (data) => {
       alert("Incident Save failed");

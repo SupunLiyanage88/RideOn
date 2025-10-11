@@ -305,7 +305,7 @@ const AddOrEditObstacle = ({
                         textAlign: "center",
                       }}
                     >
-                      Submit Incident
+                      {defaultValues ? "Hide Obstacle" : "Add Obstacle"}
                     </Text>
                   )}
                 </Pressable>

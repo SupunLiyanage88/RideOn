@@ -1,7 +1,7 @@
 import AccidentManagement from "@/app/components/admin/EmergencyManagement/AccidentManagement";
 import IncidentManagement from "@/app/components/admin/EmergencyManagement/IncidentManagement";
 import React, { useState } from "react";
-import { View } from "react-native";
+import { StatusBar, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ToggleButton from "../components/toggleButton";
 
@@ -11,6 +11,7 @@ const EmergencyManagement = () => {
 
   return (
     <SafeAreaView style={{flex: 1}}>
+      <StatusBar barStyle="light-content" />
       <View style={{flexGrow: 1, paddingHorizontal: 4}}>
         <View style={{
           alignItems: "center",
