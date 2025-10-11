@@ -7,6 +7,7 @@ import { useDebounce } from "@/utils/useDebounce.utils";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Location from "expo-location";
+import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -49,6 +50,7 @@ const RentUserBike = ({
 }: DialogProps) => {
   const mapRef = useRef<MapView | null>(null);
   const { user } = UseCurrentUser();
+  const router = useRouter();
   const [location, setLocation] = useState<Coordinate | null>(null);
   const [selectedStation, setSelectedStation] = useState<any>(null);
   const [obstacleModalOpen, setObstacleModalOpen] = useState<any>(null);
@@ -338,7 +340,7 @@ const RentUserBike = ({
     }
   }, [bikeStationData, selectedStation]);
 
-  const RC_FEE_ROUTE = Math.round(distance?.distanceKm * RC_FEE_VALUE);
+  const RC_FEE_ROUTE = distance?.distanceKm * RC_FEE_VALUE;
   const shouldShowButton = RC_FEE_ROUTE > (user?.rc || 0);
 
   function saveBike(data: any) {
@@ -356,6 +358,7 @@ const RentUserBike = ({
       userLongitude: location?.longitude,
       fromLatitude: bikeStation?.latitude,
       fromLongitude: bikeStation?.longitude,
+      bikeStationId: bikeStation?._id
     };
     saveRentBikeMutation(submitData);
     setNavigationSet(false);
@@ -388,7 +391,7 @@ const RentUserBike = ({
           <View style={{ marginTop: 15 }}>
             <DialogHeader
               title={"Pick Station"}
-              onClose={handleClose}
+              onClose={() => {handleClose(),router.push("/(tabs)")} }
               subtitle="Pick Your Ride On Station"
             />
           </View>
@@ -569,6 +572,7 @@ const RentUserBike = ({
                         style={{
                           marginRight:
                             idx !== obstacleCategories.length - 1 ? 8 : 0,
+                          flexDirection: "row",
                         }}
                       >
                         <View
@@ -578,8 +582,28 @@ const RentUserBike = ({
                             selected && styles.categoryDotSelected,
                           ]}
                         >
-                          <Ionicons name="warning" size={10} color="#fff" />
+                          <Ionicons name="warning" size={15} color="#fff" />
                         </View>
+                        {selected && (
+                          <View
+                            style={{
+                              flexDirection: "row",
+                              backgroundColor: "gray",
+                              marginLeft: 5,
+                              borderRadius: 999,
+                              paddingVertical: 4,
+                              paddingHorizontal: 8,
+                            }}
+                          >
+                            <Text
+                              style={{
+                                color: "#fff",
+                              }}
+                            >
+                              {cat.label}
+                            </Text>
+                          </View>
+                        )}
                       </TouchableOpacity>
                     );
                   })}
@@ -640,7 +664,7 @@ const RentUserBike = ({
                         <Text style={styles.detailLabel}>RC Fee</Text>
                       </View>
                       <Text style={styles.basicChip}>
-                        {RC_FEE_ROUTE || 0} RC
+                        {RC_FEE_ROUTE.toFixed(2) || 0} RC
                       </Text>
                     </View>
                   )}
@@ -890,7 +914,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: THEME_COLOR,
-    borderRadius: 8,
+    borderRadius: 999,
     paddingVertical: 10,
     marginTop: 10,
   },
@@ -998,14 +1022,14 @@ const styles = StyleSheet.create({
   categoryContainer: {
     flexDirection: "column",
     gap: 10,
-    marginLeft: 5,
-    marginTop: 10,
+    marginLeft: 16,
+    marginTop: 55,
     position: "absolute",
   },
   categoryDot: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 30,
+    height: 30,
+    borderRadius: 999,
     borderWidth: 2,
     borderColor: "#ffffff",
     elevation: 2,

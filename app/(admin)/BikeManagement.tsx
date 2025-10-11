@@ -13,6 +13,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StatusBar,
   StyleSheet,
   View,
 } from "react-native";
@@ -118,6 +119,7 @@ const BikeManagement = () => {
 
   return (
     <SafeAreaView edges={["left", "right"]} style={styles.safeArea}>
+      <StatusBar barStyle="light-content" />
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === "ios" ? "padding" : "height"}

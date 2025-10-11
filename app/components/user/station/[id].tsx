@@ -26,7 +26,8 @@ export default function StationDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [modalVisible, setModalVisible] = useState(false);
   const [bikeId, setBikeId] = useState<String | null>(null);
-  const [bikeStationSchema, setBikeStationSchema] = useState<BikeStation | null>(null);
+  const [bikeStationSchema, setBikeStationSchema] =
+    useState<BikeStation | null>(null);
 
   const {
     data: stationData,
@@ -76,8 +77,15 @@ export default function StationDetail() {
 
   if (error || !stationData || isLoading) {
     return (
-      <View style={{ padding: 24, marginTop: 40 }}>
-        <Loader textStyle={{ fontSize: 20 }} showText={false} />
+      <View
+        style={{
+          flex: 1,
+          marginTop: 40,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Loader textStyle={{ fontSize: 20 }} />
       </View>
     );
   }

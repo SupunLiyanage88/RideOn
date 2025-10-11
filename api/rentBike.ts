@@ -14,6 +14,7 @@ export const rentBikeSchema = z.object({
   latitude: z.number(),
   longitude: z.number(),
   createdAt: z.string(),
+  bikeStationId: z.string(),
 });
 
 export type RentBike = z.infer<typeof rentBikeSchema>;
