@@ -1,10 +1,10 @@
 import { deleteIncident, getAllIncident, Incident } from "@/api/incident";
-import { MaterialIcons } from "@expo/vector-icons";
+import { Feather, Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, parse } from "date-fns";
 import React, { useState } from "react";
 import {
-  ActivityIndicator,
+  Animated,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -14,18 +14,23 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import DeleteConfirmationModal from "../../DeleteConfirmationModal";
+import Loader from "../../Loader";
+
+// const { width } = Dimensions.get("window");
 
 const IncidentManagement = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedData, setSelectedData] = useState<Incident | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const fadeAnim = useState(new Animated.Value(0))[0];
+  const scaleAnim = useState(new Animated.Value(0.9))[0];
 
   const {
     data: incidentData,
     isFetching: isIncidentDataFetching,
     error,
     refetch,
-  } = useQuery({
+  } = useQuery<Incident[]>({
     queryKey: ["incident-data"],
     queryFn: getAllIncident,
   });
@@ -37,6 +42,7 @@ const IncidentManagement = () => {
       alert("Incident deleted successfully");
       setDeleteDialogOpen(false);
       queryClient.invalidateQueries({ queryKey: ["incident-data"] });
+      queryClient.invalidateQueries({ queryKey: ["incident-user-data"] });
     },
     onError: (error) => {
       alert("Failed to delete incident");
@@ -44,26 +50,57 @@ const IncidentManagement = () => {
     },
   });
 
+  React.useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 8,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
     await refetch();
     setRefreshing(false);
   }, [refetch]);
 
-  const getSeverityColor = (severity?: string) => {
+  const getSeverityConfig = (severity?: string) => {
     const severityLower = severity?.toLowerCase();
-    if (severityLower?.includes("critical")) return "#DC2626";
-    if (severityLower?.includes("high")) return "#EA580C";
-    if (severityLower?.includes("medium")) return "#D97706";
-    return "#16A34A";
-  };
-
-  const getSeverityBgColor = (severity?: string) => {
-    const severityLower = severity?.toLowerCase();
-    if (severityLower?.includes("critical")) return "#FEE2E2"; 
-    if (severityLower?.includes("high")) return "#FFEDD5";
-    if (severityLower?.includes("medium")) return "#FEF3C7"; 
-    return "#DCFCE7"; 
+    if (severityLower?.includes("critical"))
+      return {
+        color: "#FF3B30",
+        bgColor: "rgba(255, 59, 48, 0.1)",
+        icon: "alert-circle",
+        pulse: true,
+      };
+    if (severityLower?.includes("high"))
+      return {
+        color: "#FF9500",
+        bgColor: "rgba(255, 149, 0, 0.1)",
+        icon: "alert-triangle",
+        pulse: false,
+      };
+    if (severityLower?.includes("medium"))
+      return {
+        color: "#FFCC00",
+        bgColor: "rgba(255, 204, 0, 0.1)",
+        icon: "info",
+        pulse: false,
+      };
+    return {
+      color: "#34C759",
+      bgColor: "rgba(52, 199, 89, 0.1)",
+      icon: "check-circle",
+      pulse: false,
+    };
   };
 
   const formatTime = (timeString?: string) => {
@@ -79,134 +116,236 @@ const IncidentManagement = () => {
     }
   };
 
+  const getIncidentIcon = (type?: string) => {
+    const typeLower = type?.toLowerCase();
+    if (typeLower?.includes("fire")) return "flame";
+    if (typeLower?.includes("security")) return "shield";
+    if (typeLower?.includes("medical")) return "medkit";
+    if (typeLower?.includes("technical")) return "settings";
+    if (typeLower?.includes("safety")) return "warning";
+    return "alert-circle";
+  };
+
   return (
-    <SafeAreaView edges={["left", "right"]} style={{ flex: 1,marginTop: 20 }} >
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>Incident Management</Text>
-          <Text style={styles.headerSubtitle}>
-            {incidentData?.length || 0} incident(s) reported
-          </Text>
-        </View>
-        <View style={styles.headerIconContainer}>
-          <MaterialIcons name="warning" size={20} color="white" />
-        </View>
-      </View>
-
-      {isIncidentDataFetching && !refreshing && (
-        <View >
-          <ActivityIndicator size="large" color="#0B4057" />
-        </View>
-      )}
-
-      {!isIncidentDataFetching && (!incidentData || incidentData.length === 0) && (
-        <View style={styles.centeredContentFlex1}>
-          <MaterialIcons name="inbox" size={80} color="#9CA3AF" />
-          <Text style={styles.emptyTitle}>No Incidents Found</Text>
-          <Text style={styles.emptyText}>
-            All incidents are resolved or no incidents have been reported yet.
-          </Text>
-        </View>
-      )}
-
-      <ScrollView
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={["#0B4057"]}
-            tintColor="#0B4057"
-          />
-        }
-      >
-        {incidentData?.map((incident: Incident) => (
-          <View key={incident._id} style={styles.card}>
-            <View
-              style={[
-                styles.cardHeader,
-                { backgroundColor: getSeverityBgColor(incident.howSerious) },
-              ]}
-            >
-              <View style={styles.cardHeaderLeft}>
-                <View style={styles.incidentTypeBadge}>
-                  <Text style={styles.incidentTypeText}>
-                  {incident.incidentType}
-                </Text>
-              </View>
-            </View>
-
-              <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => {
-                  setSelectedData(incident);
-                  setDeleteDialogOpen(true);
-                }}
-              >
-                <MaterialIcons name="delete-outline" size={22} color="#EF4444" />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.cardBody}>
-              <View style={styles.rowSpaced}>
-                <View style={styles.flex1}>
-                  <Text style={styles.label}>Severity Level</Text>
-                  <View style={styles.row}>
-                    <View
-                      style={[
-                        styles.severityDot,
-                        { backgroundColor: getSeverityColor(incident.howSerious) },
-                      ]}
-                    />
-                    <Text style={styles.severityText}>{incident.howSerious}</Text>
-                  </View>
-                </View>
-              </View>
-
-              <View style={{ marginVertical: 16 }}>
-                <Text style={styles.label}>Description</Text>
-                <Text style={styles.descriptionText}>
-                  {incident.description || "No description provided."}
-                </Text>
-              </View>
-
-              <View style={styles.dateTimeContainer}>
-                <View style={styles.row}>
-                  <MaterialIcons name="event" size={18} color="#6B7280" />
-                  <Text style={styles.dateTimeText}>
-                    {format(new Date(incident?.date), "MMM dd, yyyy")}
-                  </Text>
-                </View>
-
-                <View style={styles.row}>
-                  <MaterialIcons name="schedule" size={18} color="#6B7280" />
-                  <Text style={styles.dateTimeText}>
-                    {formatTime(incident?.time)}
+    <SafeAreaView edges={["left", "right"]} style={styles.container}>
+      <View style={styles.mainBackground}>
+        <Animated.View
+          style={[
+            styles.header,
+            {
+              opacity: fadeAnim,
+              transform: [{ scale: scaleAnim }],
+            },
+          ]}
+        >
+          <View style={styles.headerContent}>
+            <View style={styles.headerLeft}>
+              <Text style={styles.headerTitle}>Incidents</Text>
+              <View style={styles.statsContainer}>
+                <View style={styles.statBadge}>
+                  <View style={styles.statDot} />
+                  <Text style={styles.statText}>
+                    {incidentData?.length || 0} Active
                   </Text>
                 </View>
               </View>
             </View>
           </View>
-        ))}
-        <View style={{ height: 16 }} />
-      </ScrollView>
+
+          <View style={styles.quickStats}>
+            {["Critical", "High", "Medium", "Low"].map((level) => {
+              const count =
+                incidentData?.filter((i: Incident) =>
+                  i.howSerious?.toLowerCase().includes(level.toLowerCase())
+                ).length || 0;
+              const config = getSeverityConfig(level);
+
+              return (
+                <View key={level} style={styles.quickStatItem}>
+                  <View
+                    style={[
+                      styles.quickStatGradient,
+                      { backgroundColor: config.color },
+                    ]}
+                  >
+                    <Text style={styles.quickStatCount}>{count}</Text>
+                  </View>
+                  <Text style={styles.quickStatLabel}>{level}</Text>
+                </View>
+              );
+            })}
+          </View>
+        </Animated.View>
+
+        {isIncidentDataFetching && !refreshing && (
+          <View style={styles.loaderContainer}>
+            <Loader showText={false} />
+          </View>
+        )}
+
+        {!isIncidentDataFetching &&
+          (!incidentData || incidentData.length === 0) && (
+            <Animated.View
+              style={[styles.emptyContainer, { opacity: fadeAnim }]}
+            >
+              <View style={styles.emptyIconContainer}>
+                <View style={styles.emptyIconGradient}>
+                  <Ionicons name="shield-checkmark" size={60} color="#667EEA" />
+                </View>
+              </View>
+              <Text style={styles.emptyTitle}>All Clear!</Text>
+              <Text style={styles.emptyText}>
+                No active incidents reported. Your system is running smoothly.
+              </Text>
+            </Animated.View>
+          )}
+
+        <ScrollView
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#667EEA"]}
+              tintColor="#667EEA"
+              progressBackgroundColor="#FFFFFF"
+            />
+          }
+        >
+          {incidentData?.map((incident: Incident, index: number) => {
+            const severityConfig = getSeverityConfig(incident.howSerious);
+            const slideAnim = new Animated.Value(0);
+
+            Animated.timing(slideAnim, {
+              toValue: 1,
+              duration: 400,
+              delay: index * 100,
+              useNativeDriver: true,
+            }).start();
+
+            return (
+              <Animated.View
+                key={incident._id}
+                style={[
+                  styles.card,
+                  {
+                    opacity: slideAnim,
+                    transform: [
+                      {
+                        translateY: slideAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [50, 0],
+                        }),
+                      },
+                    ],
+                  },
+                ]}
+              >
+                <View style={styles.cardContent}>
+                  <View style={styles.cardHeader}>
+                    <View style={styles.cardHeaderLeft}>
+                      <View
+                        style={[
+                          styles.iconContainer,
+                          { backgroundColor: severityConfig.bgColor },
+                        ]}
+                      >
+                        <Ionicons
+                          name={getIncidentIcon(incident.incidentType) as any}
+                          size={20}
+                          color={severityConfig.color}
+                        />
+                      </View>
+                      <View style={styles.headerInfo}>
+                        <Text style={styles.incidentType}>
+                          {incident.incidentType}
+                        </Text>
+                        <View style={styles.severityBadge}>
+                          {severityConfig.pulse && (
+                            <View
+                              style={[
+                                styles.pulseDot,
+                                { backgroundColor: severityConfig.color },
+                              ]}
+                            />
+                          )}
+                          <View
+                            style={[
+                              styles.severityIndicator,
+                              { backgroundColor: severityConfig.color },
+                            ]}
+                          />
+                          <Text
+                            style={[
+                              styles.severityText,
+                              { color: severityConfig.color },
+                            ]}
+                          >
+                            {incident.howSerious}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+
+                  <View style={{ alignItems: "flex-end" }}>
+                    <TouchableOpacity
+                      style={styles.actionButton}
+                      onPress={() => {
+                        setSelectedData(incident);
+                        setDeleteDialogOpen(true);
+                      }}
+                    >
+                      <Feather name="trash-2" size={18} color="#FF3B30" />
+                    </TouchableOpacity>
+
+                    {incident.stopRide && (
+                      <Text style={styles.rideStoppedText}>Ride Stopped</Text>
+                    )}
+                  </View>
+                  </View>
+
+                  <View style={styles.descriptionContainer}>
+                    <Text style={styles.description}>
+                      {incident.description || "No description provided."}
+                    </Text>
+                  </View>
+
+                  <View style={styles.cardFooter}>
+                    <View style={styles.metaItem}>
+                      <Feather name="calendar" size={14} color="#6B7280" />
+                      <Text style={styles.metaText}>
+                        {format(new Date(incident?.date), "MMM dd, yyyy")}
+                      </Text>
+                    </View>
+                    <View style={styles.metaDivider} />
+                    <View style={styles.metaItem}>
+                      <Feather name="clock" size={14} color="#6B7280" />
+                      <Text style={styles.metaText}>
+                        {formatTime(incident?.time)}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </Animated.View>
+            );
+          })}
+          <View style={{ height: 100 }} />
+        </ScrollView>
+      </View>
 
       <DeleteConfirmationModal
         open={deleteDialogOpen}
         title="Delete Incident"
         content={
-          <View style={styles.modalContentContainer}>
-            <View style={styles.modalRow}>
-              <MaterialIcons name="warning" size={24} color="#D97706" />
-              <View style={styles.modalTextContainer}>
-                <Text style={styles.modalTitle}>Confirm Deletion</Text>
-                <Text style={styles.modalText}>
-                  Are you sure you want to delete this incident? This action
-                  cannot be undone and the incident data will be permanently
-                  removed from the system.
-                </Text>
-              </View>
+          <View style={styles.modalContent}>
+            <View style={styles.modalGradient}>
+              <Ionicons name="warning" size={32} color="#FF3B30" />
+              <Text style={styles.modalTitle}>Confirm Deletion</Text>
+              <Text style={styles.modalText}>
+                This action cannot be undone. The incident data will be
+                permanently removed.
+              </Text>
             </View>
           </View>
         }
@@ -224,170 +363,219 @@ const IncidentManagement = () => {
 };
 
 const styles = StyleSheet.create({
-  flex1: { flex: 1 },
-  flex1_bgGray50: { flex: 1, backgroundColor: "#F9FAFB" },
-  row: { flexDirection: "row", alignItems: "center" },
-  rowSpaced: {
+  container: { flex: 1, marginTop: 20, paddingLeft: 25, paddingRight: 25 },
+  mainBackground: { flex: 1, backgroundColor: "#F0F2F5" },
+  header: {
+    paddingHorizontal: 25,
+    paddingTop: 20,
+    paddingBottom: 24,
+    backgroundColor: "white",
+    borderRadius: 24,
+    marginBottom: 10,
+  },
+  headerContent: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
+    marginBottom: 20,
   },
-  centeredContent: {
-    justifyContent: "center",
+  headerLeft: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 24,
-  },
-  centeredContentFlex1: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 24,
   },
-  errorContainer: {
-    flex: 1,
-    backgroundColor: "white",
-    justifyContent: "center",
-    alignItems: "center",
+
+  headerTitle: {
+    fontSize: 34,
+    fontWeight: "700",
+    color: "#1C1C1E",
+    letterSpacing: -0.5,
   },
-  errorTitle: {
-    fontSize: 22,
-    fontWeight: "600",
-    color: "#1F2937",
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  errorText: {
-    color: "#4B5563",
-    textAlign: "center",
-    marginBottom: 24,
-    lineHeight: 20,
-  },
-  retryButton: {
-    backgroundColor: "#0B4057",
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  retryButtonText: { color: "white", fontWeight: "600" },
-  loadingText: { color: "#4B5563", marginTop: 12 },
-  emptyTitle: {
-    fontSize: 22,
-    fontWeight: "600",
-    color: "#1F2937",
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyText: { color: "#4B5563", textAlign: "center", lineHeight: 20 },
-  header: {
-    backgroundColor: "white",
-    paddingHorizontal: 24,
-    paddingBottom: 8,
-    paddingTop: 8,
-    marginLeft: 15,
-    marginRight: 15,
-    borderRadius: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+  statsContainer: { flexDirection: "row", marginTop: 8 },
+  statBadge: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    backgroundColor: "#EFF2FF",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
   },
-  headerTitle: { fontSize: 24, fontWeight: "bold", color: "#111827" },
-  headerSubtitle: { color: "#4B5563", marginTop: 4 },
-  headerIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#0B4057",
-    alignItems: "center",
+  statDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#34C759",
+    marginRight: 6,
+  },
+  statText: { color: "#4338CA", fontSize: 13, fontWeight: "600" },
+  headerButton: { marginLeft: 16 },
+  gradientButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#667EEA",
+    shadowColor: "#667EEA",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 8,
   },
-  scrollView: { flex: 1, paddingHorizontal: 16, paddingTop: 16 },
-  card: {
-    backgroundColor: "white",
+  quickStats: { flexDirection: "row", justifyContent: "space-between" },
+  quickStatItem: { alignItems: "center", flex: 1 },
+  quickStatGradient: {
+    width: 56,
+    height: 56,
     borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  quickStatCount: { fontSize: 20, fontWeight: "700", color: "#FFFFFF" },
+  quickStatLabel: {
+    fontSize: 11,
+    color: "#6B7280",
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  loaderContainer: { marginVertical: 40 },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 40,
+  },
+  emptyIconContainer: { marginBottom: 24 },
+  emptyIconGradient: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#E0E7FF",
+  },
+  emptyTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#1F2937",
+    marginBottom: 12,
+  },
+  emptyText: {
+    fontSize: 15,
+    color: "#6B7280",
+    textAlign: "center",
+    lineHeight: 22,
+  },
+  scrollView: { flex: 1 },
+  card: {
     marginBottom: 16,
+    borderRadius: 20,
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#F3F4F6",
-    shadowColor: "#000",
+    borderColor: "#E5E7EB",
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
     shadowRadius: 12,
     elevation: 3,
-    overflow: "hidden",
   },
+  cardContent: { padding: 20 },
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
+    alignItems: "flex-start",
+    marginBottom: 16,
   },
-  cardHeaderLeft: { flexDirection: "row", alignItems: "center" },
-  incidentTypeBadge: {
-    backgroundColor: "white",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
-  },
-  incidentTypeText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#111827",
-    textTransform: "capitalize",
-  },
-  deleteButton: {
+  cardHeaderLeft: { flexDirection: "row", flex: 1 },
+  iconContainer: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.8)",
-    alignItems: "center",
+    borderRadius: 12,
     justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
   },
-  cardBody: { padding: 16 },
-  label: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: "#6B7280",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: 6,
-  },
-  severityDot: { width: 9, height: 9, borderRadius: 5, marginRight: 8 },
-  severityText: {
+  headerInfo: { flex: 1 },
+  incidentType: {
     fontSize: 16,
     fontWeight: "600",
     color: "#111827",
+    marginBottom: 6,
     textTransform: "capitalize",
   },
-  descriptionText: { color: "#374151", lineHeight: 22, fontSize: 15 },
-  dateTimeContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#F9FAFB",
-    borderRadius: 12,
-    padding: 12,
+  severityBadge: { flexDirection: "row", alignItems: "center" },
+  pulseDot: {
+    position: "absolute",
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    opacity: 0.4,
   },
-  dateTimeText: {
-    color: "#374151",
-    marginLeft: 8,
-    fontSize: 14,
+  severityIndicator: { width: 8, height: 8, borderRadius: 4, marginRight: 8 },
+  severityText: {
+    fontSize: 13,
+    fontWeight: "600",
+    textTransform: "capitalize",
+  },
+  actionButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: "rgba(255, 59, 48, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  descriptionContainer: { marginBottom: 16 },
+  description: { fontSize: 14, color: "#4B5563", lineHeight: 21 },
+  cardFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#F3F4F6",
+  },
+  metaItem: { flexDirection: "row", alignItems: "center" },
+  metaDivider: {
+    width: 1,
+    height: 16,
+    backgroundColor: "#E5E7EB",
+    marginHorizontal: 12,
+  },
+  metaText: {
+    color: "#4B5563",
+    fontSize: 13,
+    marginLeft: 6,
     fontWeight: "500",
   },
-  modalContentContainer: {
-    backgroundColor: "#FFFBEB",
-    width: "100%",
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#FDE68A",
+  modalContent: { width: "100%" },
+  modalGradient: {
+    padding: 24,
+    borderRadius: 16,
+    alignItems: "center",
+    backgroundColor: "#FEF2F2",
   },
-  modalRow: { flexDirection: "row", alignItems: "flex-start" },
-  modalTextContainer: { marginLeft: 12, flex: 1 },
-  modalTitle: { color: "#92400E", fontWeight: "600", marginBottom: 4 },
-  modalText: { color: "#B45309", fontSize: 14, lineHeight: 20 },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#B91C1C",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  modalText: {
+    fontSize: 14,
+    color: "#DC2626",
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  rideStoppedText: {
+    marginTop: 6,
+    fontSize: 12,
+    color: "#FF3B30",
+    fontWeight: "700",
+  },
 });
 
 export default IncidentManagement;

@@ -8,6 +8,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Dimensions,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,7 +17,6 @@ import {
 } from "react-native";
 import MapView, { Circle, Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Loader from "../components/Loader";
 import SearchInput from "../components/SearchBarQuery";
 
 const { height } = Dimensions.get("window");
@@ -161,11 +161,6 @@ const Search = () => {
           isSearching={isBikeStationLoading}
         />
       </View>
-      {isBikeStationLoading && (
-        <View style={{ padding: 24, marginBottom: 15 }}>
-          <Loader textStyle={{ fontSize: 20 }} showText={false} />
-        </View>
-      )}
 
       <View style={styles.mapContainer}>
         {location ? (
@@ -253,64 +248,85 @@ const Search = () => {
           ref={scrollViewRef}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={isBikeStationLoading}
+              onRefresh={researchBikeStation}
+              colors={[THEME_COLOR]}
+            />
+          }
         >
-          {nearbyStations.length === 0
-            ? null
-            : nearbyStations.map((station: any, index: number) => (
-                <TouchableOpacity
-                  key={station._id}
-                  style={[
-                    styles.stationCard,
-                    selectedStation?._id === station._id && styles.selectedCard,
-                  ]}
-                  onLayout={(event) => {
-                    const { y } = event.nativeEvent.layout;
-                    cardPositions.current[station._id] = y;
-                  }}
-                  onPress={() => {
-                    setSelectedStation(station);
-                    router.push({
-                      pathname: "/components/user/station/[id]",
-                      params: { id: station._id },
-                    });
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.cardLeft}>
-                    <View style={styles.numberBadge}>
-                      <Text style={styles.numberText}>{index + 1}</Text>
-                    </View>
-                    <View style={styles.stationInfo}>
-                      <Text style={styles.stationName} numberOfLines={1}>
-                        {station.stationName}
-                      </Text>
-                      <Text style={styles.stationLocation} numberOfLines={1}>
-                        <Ionicons
-                          name="location-outline"
-                          size={12}
-                          color="#64748b"
-                        />{" "}
-                        {station.stationLocation}
-                      </Text>
-                    </View>
+          {nearbyStations.length === 0 ? (
+            <View style={styles.emptyState}>
+              <View
+                style={{
+                  width: 35,
+                  height: 35,
+                  borderRadius: 9999,
+                  backgroundColor: "#e6f2f5",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  marginBottom: 5,
+                }}
+              >
+                <Ionicons name="location" size={20} color={THEME_COLOR} />
+              </View>
+              <Text style={styles.emptyTitle}>No Nearby Stations</Text>
+              <Text style={styles.emptySubtitle}>
+                Try widening your search or enable location services.
+              </Text>
+            </View>
+          ) : (
+            nearbyStations.map((station: any, index: number) => (
+              <TouchableOpacity
+                key={station._id}
+                style={[
+                  styles.stationCard,
+                  selectedStation?._id === station._id && styles.selectedCard,
+                ]}
+                onLayout={(event) => {
+                  const { y } = event.nativeEvent.layout;
+                  cardPositions.current[station._id] = y;
+                }}
+                onPress={() => {
+                  setSelectedStation(station);
+                  router.push({
+                    pathname: "/components/user/station/[id]",
+                    params: { id: station._id },
+                  });
+                }}
+                activeOpacity={0.7}
+              >
+                <View style={styles.cardLeft}>
+                  <View style={styles.numberBadge}>
+                    <Text style={styles.numberText}>{index + 1}</Text>
                   </View>
-                  <View style={styles.cardRight}>
-                    <View style={styles.distanceBadge}>
-                      <Ionicons name="walk" size={14} color={THEME_COLOR} />
-                      <Text
-                        style={[styles.distanceText, { color: THEME_COLOR }]}
-                      >
-                        {formatDistance(station.distance)}
-                      </Text>
-                    </View>
-                    <Ionicons
-                      name="chevron-forward"
-                      size={20}
-                      color="#cbd5e1"
-                    />
+                  <View style={styles.stationInfo}>
+                    <Text style={styles.stationName} numberOfLines={1}>
+                      {station.stationName}
+                    </Text>
+                    <Text style={styles.stationLocation} numberOfLines={1}>
+                      <Ionicons
+                        name="location-outline"
+                        size={12}
+                        color="#64748b"
+                      />{" "}
+                      {station.stationLocation}
+                    </Text>
                   </View>
-                </TouchableOpacity>
-              ))}
+                </View>
+                <View style={styles.cardRight}>
+                  <View style={styles.distanceBadge}>
+                    <Ionicons name="walk" size={14} color={THEME_COLOR} />
+                    <Text style={[styles.distanceText, { color: THEME_COLOR }]}>
+                      {formatDistance(station.distance)}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
+                </View>
+              </TouchableOpacity>
+            ))
+          )}
           <View style={{ marginBottom: 40 }}></View>
         </ScrollView>
       </View>

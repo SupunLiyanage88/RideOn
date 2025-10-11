@@ -2,6 +2,7 @@ import {
   Bike,
   getAllBikes,
   getBikeConditionStats,
+  getBikesAwaitingApproval,
   searchBikes,
 } from "@/api/bike";
 import { images } from "@/constants/images";
@@ -12,21 +13,25 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StatusBar,
   StyleSheet,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AddBtn from "../components/AddBtn";
 import AddOrEditBikeDialog from "../components/admin/BikeManagement/AddOrEditBikeDialog";
+import BikeApprovalModal from "../components/admin/BikeManagement/BikeApprovalModal";
 import BikeCard from "../components/admin/BikeManagement/BikeCard";
 import BikeDetailsModal from "../components/admin/BikeManagement/BikeDetailsModal";
 import BikeGetCard from "../components/admin/BikeManagement/BikeGetCard";
 import Loader from "../components/Loader";
+import PendingBtn from "../components/PendingBtn";
 import SearchInput from "../components/SearchBarQuery";
 
 const BikeManagement = () => {
   const [bikeModalVisible, setBikeModalVisible] = useState(false);
   const [detailsModalVisible, setDetailsModalVisible] = useState(false);
+  const [approvalModalVisible, setApprovalModalVisible] = useState(false);
   const [selectedData, setSelectedData] = useState<Bike | null>(null);
   const { data: bikeStatData, isFetching: isBikeStatLoading } = useQuery({
     queryKey: ["bike-stat-data"],
@@ -36,6 +41,11 @@ const BikeManagement = () => {
     queryKey: ["bike-data"],
     queryFn: getAllBikes,
   });
+  const { data: awaitingApprovalBikes, isFetching: isAwaitingApprovalLoading } =
+    useQuery({
+      queryKey: ["bikes-awaiting-approval"],
+      queryFn: getBikesAwaitingApproval,
+    });
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedQuery = useDebounce(searchQuery, 500);
 
@@ -48,7 +58,7 @@ const BikeManagement = () => {
     queryFn: ({ queryKey }) => searchBikes({ query: queryKey[1] }),
   });
 
-  console.log(bikeSearchData)
+  console.log(bikeSearchData);
   const handleSearch = async (query: string) => {
     console.log("Searching for:", query);
     setSearchQuery(query);
@@ -98,10 +108,10 @@ const BikeManagement = () => {
   };
 
   const electricCount =
-    bikeData?.filter((b: Bike) => b.fuelType.toLowerCase() === "electric")
+    bikeData?.filter((b: Bike) => b.fuelType?.toLowerCase() === "electric")
       .length || 0;
   const pedalCount =
-    bikeData?.filter((b: Bike) => b.fuelType.toLowerCase() === "pedal")
+    bikeData?.filter((b: Bike) => b.fuelType?.toLowerCase() === "pedal")
       .length || 0;
 
   const electricStats = getConditionDetails(bikeStatData?.electric);
@@ -109,6 +119,7 @@ const BikeManagement = () => {
 
   return (
     <SafeAreaView edges={["left", "right"]} style={styles.safeArea}>
+      <StatusBar barStyle="light-content" />
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -120,16 +131,28 @@ const BikeManagement = () => {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.container}>
-            <AddBtn
-              title="Add New Bike"
-              backgroundColor="#083A4C"
-              textColor="#FFFFFF"
-              iconColor="#FFFFFF"
-              iconSize={25}
-              onPress={() => {
-                setBikeModalVisible(true);
-              }}
-            />
+            <View style={{ marginTop: 10}}>
+              <AddBtn
+                title="Add New Bike"
+                backgroundColor="#083A4C"
+                textColor="#FFFFFF"
+                iconColor="#FFFFFF"
+                iconSize={25}
+                onPress={() => {
+                  setBikeModalVisible(true);
+                }}
+              />
+              <PendingBtn
+                title={`Pending Approvals (${awaitingApprovalBikes?.length || 0})`}
+                backgroundColor="#F39C12"
+                textColor="#FFFFFF"
+                iconColor="#FFFFFF"
+                iconSize={25}
+                onPress={() => {
+                  setApprovalModalVisible(true);
+                }}
+              />
+            </View>
             <View style={{ flexDirection: "row", marginTop: 5 }}>
               <BikeCard
                 title="Electric Bikes"
@@ -159,7 +182,7 @@ const BikeManagement = () => {
             </View>
             {isBikeSearchLoading && (
               <View style={{ paddingBottom: 24, margin: 8 }}>
-                <Loader textStyle={{ fontSize: 20 }} showText={false} />
+                <Loader showText={false} />
               </View>
             )}
             {bikeSearchData?.map((bike: Bike) => (
@@ -198,6 +221,13 @@ const BikeManagement = () => {
               setSelectedData(null);
             }}
             defaultValues={selectedData ?? undefined}
+          />
+
+          <BikeApprovalModal
+            visible={approvalModalVisible}
+            bikes={awaitingApprovalBikes || []}
+            onClose={() => setApprovalModalVisible(false)}
+            isLoading={isAwaitingApprovalLoading}
           />
         </ScrollView>
       </KeyboardAvoidingView>

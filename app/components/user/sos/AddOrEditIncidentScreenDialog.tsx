@@ -14,6 +14,7 @@ import {
   Modal,
   Pressable,
   ScrollView,
+  Switch,
   Text,
   TextInput,
   TouchableOpacity,
@@ -42,8 +43,10 @@ const IncidentScreenDialog = ({ visible, onClose, defaultValues }: DialogProps) 
       description: "",
       date: undefined as any,
       time: "",
+      stopRide: false,
     },
   });
+  const [stopRideLocked, setStopRideLocked] = useState<boolean>(!!defaultValues?.stopRide);
 
   React.useEffect(() => {
     if (!visible) return;
@@ -56,7 +59,9 @@ const IncidentScreenDialog = ({ visible, onClose, defaultValues }: DialogProps) 
         description: defaultValues.description,
         date: new Date(defaultValues.date),
         time: defaultValues.time ? defaultValues.time.substring(0, 5) : "",
+        stopRide: defaultValues.stopRide ?? false,
       });
+      setStopRideLocked(!!defaultValues.stopRide);
     } else {
       reset({
         incidentType: undefined,
@@ -64,7 +69,9 @@ const IncidentScreenDialog = ({ visible, onClose, defaultValues }: DialogProps) 
         description: "",
         date: undefined as any,
         time: "",
+        stopRide: false,
       });
+      setStopRideLocked(false);
     }
   }, [visible, defaultValues, reset]);
 
@@ -78,7 +85,8 @@ const IncidentScreenDialog = ({ visible, onClose, defaultValues }: DialogProps) 
       alert("Incident Save successful");
       reset();
       onClose();
-      queryClient.invalidateQueries({ queryKey: ["incident-data"] });
+      queryClient.invalidateQueries({ queryKey: ["incident-user-data"] });
+      queryClient.invalidateQueries({ queryKey: ["station-rented-bike"] });
     },
     onError: (data) => {
       alert("Incident Save failed");
@@ -92,7 +100,7 @@ const IncidentScreenDialog = ({ visible, onClose, defaultValues }: DialogProps) 
       alert("Incident Updated Successful");
       reset();
       onClose();
-      queryClient.invalidateQueries({ queryKey: ["incident-data"] });
+      queryClient.invalidateQueries({ queryKey: ["incident-user-data"] });
     },
     onError: (data) => {
       alert("Incident Update failed");
@@ -121,6 +129,7 @@ const IncidentScreenDialog = ({ visible, onClose, defaultValues }: DialogProps) 
       description: "",
       date: undefined as any,
       time: "",
+      stopRide: false,
     });
     onClose();
   };
@@ -147,7 +156,7 @@ const IncidentScreenDialog = ({ visible, onClose, defaultValues }: DialogProps) 
 
           <ScrollView showsVerticalScrollIndicator={false}>
             {/* Incident Type */}
-            <View style={{ backgroundColor: "#FFFFFF", borderRadius: 24, paddingHorizontal: 16, marginBottom: 16 }}>
+            <View style={{ backgroundColor: "#FFFFFF", borderRadius: 24, paddingHorizontal: 16 }}>
               <Text style={{ fontWeight: "700", marginBottom: 12, marginTop: 16 }}>Incident Type ?</Text>
               <Controller
                 control={control}
@@ -167,7 +176,7 @@ const IncidentScreenDialog = ({ visible, onClose, defaultValues }: DialogProps) 
             </View>
 
             {/* Incident Level */}
-            <View style={{ backgroundColor: "#FFFFFF", borderRadius: 24, paddingHorizontal: 16, marginBottom: 16 }}>
+            <View style={{ backgroundColor: "#FFFFFF", borderRadius: 24, paddingHorizontal: 14 }}>
               <Text style={{ fontWeight: "700", marginBottom: 12, marginTop: 8 }}>Incident Level ?</Text>
               <Controller
                 control={control}
@@ -218,7 +227,7 @@ const IncidentScreenDialog = ({ visible, onClose, defaultValues }: DialogProps) 
             </View>
 
             {/* Incident Date */}
-            <View style={{ backgroundColor: "#FFFFFF", borderRadius: 24, paddingHorizontal: 16, paddingBottom: 24, marginBottom: 16 }}>
+            <View style={{ backgroundColor: "#FFFFFF", borderRadius: 24, paddingHorizontal: 16, paddingBottom: 15 }}>
               <Text style={{ fontWeight: "700", marginBottom: 12 }}>Incident Date</Text>
               <Controller
                 control={control}
@@ -253,7 +262,7 @@ const IncidentScreenDialog = ({ visible, onClose, defaultValues }: DialogProps) 
             </View>
 
             {/* Incident Time */}
-            <View style={{ backgroundColor: "#FFFFFF", borderRadius: 24, paddingHorizontal: 16, paddingBottom: 40, marginBottom: 16 }}>
+            <View style={{ backgroundColor: "#FFFFFF", borderRadius: 24, paddingHorizontal: 16 }}>
               <Text style={{ fontWeight: "700", marginBottom: 12, marginTop: 8 }}>Incident Time</Text>
               <Controller
                 control={control}
@@ -300,6 +309,31 @@ const IncidentScreenDialog = ({ visible, onClose, defaultValues }: DialogProps) 
                   );
                 }}
               />
+            </View>
+
+            <View style={{ backgroundColor: "#FFFFFF", borderRadius: 24, paddingHorizontal: 14 , marginBottom: 16 }}>
+              <Controller
+                control={control}
+                name="stopRide"
+                defaultValue={defaultValues?.stopRide}
+                render={({ field: { value, onChange } }) => (
+                  <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 8 }}>
+                    <Text style={{ fontWeight: "700", marginTop: 8 }}>Do you need to stop the ride?</Text>
+                    <Switch
+                      value={!!value}
+                      disabled={!!defaultValues?.stopRide}
+                      onValueChange={(val) => onChange(val)}
+                      trackColor={{ false: "#D1D5DB", true: "#93C5FD" }}
+                      thumbColor={value ? "#2563EB" : "#F3F4F6"}
+                    />
+                  </View>
+                )}
+              />
+              {!!defaultValues?.stopRide && (
+                <Text style={{ color: "#6B7280", fontSize: 12, marginTop: 4 }}>
+                  Incident already stopped the ride.
+                </Text>
+              )}
             </View>
 
             {/* Submit */}
