@@ -317,8 +317,8 @@ const IncidentScreenDialog = ({ visible, onClose, defaultValues }: DialogProps) 
                 name="stopRide"
                 defaultValue={defaultValues?.stopRide}
                 render={({ field: { value, onChange } }) => (
-                  <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 8 }}>
-                    <Text style={{ fontWeight: "700", marginTop: 8 }}>Do you need to stop the ride?</Text>
+                  <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 8, marginTop: 18 }}>
+                    <Text style={{ fontWeight: "700",  }}>Do you need to stop the ride?</Text>
                     <Switch
                       value={!!value}
                       disabled={!!defaultValues?.stopRide}
