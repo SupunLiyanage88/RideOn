@@ -1,5 +1,5 @@
 import React from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity } from "react-native";
 
 type StatCardProps = {
   title: string;
@@ -9,7 +9,7 @@ type StatCardProps = {
 
 const StatCard = ({ title, value, isLoading }: StatCardProps) => {
   return (
-    <View style={styles.container}>
+    <TouchableOpacity style={styles.container}>
       <Text style={styles.title}>{title}</Text>
       {isLoading ? (
         <ActivityIndicator size="small" color="#6366F1" style={styles.loader} />
@@ -18,7 +18,7 @@ const StatCard = ({ title, value, isLoading }: StatCardProps) => {
           {value ?? 0}
         </Text>
       )}
-    </View>
+    </TouchableOpacity>
   );
 };
 

@@ -34,7 +34,6 @@ const Admin = () => {
     queryFn: getAllBikes,
   });
 
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <Text style={styles.title}>Ride On Admin</Text>
@@ -83,7 +82,7 @@ const Admin = () => {
           color="#37A77D"
           onPress={() => router.push("/(admin)/BikeManagement")}
         />
-                <ManagementCard
+        <ManagementCard
           title="Emergency Management"
           icon={<AntDesign name="alert" size={24} color="white" />}
           color="#B83434"
@@ -95,7 +94,6 @@ const Admin = () => {
           color="#083A4C"
           onPress={() => router.push("/(admin)/StationManagement")}
         />
-
 
         <ManagementCard
           title="Payment Management"

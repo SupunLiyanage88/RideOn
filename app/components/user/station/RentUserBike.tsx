@@ -102,12 +102,6 @@ const RentUserBike = ({
       fetchObstacleData({ category: obstacleCategory }),
   });
 
-  useEffect(() => {
-    if (typeof obstacleCategory === "string") {
-      reFetchObstacleData();
-    }
-  }, [obstacleCategory]);
-
   const colorForCategory = useMemo(
     () => ({
       ACCIDENTS: "#D32F2F",
@@ -567,7 +561,7 @@ const RentUserBike = ({
                     return (
                       <TouchableOpacity
                         key={cat.key}
-                        onPress={() => setObstacleCategory(cat.label)}
+                        onPress={() => {setObstacleCategory(cat.label)}}
                         activeOpacity={0.8}
                         style={{
                           marginRight:
@@ -593,6 +587,8 @@ const RentUserBike = ({
                               borderRadius: 999,
                               paddingVertical: 4,
                               paddingHorizontal: 8,
+                              justifyContent: "center",
+                              alignItems: "center"
                             }}
                           >
                             <Text
