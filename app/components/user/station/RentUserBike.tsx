@@ -681,7 +681,7 @@ const RentUserBike = ({
                         </View>
                         <Text style={styles.detailLabel}>Available RC</Text>
                       </View>
-                      <Text style={styles.basicChip}>{user?.rc} RC</Text>
+                      <Text style={styles.basicChip}>{(user?.rc)?.toFixed(2)} RC</Text>
                     </View>
                   )}
                   {((!rentedBikeData && navigationSet) || selectedStation) && (
