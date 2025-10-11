@@ -13,6 +13,7 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import Feather from "@expo/vector-icons/Feather";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import ResetOnboardingButton from "../components/ResetOnboardingButton";
 import StatCard from "../components/StatCard";
 
 const Admin = () => {
@@ -94,7 +95,6 @@ const Admin = () => {
           color="#083A4C"
           onPress={() => router.push("/(admin)/StationManagement")}
         />
-
         <ManagementCard
           title="Payment Management"
           icon={<MaterialIcons name="payment" size={24} color="white" />}
@@ -107,6 +107,7 @@ const Admin = () => {
           color="#F79F1B"
           onPress={() => router.push("/(admin)/PackageManagement")}
         />
+        <ResetOnboardingButton />
 
         <View style={{ marginBottom: 45 }}></View>
       </ScrollView>

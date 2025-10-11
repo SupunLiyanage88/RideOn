@@ -18,16 +18,111 @@ import {
 import MapView, { Callout, Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 
-const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "";;
+const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "";
+
+// Enhanced color palette for better UX
 const THEME_COLOR = "#083A4C";
-const WARNING_COLOR = "#FF4757";
-const SUCCESS_COLOR = "#2ED573";
-const SECONDARY_COLOR = "#1E90FF";
-const ACCENT_COLOR = "#FF6B81";
-const NEUTRAL_COLOR = "#F1F2F6";
+const WARNING_COLOR = "#FF6B35";
+const SUCCESS_COLOR = "#37A77D";
+const SECONDARY_COLOR = "#4A90E2";
+const ACCENT_COLOR = "#7B68EE";
+const NEUTRAL_COLOR = "#F8F9FA";
+const LIGHT_GRAY = "#E9ECEF";
+const DARK_GRAY = "#495057";
+const SHADOW_COLOR = "#000";
 
 const MAX_DEVIATION_METERS = 1000;
 const { width, height } = Dimensions.get("window");
+
+// Map styles for different themes
+const mapStyles = [
+  {
+    elementType: 'geometry',
+    stylers: [{ color: '#f5f5f5' }]
+  },
+  {
+    elementType: 'labels.icon',
+    stylers: [{ visibility: 'off' }]
+  },
+  {
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#616161' }]
+  },
+  {
+    elementType: 'labels.text.stroke',
+    stylers: [{ color: '#f5f5f5' }]
+  },
+  {
+    featureType: 'administrative.land_parcel',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#bdbdbd' }]
+  },
+  {
+    featureType: 'poi',
+    elementType: 'geometry',
+    stylers: [{ color: '#eeeeee' }]
+  },
+  {
+    featureType: 'poi',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#757575' }]
+  },
+  {
+    featureType: 'poi.park',
+    elementType: 'geometry',
+    stylers: [{ color: '#e5e5e5' }]
+  },
+  {
+    featureType: 'poi.park',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#9e9e9e' }]
+  },
+  {
+    featureType: 'road',
+    elementType: 'geometry',
+    stylers: [{ color: '#ffffff' }]
+  },
+  {
+    featureType: 'road.arterial',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#757575' }]
+  },
+  {
+    featureType: 'road.highway',
+    elementType: 'geometry',
+    stylers: [{ color: '#dadada' }]
+  },
+  {
+    featureType: 'road.highway',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#616161' }]
+  },
+  {
+    featureType: 'road.local',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#9e9e9e' }]
+  },
+  {
+    featureType: 'transit.line',
+    elementType: 'geometry',
+    stylers: [{ color: '#e5e5e5' }]
+  },
+  {
+    featureType: 'transit.station',
+    elementType: 'geometry',
+    stylers: [{ color: '#eeeeee' }]
+  },
+  {
+    featureType: 'water',
+    elementType: 'geometry',
+    stylers: [{ color: '#c9c9c9' }]
+  },
+  {
+    featureType: 'water',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#9e9e9e' }]
+  }
+];
 
 interface DeviationInfo {
   userId: string;
@@ -51,6 +146,10 @@ const BikeSecurity = () => {
   const [showContactModal, setShowContactModal] = useState(false);
   const [userToContact, setUserToContact] = useState<any>(null);
   const [location, setLocation] = useState<Coordinate | null>(null);
+  const [isPanelCollapsed, setIsPanelCollapsed] = useState(false);
+  const [filterMode, setFilterMode] = useState<'all' | 'warnings' | 'safe'>('all');
+  const [showRoutes, setShowRoutes] = useState(true);
+  const [mapType, setMapType] = useState<'standard' | 'satellite' | 'hybrid'>('standard');
 
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const slideAnim = useRef(new Animated.Value(100)).current;
@@ -313,20 +412,44 @@ const BikeSecurity = () => {
 
   return (
     <View style={styles.container}>
-      {/* Map */}
+      {/* Enhanced Map with custom styling */}
       <MapView
         ref={mapRef}
         style={styles.map}
         provider={PROVIDER_GOOGLE}
+        customMapStyle={mapStyles}
+        mapType={mapType}
         showsUserLocation
+        showsMyLocationButton={false}
+        showsCompass={false}
+        showsScale={true}
+        showsTraffic={false}
+        loadingEnabled={true}
+        loadingIndicatorColor={THEME_COLOR}
+        loadingBackgroundColor={NEUTRAL_COLOR}
+        moveOnMarkerPress={false}
+        showsPointsOfInterest={false}
         initialRegion={{
           latitude: 7.2,
           longitude: 80.6,
           latitudeDelta: 2,
           longitudeDelta: 2,
         }}
+        onMapReady={() => {
+          // Fit to coordinates when map is ready
+          setTimeout(() => {
+            fitAllStations();
+          }, 1000);
+        }}
       >
-        {rentedBikeData.map((rental: any) => {
+        {rentedBikeData
+          .filter((rental: any) => {
+            const isDeviating = deviations[rental._id];
+            if (filterMode === 'warnings') return isDeviating;
+            if (filterMode === 'safe') return !isDeviating;
+            return true; // 'all' mode
+          })
+          .map((rental: any) => {
           const isDeviating = deviations[rental._id];
           const isSelected = selectedUser?._id === rental._id;
 
@@ -347,150 +470,298 @@ const BikeSecurity = () => {
 
           return (
             <React.Fragment key={rental._id}>
-              {/* Station Markers */}
-              <Marker coordinate={stationLocation}>
-                <View style={[styles.marker, styles.stationMarker]}>
-                  <Ionicons name="flag" size={14} color="#fff" />
+              {/* Enhanced Station Markers */}
+              <Marker coordinate={stationLocation} identifier={`station-${rental._id}`}>
+                <View style={[styles.marker, styles.stationMarker, isSelected && styles.selectedMarkerBorder]}>
+                  <View style={styles.markerInner}>
+                    <Ionicons name="flag" size={16} color="#fff" />
+                  </View>
+                  {isSelected && <View style={styles.markerPulse} />}
                 </View>
-                <Callout style={styles.callout}>
+                <Callout style={styles.enhancedCallout}>
                   <View style={styles.calloutContent}>
-                    <Text style={styles.calloutTitle}>Destination Station</Text>
+                    <View style={styles.calloutHeader}>
+                      <MaterialIcons name="place" size={20} color={SECONDARY_COLOR} />
+                      <Text style={styles.calloutTitle}>Destination</Text>
+                    </View>
                     <Text style={styles.calloutText}>
-                      {rental.selectedStationId?.stationName || "Unknown"}
+                      {rental.selectedStationId?.stationName || "Bike Station"}
                     </Text>
+                    <Text style={styles.calloutSubtext}>Drop-off location</Text>
                   </View>
                 </Callout>
               </Marker>
 
-              <Marker coordinate={fromLocation}>
-                <View style={[styles.marker, styles.originMarker]}>
-                  <Ionicons name="location" size={14} color="#fff" />
+              <Marker coordinate={fromLocation} identifier={`origin-${rental._id}`}>
+                <View style={[styles.marker, styles.originMarker, isSelected && styles.selectedMarkerBorder]}>
+                  <View style={styles.markerInner}>
+                    <MaterialIcons name="my-location" size={16} color="#fff" />
+                  </View>
+                  {isSelected && <View style={styles.markerPulse} />}
                 </View>
-                <Callout style={styles.callout}>
+                <Callout style={styles.enhancedCallout}>
                   <View style={styles.calloutContent}>
-                    <Text style={styles.calloutTitle}>Start Point</Text>
+                    <View style={styles.calloutHeader}>
+                      <MaterialIcons name="location-on" size={20} color="#9b59b6" />
+                      <Text style={styles.calloutTitle}>Start Point</Text>
+                    </View>
                     <Text style={styles.calloutText}>
-                      {rental.fromLocation || "Starting Location"}
+                      {rental.fromLocation || "Pick-up Location"}
                     </Text>
+                    <Text style={styles.calloutSubtext}>Journey started here</Text>
                   </View>
                 </Callout>
               </Marker>
 
-              {/* User Marker with Animation */}
-              <Marker coordinate={userLocation}>
+              {/* Enhanced User Marker with Animation */}
+              <Marker coordinate={userLocation} identifier={`user-${rental._id}`}>
                 <Animated.View
                   style={[
                     styles.marker,
+                    styles.userMarkerContainer,
                     isDeviating ? styles.warningMarker : styles.userMarker,
-                    isSelected && styles.selectedMarker,
+                    isSelected && styles.selectedMarkerBorder,
                     isDeviating && {
                       transform: [{ scale: pulseAnim }],
                     },
                   ]}
                 >
-                  <Ionicons
-                    name={isDeviating ? "warning" : "person"}
-                    size={14}
-                    color="#fff"
-                  />
+                  <View style={styles.markerInner}>
+                    <View style={[styles.userAvatar, isDeviating && styles.userAvatarWarning]}>
+                      <Text style={styles.userAvatarText}>
+                        {rental.userId.userName.charAt(0).toUpperCase()}
+                      </Text>
+                    </View>
+                    {isDeviating && (
+                      <View style={styles.warningIndicator}>
+                        <MaterialIcons name="warning" size={12} color="#fff" />
+                      </View>
+                    )}
+                  </View>
+                  {isSelected && <View style={styles.markerPulse} />}
+                  {isDeviating && (
+                    <Animated.View 
+                      style={[
+                        styles.warningPulse,
+                        {
+                          transform: [{ scale: pulseAnim }],
+                          opacity: pulseAnim.interpolate({
+                            inputRange: [1, 1.3],
+                            outputRange: [0.3, 0.1],
+                          }),
+                        },
+                      ]}
+                    />
+                  )}
                 </Animated.View>
-                <Callout style={styles.callout}>
+                <Callout style={styles.enhancedCallout}>
                   <View style={styles.calloutContent}>
-                    <Text style={styles.calloutTitle}>
-                      {rental.userId.userName}
-                    </Text>
-                    <Text style={styles.calloutText}>
-                      Bike: {rental.bikeId.bikeId}
-                    </Text>
-                    <Text style={styles.calloutText}>
-                      Phone: {rental.userId.mobile}
-                    </Text>
+                    <View style={styles.calloutHeader}>
+                      <View style={[styles.userAvatar, { width: 24, height: 24, borderRadius: 12 }, isDeviating && styles.userAvatarWarning]}>
+                        <Text style={[styles.userAvatarText, { fontSize: 10 }]}>
+                          {rental.userId.userName.charAt(0).toUpperCase()}
+                        </Text>
+                      </View>
+                      <Text style={styles.calloutTitle}>
+                        {rental.userId.userName}
+                      </Text>
+                      {isDeviating && (
+                        <View style={styles.calloutStatusBadge}>
+                          <MaterialIcons name="warning" size={12} color="#fff" />
+                        </View>
+                      )}
+                    </View>
+                    
+                    <View style={styles.calloutInfo}>
+                      <View style={styles.calloutInfoRow}>
+                        <MaterialIcons name="directions-bike" size={16} color={THEME_COLOR} />
+                        <Text style={styles.calloutText}>Bike: {rental.bikeId.bikeId}</Text>
+                      </View>
+                      <View style={styles.calloutInfoRow}>
+                        <MaterialIcons name="phone" size={16} color={THEME_COLOR} />
+                        <Text style={styles.calloutText}>{rental.userId.mobile}</Text>
+                      </View>
+                      <View style={styles.calloutInfoRow}>
+                        <MaterialIcons name="email" size={16} color={THEME_COLOR} />
+                        <Text style={styles.calloutText}>{rental.userId.email}</Text>
+                      </View>
+                    </View>
+
                     {isDeviating && (
                       <View style={styles.calloutWarning}>
-                        <Text style={styles.warningText}>
-                          ⚠️ Deviation:{" "}
-                          {(deviations[rental._id].deviation / 1000).toFixed(2)}{" "}
-                          km
+                        <View style={styles.calloutWarningHeader}>
+                          <MaterialIcons name="warning" size={16} color={WARNING_COLOR} />
+                          <Text style={styles.warningText}>Route Deviation</Text>
+                        </View>
+                        <Text style={styles.warningSubtext}>
+                          {(deviations[rental._id].deviation / 1000).toFixed(2)} km off planned route
                         </Text>
+                        <TouchableOpacity
+                          style={styles.calloutContactButton}
+                          onPress={() => {
+                            setUserToContact(rental);
+                            setShowContactModal(true);
+                          }}
+                        >
+                          <MaterialIcons name="phone" size={14} color="#fff" />
+                          <Text style={styles.calloutContactText}>Contact</Text>
+                        </TouchableOpacity>
                       </View>
                     )}
                   </View>
                 </Callout>
               </Marker>
 
-              {/* Route */}
-              <MapViewDirections
-                origin={fromLocation}
-                destination={stationLocation}
-                apikey={GOOGLE_MAPS_API_KEY}
-                strokeWidth={isSelected ? 5 : 3}
-                strokeColor={isDeviating ? WARNING_COLOR : THEME_COLOR}
-                optimizeWaypoints
-                onReady={(result) => {
-                  setRoutes((prev) => ({
-                    ...prev,
-                    [rental._id]: result.coordinates,
-                  }));
-                }}
-              />
+              {/* Enhanced Route with conditional rendering */}
+              {showRoutes && (
+                <MapViewDirections
+                  origin={fromLocation}
+                  destination={stationLocation}
+                  apikey={GOOGLE_MAPS_API_KEY}
+                  strokeWidth={isSelected ? 6 : isDeviating ? 4 : 3}
+                  strokeColor={isSelected ? ACCENT_COLOR : isDeviating ? WARNING_COLOR : THEME_COLOR}
+                  optimizeWaypoints
+                  precision="high"
+                  mode="DRIVING"
+                  onReady={(result) => {
+                    setRoutes((prev) => ({
+                      ...prev,
+                      [rental._id]: result.coordinates,
+                    }));
+                  }}
+                  onError={(errorMessage) => {
+                    console.log('Route error:', errorMessage);
+                  }}
+                />
+              )}
             </React.Fragment>
           );
         })}
       </MapView>
 
-      {/* Top Controls */}
-      <View style={styles.topBar}>
-        <TouchableOpacity
-          style={styles.usersButton}
-          onPress={() => setShowUsersModal(true)}
-        >
-          <Ionicons name="people" size={20} color="#083A4C" />
-          <Text style={styles.buttonText}>Users ({rentedBikeData.length})</Text>
-          {warningCount > 0 && (
-            <Animated.View
-              style={[
-                styles.warningCount,
-                {
-                  transform: [
-                    {
-                      scale: bounceAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [1, 1.2],
-                      }),
-                    },
-                  ],
-                },
-              ]}
+      {/* Enhanced Top Controls */}
+      <View style={styles.topControlsContainer}>
+        {/* Main Controls Row */}
+        <View style={styles.topBar}>
+          <TouchableOpacity
+            style={styles.usersButton}
+            onPress={() => setShowUsersModal(true)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="people" size={20} color={THEME_COLOR} />
+            <Text style={styles.buttonText}>Users ({rentedBikeData.length})</Text>
+            {warningCount > 0 && (
+              <Animated.View
+                style={[
+                  styles.warningCount,
+                  {
+                    transform: [
+                      {
+                        scale: bounceAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [1, 1.2],
+                        }),
+                      },
+                    ],
+                  },
+                ]}
+              >
+                <Text style={styles.warningCountText}>{warningCount}</Text>
+              </Animated.View>
+            )}
+          </TouchableOpacity>
+
+          <View style={styles.rightControls}>
+            <TouchableOpacity
+              style={styles.controlButton}
+              onPress={fitAllStations}
+              activeOpacity={0.8}
             >
-              <Text style={styles.warningCountText}>{warningCount}</Text>
-            </Animated.View>
-          )}
-        </TouchableOpacity>
+              <Ionicons name="scan" size={18} color="#fff" />
+            </TouchableOpacity>
 
-        <View style={{ display: "flex", flexDirection: "row", gap: 10 }}>
-          <TouchableOpacity
-            style={styles.refreshBtn}
-            onPress={fitAllStations}
-          >
-            <Ionicons name="expand" size={20} color={"white"} />
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.controlButton, isFetching && styles.controlButtonActive]}
+              onPress={() => refetchRentedBikeData()}
+              disabled={isFetching}
+              activeOpacity={0.8}
+            >
+              <Animated.View
+                style={isFetching ? { transform: [{ rotate: '360deg' }] } : {}}
+              >
+                <Ionicons name="refresh" size={18} color="#fff" />
+              </Animated.View>
+            </TouchableOpacity>
+          </View>
+        </View>
 
-          <TouchableOpacity
-            style={[styles.refreshBtn, isFetching && styles.refreshBtnActive]}
-            onPress={() => refetchRentedBikeData()}
-            disabled={isFetching}
-          >
-            <Ionicons
-              name="refresh"
-              size={18}
-              color="#fff"
-              style={isFetching ? styles.rotatingIcon : undefined}
-            />
-          </TouchableOpacity>
+        {/* Filter Controls */}
+        <View style={styles.filterControls}>
+          <View style={styles.filterButtons}>
+            <TouchableOpacity
+              style={[styles.filterButton, filterMode === 'all' && styles.filterButtonActive]}
+              onPress={() => setFilterMode('all')}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.filterButtonText, filterMode === 'all' && styles.filterButtonTextActive]}>
+                All
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.filterButton, filterMode === 'warnings' && styles.filterButtonActive]}
+              onPress={() => setFilterMode('warnings')}
+              activeOpacity={0.8}
+            >
+              <MaterialIcons 
+                name="warning" 
+                size={14} 
+                color={filterMode === 'warnings' ? '#fff' : WARNING_COLOR} 
+              />
+              <Text style={[styles.filterButtonText, filterMode === 'warnings' && styles.filterButtonTextActive]}>
+                Alerts ({warningCount})
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.filterButton, filterMode === 'safe' && styles.filterButtonActive]}
+              onPress={() => setFilterMode('safe')}
+              activeOpacity={0.8}
+            >
+              <MaterialIcons 
+                name="check-circle" 
+                size={14} 
+                color={filterMode === 'safe' ? '#fff' : SUCCESS_COLOR} 
+              />
+              <Text style={[styles.filterButtonText, filterMode === 'safe' && styles.filterButtonTextActive]}>
+                Safe ({rentedBikeData.length - warningCount})
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.mapControls}>
+            <TouchableOpacity
+              style={[styles.mapControlButton, showRoutes && styles.mapControlButtonActive]}
+              onPress={() => setShowRoutes(!showRoutes)}
+              activeOpacity={0.8}
+            >
+              <MaterialIcons name="route" size={16} color={showRoutes ? '#fff' : THEME_COLOR} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.mapControlButton}
+              onPress={() => {
+                const types: ('standard' | 'satellite' | 'hybrid')[] = ['standard', 'satellite', 'hybrid'];
+                const currentIndex = types.indexOf(mapType);
+                const nextIndex = (currentIndex + 1) % types.length;
+                setMapType(types[nextIndex]);
+              }}
+              activeOpacity={0.8}
+            >
+              <MaterialIcons name="layers" size={16} color={THEME_COLOR} />
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 
-      {/* Modern Bottom Summary Panel */}
+      {/* Enhanced Collapsible Bottom Panel */}
       <Animated.View
         style={[
           styles.bottomPanel,
@@ -500,82 +771,98 @@ const BikeSecurity = () => {
           },
         ]}
       >
-        <View style={styles.panelHeader}>
+        <TouchableOpacity
+          style={styles.panelHeader}
+          onPress={() => setIsPanelCollapsed(!isPanelCollapsed)}
+          activeOpacity={0.8}
+        >
           <View style={styles.headerLeft}>
             <Text style={styles.panelTitle}>Security Overview</Text>
-            <Text style={styles.panelSubtitle}>Real-time monitoring</Text>
+            <Text style={styles.panelSubtitle}>
+              {isFetching ? 'Updating...' : 'Real-time monitoring'}
+            </Text>
           </View>
           <View style={styles.headerRight}>
             <View style={styles.timeIndicator}>
-              <Ionicons name="time" size={12} color="#37A77D" />
+              <View style={[styles.liveIndicator, isFetching && styles.liveIndicatorActive]} />
               <Text style={styles.timeText}>Live</Text>
             </View>
+            <Ionicons 
+              name={isPanelCollapsed ? "chevron-up" : "chevron-down"} 
+              size={20} 
+              color={THEME_COLOR}
+              style={{ marginLeft: 8 }}
+            />
           </View>
-        </View>
+        </TouchableOpacity>
 
-        <View style={styles.statsGrid}>
-          <View style={styles.statCard}>
-            <View
-              style={[
-                styles.statIconContainer,
-                { backgroundColor: THEME_COLOR },
-              ]}
-            >
-              <Ionicons name="bicycle" size={20} color="#fff" />
-            </View>
-            <View style={styles.statContent}>
-              <Text style={styles.statValue}>{rentedBikeData.length}</Text>
-              <Text style={styles.statLabel}>Active Rides</Text>
-            </View>
-          </View>
+        {!isPanelCollapsed && (
+          <View style={styles.panelContent}>
+            <View style={styles.statsGrid}>
+              <View style={styles.statCard}>
+                <View
+                  style={[
+                    styles.statIconContainer,
+                    { backgroundColor: THEME_COLOR },
+                  ]}
+                >
+                  <Ionicons name="bicycle" size={20} color="#fff" />
+                </View>
+                <View style={styles.statContent}>
+                  <Text style={styles.statValue}>{rentedBikeData.length}</Text>
+                  <Text style={styles.statLabel}>Active Rides</Text>
+                </View>
+              </View>
 
-          <View style={styles.statCard}>
-            <View
-              style={[
-                styles.statIconContainer,
-                { backgroundColor: WARNING_COLOR },
-              ]}
-            >
-              <MaterialIcons name="warning" size={18} color="#fff" />
-            </View>
-            <View style={styles.statContent}>
-              <Text style={[styles.statValue, { color: WARNING_COLOR }]}>
-                {warningCount}
-              </Text>
-              <Text style={styles.statLabel}>Deviations</Text>
-            </View>
-          </View>
+              <View style={styles.statCard}>
+                <View
+                  style={[
+                    styles.statIconContainer,
+                    { backgroundColor: WARNING_COLOR },
+                  ]}
+                >
+                  <MaterialIcons name="warning" size={18} color="#fff" />
+                </View>
+                <View style={styles.statContent}>
+                  <Text style={[styles.statValue, { color: WARNING_COLOR }]}>
+                    {warningCount}
+                  </Text>
+                  <Text style={styles.statLabel}>Deviations</Text>
+                </View>
+              </View>
 
-          <View style={styles.statCard}>
-            <View
-              style={[
-                styles.statIconContainer,
-                { backgroundColor: SUCCESS_COLOR },
-              ]}
-            >
-              <MaterialIcons name="check-circle" size={18} color="#fff" />
+              <View style={styles.statCard}>
+                <View
+                  style={[
+                    styles.statIconContainer,
+                    { backgroundColor: SUCCESS_COLOR },
+                  ]}
+                >
+                  <MaterialIcons name="check-circle" size={18} color="#fff" />
+                </View>
+                <View style={styles.statContent}>
+                  <Text style={[styles.statValue, { color: SUCCESS_COLOR }]}>
+                    {rentedBikeData.length - warningCount}
+                  </Text>
+                  <Text style={styles.statLabel}>On Track</Text>
+                </View>
+              </View>
             </View>
-            <View style={styles.statContent}>
-              <Text style={[styles.statValue, { color: SUCCESS_COLOR }]}>
-                {rentedBikeData.length - warningCount}
-              </Text>
-              <Text style={styles.statLabel}>On Track</Text>
-            </View>
-          </View>
-        </View>
 
-        {warningCount > 0 && (
-          <View style={styles.alertBanner}>
-            <MaterialIcons name="notifications" size={16} color="#fff" />
-            <Text style={styles.alertText}>
-              {warningCount} user{warningCount > 1 ? "s" : ""} need attention
-            </Text>
-            <TouchableOpacity
-              style={styles.alertButton}
-              onPress={() => setShowUsersModal(true)}
-            >
-              <Text style={styles.alertButtonText}>View</Text>
-            </TouchableOpacity>
+            {warningCount > 0 && (
+              <View style={styles.alertBanner}>
+                <MaterialIcons name="notifications" size={16} color="#fff" />
+                <Text style={styles.alertText}>
+                  {warningCount} user{warningCount > 1 ? "s" : ""} need attention
+                </Text>
+                <TouchableOpacity
+                  style={styles.alertButton}
+                  onPress={() => setShowUsersModal(true)}
+                >
+                  <Text style={styles.alertButtonText}>View</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         )}
       </Animated.View>
@@ -966,14 +1253,10 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   topBar: {
-    position: "absolute",
-    top: 60,
-    left: 20,
-    right: 20,
-    zIndex: 100,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    marginBottom: 12,
   },
   usersButton: {
     backgroundColor: "rgba(255, 255, 255, 0.95)",
@@ -1023,20 +1306,22 @@ const styles = StyleSheet.create({
   },
   bottomPanel: {
     position: "absolute",
-    bottom: 20,
-    left: 20,
-    right: 20,
+    bottom: 16,
+    left: 16,
+    right: 16,
     backgroundColor: "rgba(255, 255, 255, 0.98)",
-    borderRadius: 24,
-    padding: 20,
+    borderRadius: 20,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
     zIndex: 100,
     elevation: 12,
-    shadowColor: "#000",
+    shadowColor: SHADOW_COLOR,
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.3)",
+    borderColor: "rgba(255, 255, 255, 0.2)",
+    backdropFilter: "blur(20px)",
   },
   panelHeader: {
     flexDirection: "row",
@@ -1138,14 +1423,17 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   marker: {
-    padding: 10,
-    borderRadius: 25,
-    borderWidth: 3,
+    padding: 8,
+    borderRadius: 22,
+    borderWidth: 2,
     borderColor: "#fff",
-    elevation: 5,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
+    elevation: 8,
+    shadowColor: SHADOW_COLOR,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
   },
   stationMarker: {
     backgroundColor: "#1E90FF",
@@ -1447,5 +1735,225 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     color: THEME_COLOR,
+  },
+  // New enhanced UI styles
+  topControlsContainer: {
+    position: "absolute",
+    top: 50,
+    left: 16,
+    right: 16,
+    zIndex: 100,
+  },
+  rightControls: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  controlButton: {
+    backgroundColor: THEME_COLOR,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 8,
+    shadowColor: SHADOW_COLOR,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+  },
+  controlButtonActive: {
+    backgroundColor: SUCCESS_COLOR,
+  },
+  filterControls: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 12,
+    paddingHorizontal: 4,
+  },
+  filterButtons: {
+    flexDirection: "row",
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    borderRadius: 20,
+    padding: 4,
+    flex: 1,
+    marginRight: 12,
+    elevation: 6,
+    shadowColor: SHADOW_COLOR,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+  },
+  filterButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    gap: 4,
+  },
+  filterButtonActive: {
+    backgroundColor: THEME_COLOR,
+  },
+  filterButtonText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: DARK_GRAY,
+  },
+  filterButtonTextActive: {
+    color: "#fff",
+  },
+  mapControls: {
+    flexDirection: "row",
+    gap: 6,
+  },
+  mapControlButton: {
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 6,
+    shadowColor: SHADOW_COLOR,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+  },
+  mapControlButtonActive: {
+    backgroundColor: THEME_COLOR,
+  },
+  panelContent: {
+    marginTop: 16,
+  },
+  liveIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: SUCCESS_COLOR,
+    marginRight: 6,
+  },
+  liveIndicatorActive: {
+    backgroundColor: WARNING_COLOR,
+  },
+  // Enhanced marker styles
+  selectedMarkerBorder: {
+    borderColor: "#FFD700",
+    borderWidth: 3,
+    shadowColor: "#FFD700",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+    elevation: 15,
+  },
+  markerInner: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  markerPulse: {
+    position: "absolute",
+    top: -5,
+    left: -5,
+    right: -5,
+    bottom: -5,
+    borderRadius: 30,
+    borderWidth: 2,
+    borderColor: "#FFD700",
+    backgroundColor: "rgba(255, 215, 0, 0.2)",
+  },
+  // Enhanced callout styles
+  enhancedCallout: {
+    minWidth: 250,
+    maxWidth: 300,
+  },
+  calloutHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+    gap: 8,
+  },
+  calloutSubtext: {
+    fontSize: 12,
+    color: "#999",
+    fontStyle: "italic",
+    marginTop: 4,
+  },
+  // Enhanced user marker styles
+  userMarkerContainer: {
+    position: "relative",
+  },
+  userAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: SUCCESS_COLOR,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#fff",
+  },
+  userAvatarWarning: {
+    backgroundColor: WARNING_COLOR,
+  },
+  userAvatarText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "bold",
+  },
+  warningIndicator: {
+    position: "absolute",
+    top: -4,
+    right: -4,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: WARNING_COLOR,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#fff",
+  },
+  warningPulse: {
+    position: "absolute",
+    top: -10,
+    left: -10,
+    right: -10,
+    bottom: -10,
+    borderRadius: 35,
+    backgroundColor: WARNING_COLOR,
+  },
+  // Enhanced callout info styles
+  calloutStatusBadge: {
+    backgroundColor: WARNING_COLOR,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: "auto",
+  },
+  calloutInfo: {
+    marginTop: 12,
+    gap: 8,
+  },
+  calloutInfoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  calloutWarningHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 4,
+  },
+  warningSubtext: {
+    fontSize: 12,
+    color: WARNING_COLOR,
+    fontWeight: "500",
+    marginBottom: 8,
   },
 });
