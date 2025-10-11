@@ -5,6 +5,7 @@ import UseCurrentUser from "@/hooks/useCurrentUser";
 import Entypo from "@expo/vector-icons/Entypo";
 import Fontisto from "@expo/vector-icons/Fontisto";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { LinearGradient } from "expo-linear-gradient";
 import { Image, Text, View } from "react-native";
 
 interface WeatherProps {
@@ -12,12 +13,37 @@ interface WeatherProps {
   weatherData: WeatherData | null | undefined;
 }
 
+const getGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good Morning";
+  if (hour < 17) return "Good Afternoon";
+  return "Good Evening";
+};
+
+const getWeatherGradient = (weatherData: WeatherData | null | undefined): [string, string] => {
+  if (!weatherData) return ["#083A4C", "#37A77D"];
+  
+  const weather = weatherData.weather[0].description.toLowerCase();
+  const hour = new Date().getHours();
+  const isNight = hour < 6 || hour > 18;
+  
+  if (weather.includes("clear")) {
+    return isNight ? ["#083A4C", "#37A77D"] : ["#37A77D", "#083A4C"];
+  } else if (weather.includes("rain")) {
+    return ["#083A4C", "#37A77D"];
+  } else if (weather.includes("cloud")) {
+    return ["#37A77D", "#083A4C"];
+  } else if (weather.includes("snow")) {
+    return ["#083A4C", "#37A77D"];
+  }
+  return ["#083A4C", "#37A77D"];
+};
+
 const Weather: React.FC<WeatherProps> = ({ location, weatherData }) => {
   const today = new Date();
   const options: Intl.DateTimeFormatOptions = {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
+    weekday: "short",
+    month: "short",
     day: "numeric",
   };
   const formattedDate = today.toLocaleDateString(undefined, options);
@@ -27,150 +53,221 @@ const Weather: React.FC<WeatherProps> = ({ location, weatherData }) => {
     : null;
   const weatherDescription = weatherData
     ? weatherData.weather[0].description
-    : "";
+    : "Perfect day for a ride";
   const humidity = weatherData ? weatherData.main.humidity : "";
-  const windSpeed = weatherData ? weatherData.wind.speed : "";
+  const windSpeed = weatherData ? Math.round(weatherData.wind.speed * 3.6) : ""; // Convert m/s to km/h
   const { user, status } = UseCurrentUser();
-  const name = user?.userName;
+  const name = user?.userName || "Rider";
+  
+  const gradientColors = getWeatherGradient(weatherData);
   
   return (
-    <View
+    <LinearGradient
+      colors={gradientColors}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
       style={{
-        marginTop: 20,
-        marginBottom: 16,
-        paddingLeft: 20,
-        paddingRight: 20,
-        paddingBottom: 20,
-        backgroundColor: "#D9D9D9",
-        borderRadius: 32,
+        marginTop: 10,
+        marginBottom: 20,
+        marginHorizontal: 16,
+        borderRadius: 24,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 2,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+        elevation: 8,
       }}
     >
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <Text
+      <View style={{ padding: 24 }}>
+        {/* Header */}
+        <View
           style={{
-            fontSize: 24,
-            fontWeight: "bold",
-            marginVertical: 20,
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 20,
           }}
         >
-          Good Afternoon, {name}
-        </Text>
-        <MaterialIcons name="open-in-new" size={20} color="black" />
-      </View>
-
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <View style={{ flexDirection: "row" }}>
-          <Image
-            source={
-              weatherData
-                ? {
-                    uri: `https://openweathermap.org/img/wn/${weatherData.weather[0].icon}@2x.png`,
-                  }
-                : images.sun
-            }
-            style={{ width: 64, height: 64 }}
-          />
-          <View style={{ marginLeft: 12 }}>
+          <View>
             <Text
               style={{
-                fontSize: 20,
-                textTransform: "capitalize",
+                fontSize: 16,
+                color: "rgba(255,255,255,0.8)",
+                fontWeight: "500",
               }}
             >
-              {weatherDescription || "Life's better on two wheels."}
+              {getGreeting()}
+            </Text>
+            <Text
+              style={{
+                fontSize: 24,
+                fontWeight: "bold",
+                color: "white",
+                marginTop: 2,
+              }}
+            >
+              {name}
+            </Text>
+          </View>
+          <View style={{ alignItems: "flex-end" }}>
+            <Text
+              style={{
+                fontSize: 14,
+                color: "rgba(255,255,255,0.8)",
+              }}
+            >
+              {formattedDate}
             </Text>
             <View
               style={{
                 flexDirection: "row",
-                marginTop: 4,
                 alignItems: "center",
+                marginTop: 4,
               }}
             >
-              <Entypo name="location-pin" size={15} color="black" />
-              <Text style={{ marginLeft: 4 }}>{location}</Text>
-            </View>
-            <View
-              style={{
-                flexDirection: "row",
-                marginTop: 4,
-                alignItems: "center",
-              }}
-            >
-              <Fontisto name="date" size={12} color="black" />
-              <Text style={{ color: "black", marginLeft: 8 }}>
-                {formattedDate}
+              <Entypo name="location-pin" size={14} color="rgba(255,255,255,0.8)" />
+              <Text
+                style={{
+                  marginLeft: 4,
+                  color: "rgba(255,255,255,0.8)",
+                  fontSize: 14,
+                }}
+              >
+                {location}
               </Text>
             </View>
+          </View>
+        </View>
+
+        {/* Weather Info */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Image
+                source={
+                  weatherData
+                    ? {
+                        uri: `https://openweathermap.org/img/wn/${weatherData.weather[0].icon}@2x.png`,
+                      }
+                    : images.sun
+                }
+                style={{ width: 60, height: 60 }}
+              />
+              <View style={{ marginLeft: 16, flex: 1 }}>
+                <Text
+                  style={{
+                    fontSize: 48,
+                    fontWeight: "300",
+                    color: "white",
+                    lineHeight: 52,
+                  }}
+                >
+                  {tempCelsius || "--"}°
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 16,
+                    color: "rgba(255,255,255,0.9)",
+                    textTransform: "capitalize",
+                    marginTop: -4,
+                  }}
+                >
+                  {weatherDescription}
+                </Text>
+              </View>
+            </View>
+
+            {/* Weather Details */}
             {weatherData && (
               <View
                 style={{
                   flexDirection: "row",
-                  marginTop: 8,
+                  marginTop: 20,
+                  backgroundColor: "rgba(255,255,255,0.15)",
+                  borderRadius: 16,
+                  padding: 16,
                 }}
               >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    marginRight: 16,
-                  }}
-                >
-                  <Fontisto name="blood-drop" size={12} color="black" />
-                  <Text style={{ marginLeft: 4 }}>{humidity}%</Text>
+                <View style={{ flex: 1, alignItems: "center" }}>
+                  <Fontisto name="blood-drop" size={16} color="rgba(255,255,255,0.8)" />
+                  <Text
+                    style={{
+                      color: "rgba(255,255,255,0.8)",
+                      fontSize: 12,
+                      marginTop: 6,
+                    }}
+                  >
+                    Humidity
+                  </Text>
+                  <Text
+                    style={{
+                      color: "white",
+                      fontSize: 16,
+                      fontWeight: "600",
+                      marginTop: 2,
+                    }}
+                  >
+                    {humidity}%
+                  </Text>
                 </View>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                  }}
-                >
-                  <Fontisto name="wind" size={12} color="black" />
-                  <Text style={{ marginLeft: 4 }}>{windSpeed} m/s</Text>
+                
+                <View style={{ flex: 1, alignItems: "center" }}>
+                  <Fontisto name="wind" size={16} color="rgba(255,255,255,0.8)" />
+                  <Text
+                    style={{
+                      color: "rgba(255,255,255,0.8)",
+                      fontSize: 12,
+                      marginTop: 6,
+                    }}
+                  >
+                    Wind
+                  </Text>
+                  <Text
+                    style={{
+                      color: "white",
+                      fontSize: 16,
+                      fontWeight: "600",
+                      marginTop: 2,
+                    }}
+                  >
+                    {windSpeed} km/h
+                  </Text>
+                </View>
+                
+                <View style={{ flex: 1, alignItems: "center" }}>
+                  <MaterialIcons name="thermostat" size={16} color="rgba(255,255,255,0.8)" />
+                  <Text
+                    style={{
+                      color: "rgba(255,255,255,0.8)",
+                      fontSize: 12,
+                      marginTop: 6,
+                    }}
+                  >
+                    Feels like
+                  </Text>
+                  <Text
+                    style={{
+                      color: "white",
+                      fontSize: 16,
+                      fontWeight: "600",
+                      marginTop: 2,
+                    }}
+                  >
+                    {weatherData ? Math.round(weatherData.main.feels_like - 273.15) : "--"}°
+                  </Text>
                 </View>
               </View>
             )}
           </View>
         </View>
-
-        {weatherData && (
-          <View style={{ alignItems: "flex-end" }}>
-            <Text
-              style={{
-                fontSize: 36,
-                fontWeight: "bold",
-              }}
-            >
-              {tempCelsius}°C
-            </Text>
-            <Text
-              style={{
-                color: "#6B7280",
-                marginTop: 4,
-              }}
-            >
-              Feels like {Math.round(weatherData.main.feels_like - 273.15)}°C
-            </Text>
-          </View>
-        )}
       </View>
-    </View>
+    </LinearGradient>
   );
 };
 
