@@ -82,8 +82,6 @@ export default function LoginScreen() {
           )}
         />
 
-        <ResetOnboardingButton />
-
         {/* Password */}
         <Controller
           control={control}
