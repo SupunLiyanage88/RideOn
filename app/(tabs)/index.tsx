@@ -2,29 +2,30 @@ import "@/api/weather";
 import { WeatherData, fetchWeatherByCity } from "@/api/weather";
 import UseCurrentUser from "@/hooks/useCurrentUser";
 import { useQuery } from "@tanstack/react-query";
-import { ActivityIndicator, ScrollView, Text, View } from "react-native";
+import { StatusBar } from "expo-status-bar";
+import { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Animated, RefreshControl, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AnimatedSection from "../components/AnimatedSection";
 import Directions from "../components/Directions";
-import Searchbar from "../components/Searchbar";
+import QuickActions from "../components/QuickActions";
+import QuickStats from "../components/QuickStats";
+import RecentBikes from "../components/RecentBikes";
 import Weather from "../components/Weather";
+import AnimatedHeader from "../components/user/home/AnimatedHeader";
 
 export default function Index() {
   const { user, status } = UseCurrentUser();
-
-  if (status === "loading") {
-    return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <ActivityIndicator size="large" color="#3b82f6" />
-        <Text style={{ marginTop: 8 }}>Checking authentication...</Text>
-      </View>
-    );
-  }
+  const [refreshing, setRefreshing] = useState(false);
+  
+  // Animation values for content sections
+  const contentOpacity = useRef(new Animated.Value(0)).current;
+  const contentTranslateY = useRef(new Animated.Value(30)).current;
+  const weatherOpacity = useRef(new Animated.Value(0)).current;
+  const weatherTranslateY = useRef(new Animated.Value(40)).current;
+  const statsOpacity = useRef(new Animated.Value(0)).current;
+  const statsTranslateY = useRef(new Animated.Value(40)).current;
+  const backgroundScale = useRef(new Animated.Value(1.1)).current;
 
   const city = "Malabe";
 
@@ -33,77 +34,285 @@ export default function Index() {
     isLoading,
     isError,
     error,
+    refetch: refetchWeather,
   } = useQuery<WeatherData, Error>({
     queryKey: ["weather", city],
     queryFn: () => fetchWeatherByCity(city),
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refetchWeather();
+    setRefreshing(false);
+  };
+
+  const handleNotificationPress = () => {
+    // TODO: Navigate to notifications screen or show notification modal
+    console.log("Notification pressed");
+  };
+
+  const handleProfilePress = () => {
+    // TODO: Navigate to profile screen or show profile modal
+    console.log("Profile pressed");
+  };
+
+  // Animate content when component mounts and user is loaded
+  useEffect(() => {
+    if (status === "success") {
+      // Staggered animations for different sections
+      Animated.sequence([
+        Animated.delay(600), // Wait for header animation to complete
+        Animated.parallel([
+          // Main content fade in
+          Animated.timing(contentOpacity, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.spring(contentTranslateY, {
+            toValue: 0,
+            damping: 12,
+            stiffness: 100,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]).start();
+
+      // Weather section with delay
+      Animated.sequence([
+        Animated.delay(800),
+        Animated.parallel([
+          Animated.timing(weatherOpacity, {
+            toValue: 1,
+            duration: 600,
+            useNativeDriver: true,
+          }),
+          Animated.spring(weatherTranslateY, {
+            toValue: 0,
+            damping: 10,
+            stiffness: 100,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]).start();
+
+      // Stats section with additional delay
+      Animated.sequence([
+        Animated.delay(1000),
+        Animated.parallel([
+          Animated.timing(statsOpacity, {
+            toValue: 1,
+            duration: 600,
+            useNativeDriver: true,
+          }),
+          Animated.spring(statsTranslateY, {
+            toValue: 0,
+            damping: 10,
+            stiffness: 100,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]).start();
+
+      // Subtle background scale animation
+      Animated.timing(backgroundScale, {
+        toValue: 1,
+        duration: 1200,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [status]);
+
+  if (status === "loading") {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "#F8FAFC",
+        }}
+      >
+        <ActivityIndicator size="large" color="#37A77D" />
+        <Text 
+          style={{ 
+            marginTop: 12, 
+            fontSize: 16,
+            color: "#083A4C",
+            fontWeight: "500"
+          }}
+        >
+          Checking authentication...
+        </Text>
+      </View>
+    );
+  }
 
   const location =
     weatherData && weatherData.sys
       ? `${weatherData.name}, ${weatherData.sys.country}`
-      : "Unknown";
+      : "Malabe, LK";
 
   return (
-    <View style={{ flex: 1, backgroundColor: "white" }}>
-      <SafeAreaView style={{ padding: 8, flex: 1 }}>
-        {/* Searchbar */}
-        <Searchbar />
+    <Animated.View 
+      style={{ 
+        flex: 1, 
+        backgroundColor: "#F8FAFC",
+        transform: [{ scale: backgroundScale }],
+      }}
+    >
+      <StatusBar style="dark" backgroundColor="#F8FAFC" />
+      <SafeAreaView style={{ flex: 1 }}>
+        {/* Animated Header with Profile Picture and Greeting */}
+        <AnimatedHeader 
+          onNotificationPress={handleNotificationPress}
+          onProfilePress={handleProfilePress}
+          notificationCount={3} // You can make this dynamic based on actual notifications
+        />
+        
+        <Animated.ScrollView 
+          style={{ 
+            flex: 1,
+            opacity: contentOpacity,
+            transform: [{ translateY: contentTranslateY }],
+          }}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#37A77D"]}
+              tintColor="#37A77D"
+            />
+          }
+        >
+          {/* Weather Component */}
+          <Animated.View
+            style={{
+              opacity: weatherOpacity,
+              transform: [{ translateY: weatherTranslateY }],
+            }}
+          >
+            {isLoading ? (
+              <View
+                style={{
+                  marginHorizontal: 16,
+                  marginTop: 10,
+                  marginBottom: 20,
+                  backgroundColor: "#E5E7EB",
+                  borderRadius: 24,
+                  padding: 24,
+                  height: 200,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <ActivityIndicator size="large" color="#37A77D" />
+                <Text 
+                  style={{ 
+                    marginTop: 12, 
+                    color: "#083A4C",
+                    fontSize: 16,
+                    fontWeight: "500"
+                  }}
+                >
+                  Loading weather...
+                </Text>
+              </View>
+            ) : isError ? (
+              <View
+                style={{
+                  marginHorizontal: 16,
+                  marginTop: 10,
+                  marginBottom: 20,
+                  backgroundColor: "#FEF2F2",
+                  borderRadius: 24,
+                  padding: 24,
+                  borderWidth: 1,
+                  borderColor: "#FECACA",
+                }}
+              >
+                <Text 
+                  style={{ 
+                    color: "#DC2626", 
+                    fontSize: 16, 
+                    fontWeight: "600",
+                    textAlign: "center",
+                    marginBottom: 8
+                  }}
+                >
+                  Weather Unavailable
+                </Text>
+                <Text 
+                  style={{ 
+                    color: "#B91C1C", 
+                    fontSize: 14,
+                    textAlign: "center"
+                  }}
+                >
+                  {(error as Error).message}
+                </Text>
+              </View>
+            ) : (
+              <Weather location={location} weatherData={weatherData} />
+            )}
+          </Animated.View>
 
-        {/* Weather Component */}
-        <ScrollView style={{ flex: 1 }}>
-          {isLoading ? (
-            <View
-              style={{
-                width: "100%",
-                borderRadius: 8,
-                backgroundColor: "#fff",
-                padding: 16,
-                shadowColor: "#000",
-                shadowOpacity: 0.1,
-                shadowRadius: 4,
-                shadowOffset: { width: 0, height: 2 },
-                elevation: 3,
-                flex: 1,
-                justifyContent: "center",
-                alignItems: "center",
-                height: 80,
-                marginTop: 40,
-              }}
-            >
-              <ActivityIndicator size="large" color="#3b82f6" />
-              <Text style={{ marginTop: 8 }}>Loading weather data...</Text>
-            </View>
-          ) : isError ? (
-            <View
-              style={{
-                width: "100%",
-                borderRadius: 8,
-                backgroundColor: "#fff",
-                padding: 16,
-                shadowColor: "#000",
-                shadowOpacity: 0.1,
-                shadowRadius: 4,
-                shadowOffset: { width: 0, height: 2 },
-                elevation: 3,
-                flex: 1,
-                justifyContent: "center",
-                alignItems: "center",
-                marginTop: 40,
-              }}
-            >
-              <Text style={{ color: "red", fontSize: 16 }}>
-                Error: {(error as Error).message}
-              </Text>
-              <Text style={{ marginTop: 8 }}>Please try another location</Text>
-            </View>
-          ) : (
-            <Weather location={location} weatherData={weatherData} />
-          )}
+          {/* Quick Stats */}
+          <Animated.View
+            style={{
+              opacity: statsOpacity,
+              transform: [{ translateY: statsTranslateY }],
+            }}
+          >
+            <QuickStats />
+          </Animated.View>
+          
+          {/* Recent Bikes */}
+          <AnimatedSection delay={1200}>
+            <RecentBikes />
+          </AnimatedSection>
+
+          {/* Quick Actions */}
+          <AnimatedSection delay={1400}>
+            <QuickActions />
+          </AnimatedSection>
 
           {/* Direction Component */}
-          <Directions />
-        </ScrollView>
+          <AnimatedSection delay={1600}>
+            <View style={{ marginHorizontal: 16, marginVertical: 20 }}>
+              <Text
+                style={{
+                  fontSize: 20,
+                  fontWeight: "bold",
+                  color: "#1F2937",
+                  marginBottom: 16,
+                }}
+              >
+                Navigate
+              </Text>
+              <View
+                style={{
+                  backgroundColor: "white",
+                  borderRadius: 16,
+                  overflow: "hidden",
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 8,
+                  elevation: 4,
+                }}
+              >
+                <Directions />
+              </View>
+            </View>
+          </AnimatedSection>
+
+          {/* Bottom spacing */}
+          <View style={{ height: 20 }} />
+        </Animated.ScrollView>
       </SafeAreaView>
-    </View>
+    </Animated.View>
   );
 }

@@ -18,7 +18,7 @@ import {
 import MapView, { Callout, Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyBDLI8FJtPpOWZXhrPshg3Ux00ZPL5FPhc";
+const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "";;
 const THEME_COLOR = "#083A4C";
 const WARNING_COLOR = "#FF4757";
 const SUCCESS_COLOR = "#2ED573";
