@@ -4,6 +4,7 @@ import { images } from "@/constants/images";
 import Feather from "@expo/vector-icons/Feather";
 import { useQuery } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
@@ -11,6 +12,7 @@ import RentUserBike from "./user/station/RentUserBike";
 
 const Directions = () => {
   const [openUserMapNavigation, setOpenUserMapNavigation] = useState(false);
+  const router = useRouter();
   const {
     data: rentedBikeData,
     refetch: refetchRentedBikeData,
@@ -129,7 +131,7 @@ const Directions = () => {
           flexDirection: "row",
           justifyContent: "space-between",
           alignItems: "center",
-          backgroundColor: "#00A99D", // bg-secondary
+          backgroundColor: "#083A4C", // bg-secondary
           borderRadius: 50,
           paddingHorizontal: 16,
           paddingVertical: 8,
@@ -161,21 +163,25 @@ const Directions = () => {
           </Text>
         </View>
 
-        {rentedBikeData && (
-          <TouchableOpacity
-            onPress={() => setOpenUserMapNavigation(true)}
-            style={{
-              backgroundColor: "white",
-              width: 56,
-              height: 56,
-              borderRadius: 28,
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Feather name="arrow-up-right" size={24} color="black" />
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity
+          onPress={() => {
+            if (!rentedBikeData) {
+              router.push("/(tabs)/search");
+            } else {
+              setOpenUserMapNavigation(true);
+            }
+          }}
+          style={{
+            backgroundColor: "white",
+            width: 56,
+            height: 56,
+            borderRadius: 28,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Feather name="arrow-up-right" size={24} color="black" />
+        </TouchableOpacity>
 
         <RentUserBike
           visible={openUserMapNavigation}
