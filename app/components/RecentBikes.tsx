@@ -5,11 +5,11 @@ import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import React from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 const getBikeStatusColor = (condition: string, availability: boolean) => {
@@ -416,6 +416,7 @@ const RecentBikes = () => {
             data={userBikes.slice(0, 5)}
             horizontal
             showsHorizontalScrollIndicator={false}
+            style={{ paddingVertical: 5 }}
             contentContainerStyle={{ paddingHorizontal: 16 }}
             renderItem={({ item }) => <RecentBikeCard bike={item} />}
             keyExtractor={(item) => item._id}

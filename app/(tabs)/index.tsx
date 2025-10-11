@@ -175,6 +175,7 @@ export default function Index() {
           style={{ 
             flex: 1,
             opacity: contentOpacity,
+            marginBottom: 40,
             transform: [{ translateY: contentTranslateY }],
           }}
           showsVerticalScrollIndicator={false}
@@ -285,17 +286,7 @@ export default function Index() {
 
           {/* Direction Component */}
           <AnimatedSection delay={1600}>
-            <View style={{ marginHorizontal: 16, marginVertical: 20 }}>
-              <Text
-                style={{
-                  fontSize: 20,
-                  fontWeight: "bold",
-                  color: "#1F2937",
-                  marginBottom: 16,
-                }}
-              >
-                Navigate
-              </Text>
+            <View style={{ marginHorizontal: 16, marginVertical: 5 }}>
               <View
                 style={{
                   backgroundColor: "white",
