@@ -1,6 +1,10 @@
 import { BikeStation, fetchBikeStation } from "@/api/bikeStation";
 import { fetchObstacleData } from "@/api/obstacle";
-import { fetchUserRentBike, saveRentBike } from "@/api/rentBike";
+import {
+  fetchUserRentBike,
+  saveRentBike,
+  updateUserLocation,
+} from "@/api/rentBike";
 import UseCurrentUser from "@/hooks/useCurrentUser";
 import { getRouteDistance } from "@/utils/distance.matrix.utils";
 import { useDebounce } from "@/utils/useDebounce.utils";
@@ -83,6 +87,39 @@ const RentUserBike = ({
         alert("Bike Rent failed");
       },
     });
+  const { mutate: updateUserLocationMutation, isPending: updatingMe } =
+    useMutation({
+      mutationFn: updateUserLocation,
+      onSuccess: () => {
+        console.log("Location Updated");
+        setDeleteDialogOpen(false);
+      },
+      onError: (data) => {
+        alert("Bike Rent failed");
+      },
+    });
+
+  function updateMe() {
+    if (location) {
+      const updatedData = {
+        userLatitude: location.latitude,
+        userLongitude: location.longitude,
+      };
+      updateUserLocationMutation(updatedData);
+    }
+  }
+  useEffect(() => {
+    updateMe();
+
+    const interval = setInterval(
+      () => {
+        updateMe();
+      },
+      5 * 60 * 1000
+    );
+
+    return () => clearInterval(interval);
+  }, [location]);
   const {
     data: rentedBikeData,
     refetch: refetchRentedBikeData,
@@ -352,7 +389,7 @@ const RentUserBike = ({
       userLongitude: location?.longitude,
       fromLatitude: bikeStation?.latitude,
       fromLongitude: bikeStation?.longitude,
-      bikeStationId: bikeStation?._id
+      bikeStationId: bikeStation?._id,
     };
     saveRentBikeMutation(submitData);
     setNavigationSet(false);
@@ -385,7 +422,9 @@ const RentUserBike = ({
           <View style={{ marginTop: 15 }}>
             <DialogHeader
               title={"Pick Station"}
-              onClose={() => {handleClose(),router.push("/(tabs)")} }
+              onClose={() => {
+                (handleClose(), router.push("/(tabs)"));
+              }}
               subtitle="Pick Your Ride On Station"
             />
           </View>

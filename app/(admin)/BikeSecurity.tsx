@@ -35,6 +35,11 @@ interface DeviationInfo {
   timestamp: Date;
 }
 
+interface Coordinate {
+  latitude: number;
+  longitude: number;
+}
+
 const BikeSecurity = () => {
   const mapRef = useRef<MapView>(null);
   const [routes, setRoutes] = useState<{ [key: string]: any[] }>({});
@@ -45,6 +50,7 @@ const BikeSecurity = () => {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [showContactModal, setShowContactModal] = useState(false);
   const [userToContact, setUserToContact] = useState<any>(null);
+  const [location, setLocation] = useState<Coordinate | null>(null);
 
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const slideAnim = useRef(new Animated.Value(100)).current;
@@ -167,6 +173,30 @@ const BikeSecurity = () => {
 
     setDeviations(newDeviations);
   }, [rentedBikeData, routes]);
+
+  const fitAllStations = () => {
+    if (rentedBikeData?.length > 0 && mapRef.current) {
+      const coordinates = rentedBikeData.map((station: any) => ({
+        latitude: station.userLatitude,
+        longitude: station.userLongitude,
+      }));
+      if (location && mapRef.current) {
+        mapRef.current.animateToRegion(
+          {
+            latitude: location.latitude,
+            longitude: location.longitude,
+            latitudeDelta: 0.05,
+            longitudeDelta: 0.05,
+          },
+          500
+        );
+      }
+      mapRef.current.fitToCoordinates(coordinates, {
+        edgePadding: { top: 100, bottom: 100, left: 50, right: 50 },
+        animated: true,
+      });
+    }
+  };
 
   const handleUserSelect = (rental: any) => {
     setSelectedUser(rental);
@@ -437,18 +467,27 @@ const BikeSecurity = () => {
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.refreshBtn, isFetching && styles.refreshBtnActive]}
-          onPress={() => refetchRentedBikeData()}
-          disabled={isFetching}
-        >
-          <Ionicons
-            name="refresh"
-            size={18}
-            color="#fff"
-            style={isFetching ? styles.rotatingIcon : undefined}
-          />
-        </TouchableOpacity>
+        <View style={{ display: "flex", flexDirection: "row", gap: 10 }}>
+          <TouchableOpacity
+            style={styles.refreshBtn}
+            onPress={fitAllStations}
+          >
+            <Ionicons name="expand" size={20} color={"white"} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.refreshBtn, isFetching && styles.refreshBtnActive]}
+            onPress={() => refetchRentedBikeData()}
+            disabled={isFetching}
+          >
+            <Ionicons
+              name="refresh"
+              size={18}
+              color="#fff"
+              style={isFetching ? styles.rotatingIcon : undefined}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Modern Bottom Summary Panel */}
@@ -1393,5 +1432,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     opacity: 0.9,
     marginTop: 2,
+  },
+  fitAllButton: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    elevation: 5,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  fitAllText: {
+    marginLeft: 6,
+    fontSize: 12,
+    fontWeight: "600",
+    color: THEME_COLOR,
   },
 });
