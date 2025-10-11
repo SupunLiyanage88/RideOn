@@ -14,6 +14,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import ResetOnboardingButton from "../components/ResetOnboardingButton";
 
 type FormData = {
   email: string;
@@ -80,6 +81,8 @@ export default function LoginScreen() {
             </View>
           )}
         />
+
+        <ResetOnboardingButton />
 
         {/* Password */}
         <Controller

@@ -1,8 +1,10 @@
+import OnboardingScreen from "@/app/components/OnboardingScreen";
 import ToggleButton from "@/app/components/toggleButton";
 import { images } from "@/constants/images";
 import UseCurrentUser from "@/hooks/useCurrentUser";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Redirect } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
@@ -22,8 +24,9 @@ const Loader = () => (
       style={[
         styles.loaderContent,
         {
-          backgroundColor: Platform.OS === "ios" ? "rgba(0,0,0,0.1)" : "transparent",
-        }
+          backgroundColor:
+            Platform.OS === "ios" ? "rgba(0,0,0,0.1)" : "transparent",
+        },
       ]}
     >
       <ActivityIndicator
@@ -39,12 +42,42 @@ export default function _layout() {
 
   const [clickedLogin, setClickedLogin] = useState(true);
   const [clickedRegister, setClickedRegister] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
 
-  if (status === "pending") {
+  useEffect(() => {
+    checkOnboardingStatus();
+  }, []);
+
+  const checkOnboardingStatus = async () => {
+    try {
+      const hasSeenOnboarding = await AsyncStorage.getItem("hasSeenOnboarding");
+      setShowOnboarding(hasSeenOnboarding === null);
+    } catch (error) {
+      console.error("Error checking onboarding status:", error);
+      setShowOnboarding(true);
+    }
+  };
+
+  const handleOnboardingComplete = async () => {
+    try {
+      await AsyncStorage.setItem("hasSeenOnboarding", "true");
+      setShowOnboarding(false);
+    } catch (error) {
+      console.error("Error saving onboarding status:", error);
+      setShowOnboarding(false);
+    }
+  };
+
+  if (status === "pending" || showOnboarding === null) {
     return <Loader />;
   }
+
   const isAuthenticated = user && status === "success";
   if (isAuthenticated) return <Redirect href="/(tabs)" />;
+
+  if (showOnboarding) {
+    return <OnboardingScreen onNext={handleOnboardingComplete} />;
+  }
 
   return (
     <KeyboardAwareScrollView
@@ -67,10 +100,12 @@ export default function _layout() {
           />
         </View>
 
-        <View style={[
-          styles.contentContainer,
-          { marginTop: clickedLogin ? -56 : -144 }
-        ]}>
+        <View
+          style={[
+            styles.contentContainer,
+            { marginTop: clickedLogin ? -56 : -144 },
+          ]}
+        >
           <View style={styles.toggleContainer}>
             <ToggleButton
               leftLabel="Login"
@@ -84,10 +119,9 @@ export default function _layout() {
             />
           </View>
 
-          <View style={[
-            styles.formContainer,
-            { height: clickedLogin ? 250 : 400 }
-          ]}>
+          <View
+            style={[styles.formContainer, { height: clickedLogin ? 250 : 400 }]}
+          >
             {clickedLogin ? <LoginScreen /> : <RegisterScreen />}
           </View>
         </View>
@@ -99,9 +133,9 @@ export default function _layout() {
 const styles = StyleSheet.create({
   loaderContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'white',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "white",
   },
   loaderContent: {
     padding: 20,
@@ -109,7 +143,7 @@ const styles = StyleSheet.create({
   },
   keyboardScrollView: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   keyboardContentContainer: {
     flexGrow: 1,
@@ -121,27 +155,27 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   imageContainer: {
-    width: '100%',
+    width: "100%",
     height: Dimensions.get("screen").height / 2.25,
-    position: 'relative',
+    position: "relative",
   },
   backgroundImage: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   contentContainer: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderTopLeftRadius: 64,
     borderTopRightRadius: 64,
     paddingHorizontal: 24,
   },
   toggleContainer: {
     marginTop: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   formContainer: {
-    position: 'relative',
+    position: "relative",
   },
 });

@@ -1,13 +1,7 @@
 import UseCurrentUser from "@/hooks/useCurrentUser";
-import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React, { useEffect, useRef } from "react";
-import {
-    Animated,
-    Image,
-    Text,
-    TouchableOpacity,
-    View,
-} from "react-native";
+import { Animated, Image, Text, TouchableOpacity, View } from "react-native";
 
 interface AnimatedHeaderProps {
   onNotificationPress?: () => void;
@@ -21,7 +15,7 @@ const AnimatedHeader: React.FC<AnimatedHeaderProps> = ({
   notificationCount = 0,
 }) => {
   const { user } = UseCurrentUser();
-  
+
   // Animation values using React Native Animated
   const profileScale = useRef(new Animated.Value(0)).current;
   const profileOpacity = useRef(new Animated.Value(0)).current;
@@ -120,6 +114,8 @@ const AnimatedHeader: React.FC<AnimatedHeaderProps> = ({
     setTimeout(startPulseAnimation, 1000);
   }, []);
 
+  const router = useRouter();
+
   return (
     <View
       style={{
@@ -136,7 +132,7 @@ const AnimatedHeader: React.FC<AnimatedHeaderProps> = ({
       <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
         {/* Animated Profile Picture */}
         <TouchableOpacity
-          onPress={onProfilePress}
+          onPress={() => router.push("/(tabs)/me")}
           activeOpacity={0.8}
         >
           <Animated.View
@@ -157,7 +153,7 @@ const AnimatedHeader: React.FC<AnimatedHeaderProps> = ({
               },
               {
                 transform: [
-                  { scale: Animated.multiply(profileScale, profilePulse) }
+                  { scale: Animated.multiply(profileScale, profilePulse) },
                 ],
                 opacity: profileOpacity,
               },
@@ -204,62 +200,6 @@ const AnimatedHeader: React.FC<AnimatedHeaderProps> = ({
           </Text>
         </Animated.View>
       </View>
-
-      {/* Animated Notification Button */}
-      <Animated.View
-        style={{
-          transform: [{ scale: notificationScale }],
-          opacity: notificationOpacity,
-        }}
-      >
-        <TouchableOpacity
-          onPress={onNotificationPress}
-          activeOpacity={0.7}
-          style={{
-            backgroundColor: "#FFFFFF",
-            borderRadius: 28,
-            padding: 14,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.12,
-            shadowRadius: 6,
-            elevation: 4,
-            position: "relative",
-          }}
-        >
-          <Ionicons name="notifications-outline" size={24} color="#083A4C" />
-          
-          {/* Notification Badge */}
-          {notificationCount > 0 && (
-            <View
-              style={{
-                position: "absolute",
-                top: 10,
-                right: 10,
-                backgroundColor: "#EF4444",
-                borderRadius: 10,
-                minWidth: 20,
-                height: 20,
-                alignItems: "center",
-                justifyContent: "center",
-                borderWidth: 2,
-                borderColor: "#FFFFFF",
-                paddingHorizontal: 4,
-              }}
-            >
-              <Text
-                style={{
-                  color: "#FFFFFF",
-                  fontSize: 10,
-                  fontWeight: "700",
-                }}
-              >
-                {notificationCount > 99 ? "99+" : notificationCount.toString()}
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
-      </Animated.View>
     </View>
   );
 };

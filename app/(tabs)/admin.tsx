@@ -94,7 +94,6 @@ const Admin = () => {
           color="#083A4C"
           onPress={() => router.push("/(admin)/StationManagement")}
         />
-
         <ManagementCard
           title="Payment Management"
           icon={<MaterialIcons name="payment" size={24} color="white" />}

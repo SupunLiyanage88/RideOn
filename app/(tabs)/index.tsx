@@ -1,13 +1,15 @@
 import "@/api/weather";
-import { WeatherData, fetchWeatherByCity } from "@/api/weather";
+import { WeatherData, fetchWeatherByCity, fetchWeatherByCoords } from "@/api/weather";
 import UseCurrentUser from "@/hooks/useCurrentUser";
+import useLocation from "@/hooks/useLocation";
 import { useQuery } from "@tanstack/react-query";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Animated, RefreshControl, Text, View } from "react-native";
+import { Animated, RefreshControl, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AnimatedSection from "../components/AnimatedSection";
 import Directions from "../components/Directions";
+import Loader from "../components/Loader";
 import QuickActions from "../components/QuickActions";
 import QuickStats from "../components/QuickStats";
 import RecentBikes from "../components/RecentBikes";
@@ -16,6 +18,7 @@ import AnimatedHeader from "../components/user/home/AnimatedHeader";
 
 export default function Index() {
   const { user, status } = UseCurrentUser();
+  const { location, isLoading: isLocationLoading, error: locationError, refetch: refetchLocation } = useLocation();
   const [refreshing, setRefreshing] = useState(false);
   
   // Animation values for content sections
@@ -27,8 +30,6 @@ export default function Index() {
   const statsTranslateY = useRef(new Animated.Value(40)).current;
   const backgroundScale = useRef(new Animated.Value(1.1)).current;
 
-  const city = "Malabe";
-
   const {
     data: weatherData,
     isLoading,
@@ -36,14 +37,21 @@ export default function Index() {
     error,
     refetch: refetchWeather,
   } = useQuery<WeatherData, Error>({
-    queryKey: ["weather", city],
-    queryFn: () => fetchWeatherByCity(city),
+    queryKey: ["weather", location?.latitude, location?.longitude],
+    queryFn: () => {
+      if (location?.latitude && location?.longitude) {
+        return fetchWeatherByCoords(location.latitude, location.longitude);
+      }
+      // Fallback to Malabe if location is not available
+      return fetchWeatherByCity("Malabe");
+    },
+    enabled: !isLocationLoading, // Only run when location is loaded
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await refetchWeather();
+    await Promise.all([refetchWeather(), refetchLocation()]);
     setRefreshing(false);
   };
 
@@ -134,25 +142,17 @@ export default function Index() {
           backgroundColor: "#F8FAFC",
         }}
       >
-        <ActivityIndicator size="large" color="#37A77D" />
-        <Text 
-          style={{ 
-            marginTop: 12, 
-            fontSize: 16,
-            color: "#083A4C",
-            fontWeight: "500"
-          }}
-        >
-          Checking authentication...
-        </Text>
+        <Loader size="large" itemName="Authentication" />
       </View>
     );
   }
 
-  const location =
+  const locationString =
     weatherData && weatherData.sys
       ? `${weatherData.name}, ${weatherData.sys.country}`
-      : "Malabe, LK";
+      : location && location.city && location.country
+      ? `${location.city}, ${location.country}`
+      : "Location Unavailable";
 
   return (
     <Animated.View 
@@ -194,7 +194,41 @@ export default function Index() {
               transform: [{ translateY: weatherTranslateY }],
             }}
           >
-            {isLoading ? (
+            {locationError ? (
+              <View
+                style={{
+                  marginHorizontal: 16,
+                  marginTop: 10,
+                  marginBottom: 20,
+                  backgroundColor: "#FEF3C7",
+                  borderRadius: 24,
+                  padding: 24,
+                  borderWidth: 1,
+                  borderColor: "#FCD34D",
+                }}
+              >
+                <Text 
+                  style={{ 
+                    color: "#D97706", 
+                    fontSize: 16, 
+                    fontWeight: "600",
+                    textAlign: "center",
+                    marginBottom: 8
+                  }}
+                >
+                  Location Access Needed
+                </Text>
+                <Text 
+                  style={{ 
+                    color: "#92400E", 
+                    fontSize: 14,
+                    textAlign: "center"
+                  }}
+                >
+                  {locationError}. Using default location (Malabe).
+                </Text>
+              </View>
+            ) : isLocationLoading || isLoading ? (
               <View
                 style={{
                   marginHorizontal: 16,
@@ -208,17 +242,7 @@ export default function Index() {
                   alignItems: "center",
                 }}
               >
-                <ActivityIndicator size="large" color="#37A77D" />
-                <Text 
-                  style={{ 
-                    marginTop: 12, 
-                    color: "#083A4C",
-                    fontSize: 16,
-                    fontWeight: "500"
-                  }}
-                >
-                  Loading weather...
-                </Text>
+                <Loader size="large" itemName="Weather Data" />
               </View>
             ) : isError ? (
               <View
@@ -255,29 +279,9 @@ export default function Index() {
                 </Text>
               </View>
             ) : (
-              <Weather location={location} weatherData={weatherData} />
+              <Weather location={locationString} weatherData={weatherData} />
             )}
           </Animated.View>
-
-          {/* Quick Stats */}
-          <Animated.View
-            style={{
-              opacity: statsOpacity,
-              transform: [{ translateY: statsTranslateY }],
-            }}
-          >
-            <QuickStats />
-          </Animated.View>
-          
-          {/* Recent Bikes */}
-          <AnimatedSection delay={1200}>
-            <RecentBikes />
-          </AnimatedSection>
-
-          {/* Quick Actions */}
-          <AnimatedSection delay={1400}>
-            <QuickActions />
-          </AnimatedSection>
 
           {/* Direction Component */}
           <AnimatedSection delay={1600}>
@@ -308,6 +312,28 @@ export default function Index() {
               </View>
             </View>
           </AnimatedSection>
+
+          {/* Quick Stats */}
+          <Animated.View
+            style={{
+              opacity: statsOpacity,
+              transform: [{ translateY: statsTranslateY }],
+            }}
+          >
+            <QuickStats />
+          </Animated.View>
+          
+          {/* Recent Bikes */}
+          <AnimatedSection delay={1200}>
+            <RecentBikes />
+          </AnimatedSection>
+
+          {/* Quick Actions */}
+          <AnimatedSection delay={1400}>
+            <QuickActions />
+          </AnimatedSection>
+
+          
 
           {/* Bottom spacing */}
           <View style={{ height: 20 }} />
