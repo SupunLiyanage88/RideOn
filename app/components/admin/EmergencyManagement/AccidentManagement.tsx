@@ -317,6 +317,7 @@ const AccidentManagement = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    marginTop: -20,
   },
   header: {
     backgroundColor: "white",
@@ -440,6 +441,8 @@ const styles = StyleSheet.create({
   },
   accidentCard: {
     backgroundColor: "white",
+    marginLeft: -3,
+    marginRight: -3,
     borderRadius: 24,
     marginBottom: 20,
     shadowColor: "#000",
