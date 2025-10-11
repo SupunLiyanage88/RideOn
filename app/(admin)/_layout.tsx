@@ -39,7 +39,7 @@ export default function Layout() {
       <Stack.Screen
         name="PackageManagement"
         options={{ title: "Package Management" }}
-      />
+      />      
     </Stack>
   );
 }
