@@ -363,7 +363,7 @@ const IncidentManagement = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, marginTop: 20, paddingLeft: 25, paddingRight: 25 },
+  container: { flex: 1, marginTop: 20, paddingLeft: 18, paddingRight: 18 },
   mainBackground: { flex: 1, backgroundColor: "#F0F2F5" },
   header: {
     paddingHorizontal: 25,

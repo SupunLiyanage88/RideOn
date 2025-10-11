@@ -313,8 +313,8 @@ const IncidentScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingLeft: 15,
-    paddingRight: 15,
+    paddingLeft: 3,
+    paddingRight: 3,
   },
   mainBackground: { flex: 1, backgroundColor: "#F0F2F5" },
   header: {

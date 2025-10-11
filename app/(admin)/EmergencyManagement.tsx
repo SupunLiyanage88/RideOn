@@ -12,7 +12,7 @@ const EmergencyManagement = () => {
   return (
     <SafeAreaView edges={["left", "right"]} style={{ flex: 1 }}>
       <StatusBar barStyle="light-content" />
-      <View style={{flexGrow: 1, marginTop: 30}}>
+      <View style={{flexGrow: 1}}>
         <View style={{
           alignItems: "center",
           justifyContent: "center"
