@@ -185,7 +185,7 @@ const Me = () => {
         <View style={{ 
           flexDirection: "row", 
           gap: 12,
-          marginBottom: 32
+          marginBottom: 24
         }}>
           <QuickActionCard
             icon="bicycle"
@@ -198,6 +198,26 @@ const Me = () => {
             title="Add Bike"
             color="#083A4C"
             onPress={() => router.push("/components/user/profile/AddUserBikes")}
+          />
+        </View>
+
+        {/* Earnings & History Actions */}
+        <View style={{ 
+          flexDirection: "row", 
+          gap: 12,
+          marginBottom: 32
+        }}>
+          <QuickActionCard
+            icon="money-bill-alt"
+            title="My Earnings"
+            color="#10B981"
+            onPress={() => router.push("/components/user/profile/BikeOwnerEarnings")}
+          />
+          <QuickActionCard
+            icon="history"
+            title="Rental History"
+            color="#3B82F6"
+            onPress={() => router.push("/components/user/profile/RentalHistoryDetail")}
           />
         </View>
 

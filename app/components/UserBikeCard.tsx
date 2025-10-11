@@ -2,6 +2,7 @@ import { Bike } from "@/api/bike";
 import { images } from "@/constants/images";
 import { Ionicons } from "@expo/vector-icons";
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { useRouter } from "expo-router";
 import React from "react";
 import {
   Dimensions,
@@ -11,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import BikeEarningsSummary from "./user/profile/BikeEarningsSummary";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -43,6 +45,7 @@ const getBikeConditionPercentage = (condition: string) => {
 };
 
 const UserBikeCard = ({ bike }: { bike: Bike }) => {
+  const router = useRouter();
   const isSmallScreen = SCREEN_WIDTH < 375;
   const conditionPercentage = getBikeConditionPercentage(bike.condition);
 
@@ -254,6 +257,9 @@ const UserBikeCard = ({ bike }: { bike: Bike }) => {
         </View>
       </View>
 
+      {/* Earnings Summary */}
+      <BikeEarningsSummary bikeId={bike.bikeId} />
+
       {/* Action Button */}
       <TouchableOpacity
         style={[
@@ -261,7 +267,7 @@ const UserBikeCard = ({ bike }: { bike: Bike }) => {
           { paddingVertical: isSmallScreen ? 12 : 14 },
         ]}
         onPress={() => {
-          console.log("View bike details:", bike._id);
+          router.push(`/components/user/profile/BikeOwnerEarnings?bikeId=${bike.bikeId}`);
         }}
         activeOpacity={0.8}
       >
@@ -271,7 +277,7 @@ const UserBikeCard = ({ bike }: { bike: Bike }) => {
             { fontSize: isSmallScreen ? 13 : 14 },
           ]}
         >
-          View Details
+          View Earnings
         </Text>
         <Text style={styles.actionButtonIcon}>→</Text>
       </TouchableOpacity>
