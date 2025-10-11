@@ -46,6 +46,7 @@ const IncidentScreenDialog = ({ visible, onClose, defaultValues }: DialogProps) 
       stopRide: false,
     },
   });
+  const [stopRideLocked, setStopRideLocked] = useState<boolean>(!!defaultValues?.stopRide);
 
   React.useEffect(() => {
     if (!visible) return;
@@ -60,6 +61,7 @@ const IncidentScreenDialog = ({ visible, onClose, defaultValues }: DialogProps) 
         time: defaultValues.time ? defaultValues.time.substring(0, 5) : "",
         stopRide: defaultValues.stopRide ?? false,
       });
+      setStopRideLocked(!!defaultValues.stopRide);
     } else {
       reset({
         incidentType: undefined,
@@ -69,6 +71,7 @@ const IncidentScreenDialog = ({ visible, onClose, defaultValues }: DialogProps) 
         time: "",
         stopRide: false,
       });
+      setStopRideLocked(false);
     }
   }, [visible, defaultValues, reset]);
 
@@ -317,6 +320,7 @@ const IncidentScreenDialog = ({ visible, onClose, defaultValues }: DialogProps) 
                     <Text style={{ fontWeight: "700", marginTop: 8 }}>Do you need to stop the ride?</Text>
                     <Switch
                       value={!!value}
+                      disabled={!!defaultValues?.stopRide}
                       onValueChange={(val) => onChange(val)}
                       trackColor={{ false: "#D1D5DB", true: "#93C5FD" }}
                       thumbColor={value ? "#2563EB" : "#F3F4F6"}
@@ -324,6 +328,11 @@ const IncidentScreenDialog = ({ visible, onClose, defaultValues }: DialogProps) 
                   </View>
                 )}
               />
+              {!!defaultValues?.stopRide && (
+                <Text style={{ color: "#6B7280", fontSize: 12, marginTop: 4 }}>
+                  Incident already stopped the ride.
+                </Text>
+              )}
             </View>
 
             {/* Submit */}
