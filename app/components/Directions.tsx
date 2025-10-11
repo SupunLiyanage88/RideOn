@@ -1,12 +1,24 @@
+import { fetchUserRentBike } from "@/api/rentBike";
 import { StationData } from "@/api/sampleData";
 import { images } from "@/constants/images";
 import Feather from "@expo/vector-icons/Feather";
+import { useQuery } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
-import React from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import React, { useState } from "react";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import RentUserBike from "./user/station/RentUserBike";
 
 const Directions = () => {
+  const [openUserMapNavigation, setOpenUserMapNavigation] = useState(false);
+  const {
+    data: rentedBikeData,
+    refetch: refetchRentedBikeData,
+    isLoading: rentedBikeLoading,
+  } = useQuery({
+    queryKey: ["station-rented-bike"],
+    queryFn: fetchUserRentBike,
+  });
   const station = StationData;
 
   return (
@@ -149,18 +161,26 @@ const Directions = () => {
           </Text>
         </View>
 
-        <View
-          style={{
-            backgroundColor: "white",
-            width: 56,
-            height: 56,
-            borderRadius: 28,
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Feather name="arrow-up-right" size={24} color="black" />
-        </View>
+        {rentedBikeData && (
+          <TouchableOpacity
+            onPress={() => setOpenUserMapNavigation(true)}
+            style={{
+              backgroundColor: "white",
+              width: 56,
+              height: 56,
+              borderRadius: 28,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Feather name="arrow-up-right" size={24} color="black" />
+          </TouchableOpacity>
+        )}
+
+        <RentUserBike
+          visible={openUserMapNavigation}
+          onClose={() => setOpenUserMapNavigation(false)}
+        />
       </View>
     </LinearGradient>
   );

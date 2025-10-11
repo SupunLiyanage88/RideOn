@@ -24,6 +24,7 @@ const AccidentScreen = () => {
     mutationFn: saveAccident,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["accident-data"] });
+      queryClient.invalidateQueries({ queryKey: ["station-rented-bike"] });
       alert("🚨 Emergency alert sent successfully!");
     },
     onError: (err) => {

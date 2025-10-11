@@ -340,7 +340,7 @@ const RentUserBike = ({
     }
   }, [bikeStationData, selectedStation]);
 
-  const RC_FEE_ROUTE = Math.round(distance?.distanceKm * RC_FEE_VALUE);
+  const RC_FEE_ROUTE = distance?.distanceKm * RC_FEE_VALUE;
   const shouldShowButton = RC_FEE_ROUTE > (user?.rc || 0);
 
   function saveBike(data: any) {
@@ -358,6 +358,7 @@ const RentUserBike = ({
       userLongitude: location?.longitude,
       fromLatitude: bikeStation?.latitude,
       fromLongitude: bikeStation?.longitude,
+      bikeStationId: bikeStation?._id
     };
     saveRentBikeMutation(submitData);
     setNavigationSet(false);
@@ -663,7 +664,7 @@ const RentUserBike = ({
                         <Text style={styles.detailLabel}>RC Fee</Text>
                       </View>
                       <Text style={styles.basicChip}>
-                        {RC_FEE_ROUTE || 0} RC
+                        {RC_FEE_ROUTE.toFixed(2) || 0} RC
                       </Text>
                     </View>
                   )}
