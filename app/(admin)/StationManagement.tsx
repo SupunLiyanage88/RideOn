@@ -10,6 +10,7 @@ import React, { useState } from "react";
 import {
   RefreshControl,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -68,9 +69,10 @@ const StationManagement = () => {
 
   return (
     <SafeAreaView edges={["left", "right"]} style={styles.safeArea}>
+      <StatusBar barStyle="light-content" />
       <View style={{ paddingHorizontal: 12 }}>
         <AddBtn
-          title="Add New Bike"
+          title="Add New Station"
           backgroundColor="#083A4C"
           textColor="#FFFFFF"
           iconColor="#FFFFFF"

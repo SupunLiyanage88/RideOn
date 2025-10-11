@@ -106,7 +106,7 @@ const LogoutButton = () => {
       disabled={isPending}
       activeOpacity={0.8}
       style={{
-        backgroundColor: "#083A4C",
+        backgroundColor: "#BB0101",
         paddingVertical: 18,
         borderRadius: 16,
         alignItems: "center",

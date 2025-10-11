@@ -83,7 +83,7 @@ const ConfirmationModal = ({
               </View>
               <Text style={styles.detailLabel}>RC Fee</Text>
             </View>
-            <Text style={styles.basicChip}>{values} RC</Text>
+            <Text style={styles.basicChip}>{values?.toFixed(2)} RC</Text>
           </View>
 
           {/* Content */}

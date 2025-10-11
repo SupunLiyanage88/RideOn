@@ -13,6 +13,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StatusBar,
   StyleSheet,
   View,
 } from "react-native";
@@ -107,10 +108,10 @@ const BikeManagement = () => {
   };
 
   const electricCount =
-    bikeData?.filter((b: Bike) => b.fuelType.toLowerCase() === "electric")
+    bikeData?.filter((b: Bike) => b.fuelType?.toLowerCase() === "electric")
       .length || 0;
   const pedalCount =
-    bikeData?.filter((b: Bike) => b.fuelType.toLowerCase() === "pedal")
+    bikeData?.filter((b: Bike) => b.fuelType?.toLowerCase() === "pedal")
       .length || 0;
 
   const electricStats = getConditionDetails(bikeStatData?.electric);
@@ -118,6 +119,7 @@ const BikeManagement = () => {
 
   return (
     <SafeAreaView edges={["left", "right"]} style={styles.safeArea}>
+      <StatusBar barStyle="light-content" />
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === "ios" ? "padding" : "height"}

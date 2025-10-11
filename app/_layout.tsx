@@ -1,6 +1,7 @@
 import UseCurrentUser from "@/hooks/useCurrentUser";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useSegments } from "expo-router";
+import { StatusBar } from "react-native";
 import "../api/index";
 import { ChatIconModal } from "./components/ChatBotIcon";
 import "./globals.css";
@@ -32,6 +33,7 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <RootContent />
+      <StatusBar barStyle="dark-content" />
     </QueryClientProvider>
   );
 }

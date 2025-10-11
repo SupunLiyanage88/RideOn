@@ -14,6 +14,7 @@ export const rentBikeSchema = z.object({
   latitude: z.number(),
   longitude: z.number(),
   createdAt: z.string(),
+  bikeStationId: z.string(),
 });
 
 export type RentBike = z.infer<typeof rentBikeSchema>;
@@ -29,5 +30,10 @@ export async function fetchUserRentBike() {
 
 export async function fetchAllUsersRentBike() {
   const res = await axios.get("/api/rent-bike/all-rented");
+  return res.data;
+}
+
+export async function updateUserLocation(data: any) {
+  const res = await axios.put("/api/rent-bike/me", data);
   return res.data;
 }
