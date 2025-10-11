@@ -19,14 +19,14 @@ import MapView, { Callout, Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyBDLI8FJtPpOWZXhrPshg3Ux00ZPL5FPhc";
-const THEME_COLOR = "#0066CC";
+const THEME_COLOR = "#083A4C";
 const WARNING_COLOR = "#FF4757";
 const SUCCESS_COLOR = "#2ED573";
 const SECONDARY_COLOR = "#1E90FF";
 const ACCENT_COLOR = "#FF6B81";
 const NEUTRAL_COLOR = "#F1F2F6";
 
-const MAX_DEVIATION_METERS = 300;
+const MAX_DEVIATION_METERS = 1000;
 const { width, height } = Dimensions.get("window");
 
 interface DeviationInfo {
@@ -45,7 +45,7 @@ const BikeSecurity = () => {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [showContactModal, setShowContactModal] = useState(false);
   const [userToContact, setUserToContact] = useState<any>(null);
-  
+
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const slideAnim = useRef(new Animated.Value(100)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -149,14 +149,14 @@ const BikeSecurity = () => {
             "🚨 Route Deviation Alert",
             `User ${rental.userId.userName} has deviated ${(minDist / 1000).toFixed(2)} km from the planned route!`,
             [
-              { 
-                text: "Contact User", 
+              {
+                text: "Contact User",
                 onPress: () => handleContactUser(rental),
-                style: "destructive"
+                style: "destructive",
               },
-              { 
-                text: "View Details", 
-                onPress: () => handleUserSelect(rental) 
+              {
+                text: "View Details",
+                onPress: () => handleUserSelect(rental),
               },
               { text: "Dismiss", style: "cancel" },
             ]
@@ -192,24 +192,26 @@ const BikeSecurity = () => {
   };
 
   const makePhoneCall = (phoneNumber: string) => {
-    Linking.openURL(`tel:${phoneNumber}`).catch(err =>
+    Linking.openURL(`tel:${phoneNumber}`).catch((err) =>
       Alert.alert("Error", "Could not make phone call")
     );
   };
 
   const sendSMS = (phoneNumber: string) => {
-    const message = "Hello, we've detected that you've deviated from your planned bike route. Please ensure you're following the correct path for your safety.";
-    Linking.openURL(`sms:${phoneNumber}?body=${encodeURIComponent(message)}`).catch(err =>
-      Alert.alert("Error", "Could not send SMS")
-    );
+    const message =
+      "Hello, we've detected that you've deviated from your planned bike route. Please ensure you're following the correct path for your safety.";
+    Linking.openURL(
+      `sms:${phoneNumber}?body=${encodeURIComponent(message)}`
+    ).catch((err) => Alert.alert("Error", "Could not send SMS"));
   };
 
   const openEmail = (email: string) => {
     const subject = "Route Deviation Alert";
-    const body = "Dear user,\n\nWe've detected that you have deviated from your planned bike route. This is for your safety and security. Please ensure you're following the correct path.\n\nBest regards,\nBike Security Team";
-    Linking.openURL(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`).catch(err =>
-      Alert.alert("Error", "Could not open email")
-    );
+    const body =
+      "Dear user,\n\nWe've detected that you have deviated from your planned bike route. This is for your safety and security. Please ensure you're following the correct path.\n\nBest regards,\nBike Security Team";
+    Linking.openURL(
+      `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+    ).catch((err) => Alert.alert("Error", "Could not open email"));
   };
 
   const renderUserItem = ({ item }: { item: any }) => {
@@ -254,7 +256,11 @@ const BikeSecurity = () => {
               </View>
               <TouchableOpacity
                 style={styles.contactButton}
-                onPress={() => handleContactUser(item)}
+                onPress={() => {
+                  (setUserToContact(item),
+                    setShowUsersModal(false),
+                    setShowContactModal(true));
+                }}
               >
                 <FontAwesome name="phone" size={12} color="#fff" />
               </TouchableOpacity>
@@ -372,14 +378,10 @@ const BikeSecurity = () => {
                     {isDeviating && (
                       <View style={styles.calloutWarning}>
                         <Text style={styles.warningText}>
-                          ⚠️ Deviation: {(deviations[rental._id].deviation / 1000).toFixed(2)} km
+                          ⚠️ Deviation:{" "}
+                          {(deviations[rental._id].deviation / 1000).toFixed(2)}{" "}
+                          km
                         </Text>
-                        <TouchableOpacity
-                          style={styles.calloutContactButton}
-                          onPress={() => handleContactUser(rental)}
-                        >
-                          <Text style={styles.calloutContactText}>Contact User</Text>
-                        </TouchableOpacity>
                       </View>
                     )}
                   </View>
@@ -412,20 +414,22 @@ const BikeSecurity = () => {
           style={styles.usersButton}
           onPress={() => setShowUsersModal(true)}
         >
-          <Ionicons name="people" size={20} color="#fff" />
+          <Ionicons name="people" size={20} color="#083A4C" />
           <Text style={styles.buttonText}>Users ({rentedBikeData.length})</Text>
           {warningCount > 0 && (
-            <Animated.View 
+            <Animated.View
               style={[
                 styles.warningCount,
                 {
-                  transform: [{
-                    scale: bounceAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [1, 1.2]
-                    })
-                  }]
-                }
+                  transform: [
+                    {
+                      scale: bounceAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [1, 1.2],
+                      }),
+                    },
+                  ],
+                },
               ]}
             >
               <Text style={styles.warningCountText}>{warningCount}</Text>
@@ -464,7 +468,7 @@ const BikeSecurity = () => {
           </View>
           <View style={styles.headerRight}>
             <View style={styles.timeIndicator}>
-              <Ionicons name="time" size={12} color="#666" />
+              <Ionicons name="time" size={12} color="#37A77D" />
               <Text style={styles.timeText}>Live</Text>
             </View>
           </View>
@@ -472,7 +476,12 @@ const BikeSecurity = () => {
 
         <View style={styles.statsGrid}>
           <View style={styles.statCard}>
-            <View style={[styles.statIconContainer, { backgroundColor: THEME_COLOR }]}>
+            <View
+              style={[
+                styles.statIconContainer,
+                { backgroundColor: THEME_COLOR },
+              ]}
+            >
               <Ionicons name="bicycle" size={20} color="#fff" />
             </View>
             <View style={styles.statContent}>
@@ -482,7 +491,12 @@ const BikeSecurity = () => {
           </View>
 
           <View style={styles.statCard}>
-            <View style={[styles.statIconContainer, { backgroundColor: WARNING_COLOR }]}>
+            <View
+              style={[
+                styles.statIconContainer,
+                { backgroundColor: WARNING_COLOR },
+              ]}
+            >
               <MaterialIcons name="warning" size={18} color="#fff" />
             </View>
             <View style={styles.statContent}>
@@ -494,7 +508,12 @@ const BikeSecurity = () => {
           </View>
 
           <View style={styles.statCard}>
-            <View style={[styles.statIconContainer, { backgroundColor: SUCCESS_COLOR }]}>
+            <View
+              style={[
+                styles.statIconContainer,
+                { backgroundColor: SUCCESS_COLOR },
+              ]}
+            >
               <MaterialIcons name="check-circle" size={18} color="#fff" />
             </View>
             <View style={styles.statContent}>
@@ -510,9 +529,9 @@ const BikeSecurity = () => {
           <View style={styles.alertBanner}>
             <MaterialIcons name="notifications" size={16} color="#fff" />
             <Text style={styles.alertText}>
-              {warningCount} user{warningCount > 1 ? 's' : ''} need attention
+              {warningCount} user{warningCount > 1 ? "s" : ""} need attention
             </Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.alertButton}
               onPress={() => setShowUsersModal(true)}
             >
@@ -564,97 +583,328 @@ const BikeSecurity = () => {
         transparent
         onRequestClose={() => setShowContactModal(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.contactModalContent}>
-            <View style={styles.modalHeader}>
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(11, 64, 87, 0.5)",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 20,
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "#fff",
+              borderRadius: 16,
+              width: "100%",
+              maxWidth: 400,
+              shadowColor: "#0B4057",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.2,
+              shadowRadius: 8,
+              elevation: 8,
+            }}
+          >
+            {/* Header */}
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                padding: 20,
+                borderBottomWidth: 1,
+                borderBottomColor: "#f0f0f0",
+              }}
+            >
               <View>
-                <Text style={styles.modalTitle}>Contact User</Text>
-                <Text style={styles.modalSubtitle}>
+                <Text
+                  style={{
+                    fontSize: 20,
+                    fontWeight: "700",
+                    color: "#0B4057",
+                    marginBottom: 4,
+                  }}
+                >
+                  Contact User
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    color: "#666",
+                  }}
+                >
                   {userToContact?.userId.userName}
                 </Text>
               </View>
               <TouchableOpacity
-                style={styles.closeButton}
+                style={{
+                  padding: 4,
+                  borderRadius: 20,
+                  backgroundColor: "#f8f9fa",
+                }}
                 onPress={() => setShowContactModal(false)}
               >
-                <Ionicons name="close" size={24} color={THEME_COLOR} />
+                <Ionicons name="close" size={24} color="#0B4057" />
               </TouchableOpacity>
             </View>
 
             {userToContact && (
-              <View style={styles.contactOptions}>
-                <View style={styles.userContactInfo}>
-                  <View style={styles.avatar}>
-                    <Text style={styles.avatarText}>
+              <View style={{ padding: 20 }}>
+                {/* User Info Card */}
+                <View
+                  style={{
+                    alignItems: "center",
+                    marginBottom: 24,
+                    padding: 16,
+                    backgroundColor: "#f8f9fa",
+                    borderRadius: 12,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 60,
+                      height: 60,
+                      borderRadius: 30,
+                      backgroundColor: "#0B4057",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      marginBottom: 12,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: "#fff",
+                        fontSize: 24,
+                        fontWeight: "600",
+                      }}
+                    >
                       {userToContact.userId.userName.charAt(0).toUpperCase()}
                     </Text>
                   </View>
-                  <Text style={styles.contactInfoText}>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "600",
+                      color: "#0B4057",
+                      marginBottom: 4,
+                    }}
+                  >
                     {userToContact.userId.userName}
                   </Text>
-                  <Text style={styles.contactInfoSubtext}>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      color: "#666",
+                      marginBottom: 8,
+                    }}
+                  >
                     Bike: {userToContact.bikeId.bikeId}
                   </Text>
                   {deviations[userToContact._id] && (
-                    <View style={styles.deviationAlert}>
-                      <MaterialIcons name="warning" size={14} color={WARNING_COLOR} />
-                      <Text style={styles.deviationAlertText}>
-                        Deviated {(deviations[userToContact._id].deviation / 1000).toFixed(2)} km from route
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        backgroundColor: "#FFF5F5",
+                        paddingHorizontal: 12,
+                        paddingVertical: 8,
+                        borderRadius: 8,
+                        borderWidth: 1,
+                        borderColor: "#FFE4E4",
+                      }}
+                    >
+                      <MaterialIcons name="warning" size={14} color="#FF6B35" />
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          color: "#D32F2F",
+                          marginLeft: 6,
+                          fontWeight: "500",
+                        }}
+                      >
+                        Deviated{" "}
+                        {(
+                          deviations[userToContact._id].deviation / 1000
+                        ).toFixed(2)}{" "}
+                        km from route
                       </Text>
                     </View>
                   )}
                 </View>
 
+                {/* Contact Options */}
                 <TouchableOpacity
-                  style={[styles.contactOption, styles.phoneOption]}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: 16,
+                    borderRadius: 12,
+                    backgroundColor: "#fff",
+                    borderWidth: 1,
+                    borderColor: "#e9ecef",
+                    marginBottom: 12,
+                  }}
                   onPress={() => makePhoneCall(userToContact.userId.mobile)}
                 >
-                  <View style={styles.contactOptionLeft}>
-                    <View style={styles.contactIcon}>
-                      <FontAwesome name="phone" size={20} color="#fff" />
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      flex: 1,
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 20,
+                        backgroundColor: "#0B4057",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        marginRight: 12,
+                      }}
+                    >
+                      <FontAwesome name="phone" size={18} color="#fff" />
                     </View>
-                    <View>
-                      <Text style={styles.contactOptionText}>Call</Text>
-                      <Text style={styles.contactOptionSubtext}>
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          fontWeight: "600",
+                          color: "#0B4057",
+                          marginBottom: 2,
+                        }}
+                      >
+                        Call
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          color: "#666",
+                        }}
+                      >
                         {userToContact.userId.mobile}
                       </Text>
                     </View>
                   </View>
-                  <Ionicons name="chevron-forward" size={20} color="#fff" />
+                  <Ionicons name="chevron-forward" size={20} color="#0B4057" />
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.contactOption, styles.smsOption]}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: 16,
+                    borderRadius: 12,
+                    backgroundColor: "#fff",
+                    borderWidth: 1,
+                    borderColor: "#e9ecef",
+                    marginBottom: 12,
+                  }}
                   onPress={() => sendSMS(userToContact.userId.mobile)}
                 >
-                  <View style={styles.contactOptionLeft}>
-                    <View style={styles.contactIcon}>
-                      <MaterialIcons name="message" size={20} color="#fff" />
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      flex: 1,
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 20,
+                        backgroundColor: "#0B4057",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        marginRight: 12,
+                      }}
+                    >
+                      <MaterialIcons name="message" size={18} color="#fff" />
                     </View>
-                    <View>
-                      <Text style={styles.contactOptionText}>Send SMS</Text>
-                      <Text style={styles.contactOptionSubtext}>Quick alert message</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          fontWeight: "600",
+                          color: "#0B4057",
+                          marginBottom: 2,
+                        }}
+                      >
+                        Send SMS
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          color: "#666",
+                        }}
+                      >
+                        Quick alert message
+                      </Text>
                     </View>
                   </View>
-                  <Ionicons name="chevron-forward" size={20} color="#fff" />
+                  <Ionicons name="chevron-forward" size={20} color="#0B4057" />
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.contactOption, styles.emailOption]}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: 16,
+                    borderRadius: 12,
+                    backgroundColor: "#fff",
+                    borderWidth: 1,
+                    borderColor: "#e9ecef",
+                    marginBottom: 12,
+                  }}
                   onPress={() => openEmail(userToContact.userId.email)}
                 >
-                  <View style={styles.contactOptionLeft}>
-                    <View style={styles.contactIcon}>
-                      <MaterialIcons name="email" size={20} color="#fff" />
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      flex: 1,
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 20,
+                        backgroundColor: "#0B4057",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        marginRight: 12,
+                      }}
+                    >
+                      <MaterialIcons name="email" size={18} color="#fff" />
                     </View>
-                    <View>
-                      <Text style={styles.contactOptionText}>Send Email</Text>
-                      <Text style={styles.contactOptionSubtext}>
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          fontWeight: "600",
+                          color: "#0B4057",
+                          marginBottom: 2,
+                        }}
+                      >
+                        Send Email
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          color: "#666",
+                        }}
+                      >
                         {userToContact.userId.email}
                       </Text>
                     </View>
                   </View>
-                  <Ionicons name="chevron-forward" size={20} color="#fff" />
+                  <Ionicons name="chevron-forward" size={20} color="#0B4057" />
                 </TouchableOpacity>
               </View>
             )}
@@ -850,11 +1100,10 @@ const styles = StyleSheet.create({
   },
   marker: {
     padding: 10,
-    borderRadius: 20,
+    borderRadius: 25,
     borderWidth: 3,
     borderColor: "#fff",
-    elevation: 6,
-    shadowColor: "#000",
+    elevation: 5,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
@@ -911,7 +1160,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
   },
   calloutContactText: {
     color: "#fff",
@@ -928,13 +1177,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: height * 0.8,
-    paddingBottom: 20,
-  },
-  contactModalContent: {
-    backgroundColor: "#fff",
-    borderRadius: 24,
-    margin: 20,
-    maxHeight: height * 0.7,
     paddingBottom: 20,
   },
   modalHeader: {

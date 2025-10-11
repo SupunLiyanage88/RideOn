@@ -8,10 +8,11 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ManagementCard from "../components/ManagementCard";
 
-import AntDesign from '@expo/vector-icons/AntDesign';
-import Feather from '@expo/vector-icons/Feather';
+import { getAllBikes } from "@/api/bike";
+import AntDesign from "@expo/vector-icons/AntDesign";
+import Feather from "@expo/vector-icons/Feather";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import StatCard from "../components/StatCard";
 
 const Admin = () => {
@@ -28,6 +29,11 @@ const Admin = () => {
     queryKey: ["incident-data"],
     queryFn: getAllIncident,
   });
+  const { data: bikeData, isFetching: isbikeDataLoading } = useQuery({
+    queryKey: ["bike-data"],
+    queryFn: getAllBikes,
+  });
+
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -42,8 +48,8 @@ const Admin = () => {
           />
           <StatCard
             title="Total Bikes"
-            value={12}
-            isLoading={isBikeStationLoading}
+            value={bikeData?.length}
+            isLoading={isbikeDataLoading}
           />
         </View>
         <View style={styles.statsRow}>
@@ -66,10 +72,10 @@ const Admin = () => {
         showsVerticalScrollIndicator={false}
       >
         <ManagementCard
-          title="Station Management"
-          icon={<FontAwesome5 name="broadcast-tower" size={18} color="white" />}
-          color="#083A4C"
-          onPress={() => router.push("/(admin)/StationManagement")}
+          title="Bike Security Management"
+          icon={<MaterialIcons name="security" size={24} color="white" />}
+          color="black"
+          onPress={() => router.push("/(admin)/BikeSecurity")}
         />
         <ManagementCard
           title="Bike Management"
@@ -77,12 +83,20 @@ const Admin = () => {
           color="#37A77D"
           onPress={() => router.push("/(admin)/BikeManagement")}
         />
-        <ManagementCard
+                <ManagementCard
           title="Emergency Management"
           icon={<AntDesign name="alert" size={24} color="white" />}
           color="#B83434"
           onPress={() => router.push("/(admin)/EmergencyManagement")}
         />
+        <ManagementCard
+          title="Station Management"
+          icon={<FontAwesome5 name="broadcast-tower" size={18} color="white" />}
+          color="#083A4C"
+          onPress={() => router.push("/(admin)/StationManagement")}
+        />
+
+
         <ManagementCard
           title="Payment Management"
           icon={<MaterialIcons name="payment" size={24} color="white" />}
@@ -92,16 +106,11 @@ const Admin = () => {
         <ManagementCard
           title="Package Management"
           icon={<Feather name="package" size={24} color="white" />}
-          color="#083A4C"
+          color="#F79F1B"
           onPress={() => router.push("/(admin)/PackageManagement")}
         />
-        <ManagementCard
-          title="Bike Security Management"
-          icon={<Feather name="package" size={24} color="white" />}
-          color="#083A4C"
-          onPress={() => router.push("/(admin)/BikeSecurity")}
-        />
-        <View style={{marginBottom:45}}></View>
+
+        <View style={{ marginBottom: 45 }}></View>
       </ScrollView>
     </SafeAreaView>
   );

@@ -107,10 +107,10 @@ const BikeManagement = () => {
   };
 
   const electricCount =
-    bikeData?.filter((b: Bike) => b.fuelType.toLowerCase() === "electric")
+    bikeData?.filter((b: Bike) => b.fuelType?.toLowerCase() === "electric")
       .length || 0;
   const pedalCount =
-    bikeData?.filter((b: Bike) => b.fuelType.toLowerCase() === "pedal")
+    bikeData?.filter((b: Bike) => b.fuelType?.toLowerCase() === "pedal")
       .length || 0;
 
   const electricStats = getConditionDetails(bikeStatData?.electric);
