@@ -263,7 +263,7 @@ const AddOrEditObstacle = ({
                         }}
                       >
                         <Text style={{ fontWeight: "700", marginTop: 8 }}>
-                          Do you need to stop the ride?
+                          Do you need to hide this obstacle?
                         </Text>
                         <Switch
                           value={!!value}
