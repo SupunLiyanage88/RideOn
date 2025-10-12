@@ -1,7 +1,7 @@
 import AccidentManagement from "@/app/components/admin/EmergencyManagement/AccidentManagement";
 import IncidentManagement from "@/app/components/admin/EmergencyManagement/IncidentManagement";
 import React, { useState } from "react";
-import { View } from "react-native";
+import { StatusBar, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ToggleButton from "../components/toggleButton";
 
@@ -10,12 +10,16 @@ const EmergencyManagement = () => {
   const [clickedAccident, setClickedAccident] = useState(false);
 
   return (
-    <SafeAreaView style={{flex: 1}}>
-      <View style={{flexGrow: 1, paddingHorizontal: 4}}>
-        <View style={{
-          alignItems: "center",
-          justifyContent: "center"
-        }}>
+    <SafeAreaView edges={["left", "right"]} style={{ flex: 1 }}>
+      <StatusBar barStyle="light-content" />
+      <View style={{ flexGrow: 1 }}>
+        <View
+          style={{
+            alignItems: "center",
+            justifyContent: "center",
+            marginTop: 20 
+          }}
+        >
           <ToggleButton
             leftLabel="Incident"
             rightLabel="Accident"
@@ -27,7 +31,7 @@ const EmergencyManagement = () => {
             }}
           />
         </View>
-        <View style={{flex: 1}}>
+        <View style={{ flex: 1}}>
           {clickedIncident ? <IncidentManagement /> : <AccidentManagement />}
         </View>
       </View>

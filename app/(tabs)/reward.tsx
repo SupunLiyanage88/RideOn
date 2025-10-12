@@ -21,7 +21,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import PackageCardRider from "../components/user/package/PackageCardRider";
 import SegmentedTabs from "../components/user/package/SegmentedTabs";
 import RCBalanceHeader from "../components/user/package/RCBalanceHeader";
-import PurchaseConfirmModal, {PurchaseConfirmData,} from "../components/user/package/PurchaseConfirmModal";
+import PurchaseConfirmModal, {
+  PurchaseConfirmData,
+} from "../components/user/package/PurchaseConfirmModal";
+import Leaderboard from "../components/user/package/Leaderboard";
 
 type AvailablePackage = AdminPackage & {
   activationCount?: number;
@@ -42,7 +45,7 @@ type ActiveUserPackage = {
   daysRemaining: number;
 };
 
-type Tab = "Available" | "Active";
+type Tab = "Available" | "Active" | "Leaderboard";
 
 const Reward = () => {
   const [activeTab, setActiveTab] = useState<Tab>("Available");
@@ -90,29 +93,30 @@ const Reward = () => {
   const listShown = activeTab === "Available" ? available : active;
 
   const filtered = useMemo(() => {
+    if (activeTab === "Leaderboard") return [];
     const term = search.trim().toLowerCase();
     if (!term) return listShown as any[];
     return (listShown as any[]).filter((p: any) =>
       (p.name || "").toLowerCase().includes(term)
     );
-  }, [listShown, search]);
+  }, [listShown, search, activeTab]);
 
   // Open modal with details
-const openConfirm = (id: string) => {
-  const pkg = available.find((p) => p._id === id);
-  if (!pkg) return;
-  setSelected({
-    id: pkg._id,
-    name: pkg.name,
-    rc: pkg.rc,
-    price: pkg.price,
-    timePeriod: pkg.timePeriod,
-    icon: pkg.icon,
-    description: pkg.description,     
-    recommended: pkg.recommended,     
-  });
-  setConfirmOpen(true);
-};
+  const openConfirm = (id: string) => {
+    const pkg = available.find((p) => p._id === id);
+    if (!pkg) return;
+    setSelected({
+      id: pkg._id,
+      name: pkg.name,
+      rc: pkg.rc,
+      price: pkg.price,
+      timePeriod: pkg.timePeriod,
+      icon: pkg.icon,
+      description: pkg.description,
+      recommended: pkg.recommended,
+    });
+    setConfirmOpen(true);
+  };
 
   // Confirm -> do the purchase then refresh lists
   const confirmBuy = async (id: string) => {
@@ -148,7 +152,7 @@ const openConfirm = (id: string) => {
       </View>
 
       {/* RC Balance Header Component */}
-      <RCBalanceHeader userRc={userRc} />
+      {activeTab !== "Leaderboard" && <RCBalanceHeader userRc={userRc} />}
 
       {/* Tabs */}
       <View style={{ paddingHorizontal: 16, marginTop: 8 }}>
@@ -156,97 +160,107 @@ const openConfirm = (id: string) => {
           options={[
             { key: "Available", label: "Available" },
             { key: "Active", label: "Active" },
+            { key: "Leaderboard", label: "Leaderboard" },
           ]}
           activeKey={activeTab}
           onChange={(k) => setActiveTab(k as Tab)}
         />
       </View>
 
-      {/* Search */}
-      <View style={styles.searchWrap}>
-        <Ionicons name="search" size={18} color="#6B7280" />
-        <TextInput
-          style={styles.searchInput}
-          placeholder={`Search ${activeTab.toLowerCase()} packages`}
-          placeholderTextColor="#9CA3AF"
-          value={search}
-          onChangeText={setSearch}
-          autoCorrect={false}
-        />
-        {search.length > 0 && (
-          <Ionicons
-            name="close-circle"
-            size={18}
-            color="#9CA3AF"
-            onPress={() => setSearch("")}
-          />
-        )}
-      </View>
+      {/* Conditional Rendering based on Tab */}
+      {activeTab === "Leaderboard" ? (
+        <Leaderboard theme="light" />
+      ) : (
+        <>
+          {/* Search */}
+          <View style={styles.searchWrap}>
+            <Ionicons name="search" size={18} color="#6B7280" />
+            <TextInput
+              style={styles.searchInput}
+              placeholder={`Search ${activeTab.toLowerCase()} packages`}
+              placeholderTextColor="#9CA3AF"
+              value={search}
+              onChangeText={setSearch}
+              autoCorrect={false}
+            />
+            {search.length > 0 && (
+              <Ionicons
+                name="close-circle"
+                size={18}
+                color="#9CA3AF"
+                onPress={() => setSearch("")}
+              />
+            )}
+          </View>
 
-      {/* List */}
-      <ScrollView
-        contentContainerStyle={{
-          paddingHorizontal: 16,
-          paddingTop: 12,
-          paddingBottom: 103,
-        }}
-        showsVerticalScrollIndicator={false}
-      >
-        {loading ? (
-          <View style={styles.centerMessage}>
-            <Ionicons name="reload-circle" size={48} color="#6B7280" />
-            <Text style={styles.messageText}>Loading packages...</Text>
-          </View>
-        ) : filtered.length === 0 ? (
-          <View style={styles.centerMessage}>
-            <Ionicons
-              name={search ? "search-outline" : "gift-outline"}
-              size={48}
-              color="#9CA3AF"
-            />
-            <Text style={styles.messageTitle}>
-              {search ? "No matches found" : `No ${activeTab.toLowerCase()} packages`}
-            </Text>
-            <Text style={styles.messageSubtitle}>
-              {search
-                ? `Try a different search term`
-                : activeTab === "Available"
-                ? "Check back later for new packages"
-                : "Purchase packages to see them here"}
-            </Text>
-          </View>
-        ) : activeTab === "Available" ? (
-          (filtered as AvailablePackage[]).map((p) => (
-            <PackageCardRider
-              key={p._id}
-              theme="light"
-              variant="available"
-              id={p._id}
-              name={p.name}
-              rc={p.rc}
-              price={p.price}
-              timePeriod={p.timePeriod}
-              icon={p.icon}
-              recommended={p.recommended}
-              onBuy={openConfirm}
-            />
-          ))
-        ) : (
-          (filtered as ActiveUserPackage[]).map((p) => (
-            <PackageCardRider
-              key={p._id}
-              theme="light"
-              variant="active"
-              id={p._id}
-              name={p.name}
-              rc={p.rc}
-              price={p.price}
-              icon={p.icon}
-              daysRemaining={p.daysRemaining}
-            />
-          ))
-        )}
-      </ScrollView>
+          {/* List */}
+          <ScrollView
+            contentContainerStyle={{
+              paddingHorizontal: 16,
+              paddingTop: 12,
+              paddingBottom: 103,
+            }}
+            showsVerticalScrollIndicator={false}
+          >
+            {loading ? (
+              <View style={styles.centerMessage}>
+                <Ionicons name="reload-circle" size={48} color="#6B7280" />
+                <Text style={styles.messageText}>Loading packages...</Text>
+              </View>
+            ) : filtered.length === 0 ? (
+              <View style={styles.centerMessage}>
+                <Ionicons
+                  name={search ? "search-outline" : "gift-outline"}
+                  size={48}
+                  color="#9CA3AF"
+                />
+                <Text style={styles.messageTitle}>
+                  {search
+                    ? "No matches found"
+                    : `No ${activeTab.toLowerCase()} packages`}
+                </Text>
+                <Text style={styles.messageSubtitle}>
+                  {search
+                    ? `Try a different search term`
+                    : activeTab === "Available"
+                    ? "Check back later for new packages"
+                    : "Purchase packages to see them here"}
+                </Text>
+              </View>
+            ) : activeTab === "Available" ? (
+              (filtered as AvailablePackage[]).map((p) => (
+                <PackageCardRider
+                  key={p._id}
+                  theme="light"
+                  variant="available"
+                  id={p._id}
+                  name={p.name}
+                  rc={p.rc}
+                  price={p.price}
+                  timePeriod={p.timePeriod}
+                  icon={p.icon}
+                  recommended={p.recommended}
+                  onBuy={openConfirm}
+                />
+              ))
+            ) : (
+              (filtered as ActiveUserPackage[]).map((p) => (
+                <PackageCardRider
+                  key={p._id}
+                  theme="light"
+                  variant="active"
+                  id={p._id}
+                  name={p.name}
+                  rc={p.rc}
+                  price={p.price}
+                  icon={p.icon}
+                  daysRemaining={p.daysRemaining}
+                />
+              ))
+            )}
+          </ScrollView>
+        </>
+      )}
 
       {/* Confirmation Modal */}
       <PurchaseConfirmModal
@@ -265,7 +279,7 @@ const openConfirm = (id: string) => {
 
 const styles = StyleSheet.create({
   safeArea: {
-    flex: 10,
+    flex: 1,
     backgroundColor: "#FFFFFF",
   },
   header: {

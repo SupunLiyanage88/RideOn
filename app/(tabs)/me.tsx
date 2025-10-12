@@ -1,10 +1,9 @@
 import { logout } from "@/api/auth";
-import { getUnreadCount } from "@/utils/notifications";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useFocusEffect, useRouter } from "expo-router";
-import React, { useCallback, useState } from "react";
+import { useRouter } from "expo-router";
+import React, { useState } from "react";
 import {
   ScrollView,
   Text,
@@ -13,7 +12,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ModernMenuItem from "../components/user/profile/ModernMenuItem";
-import NotificationModal from "../components/user/profile/NotificationModal";
 import ProfileHeader from "../components/user/profile/ProfileHeader";
 import QuickActionCard from "../components/user/profile/QuickActionCard";
 
@@ -108,7 +106,7 @@ const LogoutButton = () => {
       disabled={isPending}
       activeOpacity={0.8}
       style={{
-        backgroundColor: "#083A4C",
+        backgroundColor: "#BB0101",
         paddingVertical: 18,
         borderRadius: 16,
         alignItems: "center",
@@ -139,22 +137,6 @@ const Me = () => {
   const router = useRouter();
   const [notificationCount, setNotificationCount] = useState(0);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
-
-  // Load notification count when screen is focused
-  const loadNotificationCount = useCallback(async () => {
-    try {
-      const count = await getUnreadCount();
-      setNotificationCount(count);
-    } catch (error) {
-      console.error('Error loading notification count:', error);
-    }
-  }, []);
-
-  useFocusEffect(
-    useCallback(() => {
-      loadNotificationCount();
-    }, [loadNotificationCount])
-  );
 
   const handleNotificationPress = () => {
     setShowNotificationModal(true);
@@ -193,13 +175,6 @@ const Me = () => {
         />
       </View>
 
-      {/* Notification Modal */}
-      <NotificationModal
-        visible={showNotificationModal}
-        onClose={handleNotificationModalClose}
-        onNotificationCountChange={handleNotificationCountChange}
-      />
-
       <ScrollView 
         contentContainerStyle={{ padding: 20, paddingTop: 10 }}
         showsVerticalScrollIndicator={false}
@@ -210,7 +185,7 @@ const Me = () => {
         <View style={{ 
           flexDirection: "row", 
           gap: 12,
-          marginBottom: 32
+          marginBottom: 24
         }}>
           <QuickActionCard
             icon="bicycle"
@@ -223,6 +198,26 @@ const Me = () => {
             title="Add Bike"
             color="#083A4C"
             onPress={() => router.push("/components/user/profile/AddUserBikes")}
+          />
+        </View>
+
+        {/* Earnings & History Actions */}
+        <View style={{ 
+          flexDirection: "row", 
+          gap: 12,
+          marginBottom: 32
+        }}>
+          <QuickActionCard
+            icon="money-bill-alt"
+            title="My Earnings"
+            color="#10B981"
+            onPress={() => router.push("/components/user/profile/BikeOwnerEarnings")}
+          />
+          <QuickActionCard
+            icon="history"
+            title="Rental History"
+            color="#3B82F6"
+            onPress={() => router.push("/components/user/profile/RentalHistoryDetail")}
           />
         </View>
 

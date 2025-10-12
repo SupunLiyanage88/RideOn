@@ -1,12 +1,18 @@
-import { fetchBikeStation } from "@/api/bikeStation";
-import { fetchUserRentBike, saveRentBike } from "@/api/rentBike";
+import { BikeStation, fetchBikeStation } from "@/api/bikeStation";
+import { fetchObstacleData } from "@/api/obstacle";
+import {
+  fetchUserRentBike,
+  saveRentBike,
+  updateUserLocation,
+} from "@/api/rentBike";
 import UseCurrentUser from "@/hooks/useCurrentUser";
 import { getRouteDistance } from "@/utils/distance.matrix.utils";
 import { useDebounce } from "@/utils/useDebounce.utils";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Location from "expo-location";
-import React, { useEffect, useRef, useState } from "react";
+import { useRouter } from "expo-router";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Modal,
@@ -22,6 +28,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import ConfirmationModal from "../../ConfirmationModal";
 import DialogHeader from "../../DialogHeader";
 import SearchInput from "../../SearchBarQuery";
+import AddOrEditObstacle from "./AddOrEditObstacle";
 
 const THEME_COLOR = "#083A4C";
 const RC_FEE_VALUE = 10;
@@ -31,6 +38,7 @@ type DialogProps = {
   visible: boolean;
   onClose: () => void;
   defaultBikeId?: String;
+  bikeStation?: BikeStation;
 };
 
 interface Coordinate {
@@ -38,11 +46,19 @@ interface Coordinate {
   longitude: number;
 }
 
-const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
+const RentUserBike = ({
+  visible,
+  onClose,
+  defaultBikeId,
+  bikeStation,
+}: DialogProps) => {
   const mapRef = useRef<MapView | null>(null);
   const { user } = UseCurrentUser();
+  const router = useRouter();
   const [location, setLocation] = useState<Coordinate | null>(null);
   const [selectedStation, setSelectedStation] = useState<any>(null);
+  const [obstacleModalOpen, setObstacleModalOpen] = useState<any>(null);
+  const [selectedObstacle, setSelectedObstacle] = useState<any>(null);
   const [distance, setDistance] = useState<any | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
@@ -51,6 +67,7 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
   );
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [navigationSet, setNavigationSet] = useState(false);
+  const [obstacleCategory, setObstacleCategory] = useState<string>("");
 
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedQuery = useDebounce(searchQuery, 500);
@@ -70,6 +87,39 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
         alert("Bike Rent failed");
       },
     });
+  const { mutate: updateUserLocationMutation, isPending: updatingMe } =
+    useMutation({
+      mutationFn: updateUserLocation,
+      onSuccess: () => {
+        console.log("Location Updated");
+        setDeleteDialogOpen(false);
+      },
+      onError: (data) => {
+        alert("Bike Rent failed");
+      },
+    });
+
+  function updateMe() {
+    if (location) {
+      const updatedData = {
+        userLatitude: location.latitude,
+        userLongitude: location.longitude,
+      };
+      updateUserLocationMutation(updatedData);
+    }
+  }
+  useEffect(() => {
+    updateMe();
+
+    const interval = setInterval(
+      () => {
+        updateMe();
+      },
+      5 * 60 * 1000
+    );
+
+    return () => clearInterval(interval);
+  }, [location]);
   const {
     data: rentedBikeData,
     refetch: refetchRentedBikeData,
@@ -78,6 +128,45 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
     queryKey: ["station-rented-bike"],
     queryFn: fetchUserRentBike,
   });
+
+  const {
+    data: obstacleData,
+    isFetching: isFetchObstacleData,
+    refetch: reFetchObstacleData,
+  } = useQuery({
+    queryKey: ["obstacle-data", obstacleCategory],
+    queryFn: ({ queryKey }) =>
+      fetchObstacleData({ category: obstacleCategory }),
+  });
+
+  const colorForCategory = useMemo(
+    () => ({
+      ACCIDENTS: "#D32F2F",
+      TRAFFIC: "#F57C00",
+      ANIMALS: "#8E24AA",
+      MUD: "#6D4C41",
+      RAIN: "#0288D1",
+      SLIPPERY: "#43A047",
+    }),
+    []
+  );
+
+  const obstacleCategories = useMemo(
+    () => [
+      {
+        key: "ACCIDENTS",
+        label: "Accidents",
+        color: colorForCategory.ACCIDENTS,
+      },
+      { key: "TRAFFIC", label: "Traffic", color: colorForCategory.TRAFFIC },
+      { key: "ANIMALS", label: "Animals", color: colorForCategory.ANIMALS },
+      { key: "MUD", label: "Mud", color: colorForCategory.MUD },
+      { key: "RAIN", label: "Rain", color: colorForCategory.RAIN },
+      { key: "SLIPPERY", label: "Slippery", color: colorForCategory.SLIPPERY },
+    ],
+    [colorForCategory]
+  );
+
   useEffect(() => {
     let isMounted = true;
 
@@ -101,7 +190,6 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
           setLocationError(null);
         }
       } catch (error) {
-        console.error("Error getting location:", error);
         if (isMounted) {
           setLocationError("Failed to get location");
         }
@@ -126,7 +214,6 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
     queryFn: ({ queryKey }) => fetchBikeStation({ query: queryKey[1] }),
   });
 
-  console.log("Rented Bike Data:", rentedBikeData);
   useEffect(() => {
     const fetchDistance = async () => {
       if (location && (selectedStation || rentedBikeData)) {
@@ -148,9 +235,7 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
             destination
           );
           setDistance(dist);
-        } catch (error) {
-          console.error("Error fetching distance:", error);
-        }
+        } catch (error) {}
       }
     };
     fetchDistance();
@@ -189,7 +274,7 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
         {
           accuracy: Location.Accuracy.High,
           distanceInterval: 5,
-          timeInterval: 1000,
+          timeInterval: 60000,
         },
         (pos) => {
           const { latitude, longitude } = pos.coords;
@@ -207,7 +292,6 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
         }
       );
     } catch (error) {
-      console.error("Error starting navigation:", error);
       setIsNavigating(false);
     }
   };
@@ -255,9 +339,7 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
     setSearchQuery(query);
     try {
       await researchBikeStation();
-    } catch (error) {
-      console.error("Search failed:", error);
-    }
+    } catch (error) {}
   };
 
   const fitAllStations = () => {
@@ -289,7 +371,7 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
     }
   }, [bikeStationData, selectedStation]);
 
-  const RC_FEE_ROUTE = Math.round(distance?.distanceKm * RC_FEE_VALUE);
+  const RC_FEE_ROUTE = distance?.distanceKm * RC_FEE_VALUE;
   const shouldShowButton = RC_FEE_ROUTE > (user?.rc || 0);
 
   function saveBike(data: any) {
@@ -303,6 +385,11 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
       latitude: data?.latitude,
       longitude: data?.longitude,
       rcPrice: RC_FEE_ROUTE,
+      userLatitude: location?.latitude,
+      userLongitude: location?.longitude,
+      fromLatitude: bikeStation?.latitude,
+      fromLongitude: bikeStation?.longitude,
+      bikeStationId: bikeStation?._id,
     };
     saveRentBikeMutation(submitData);
     setNavigationSet(false);
@@ -335,7 +422,9 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
           <View style={{ marginTop: 15 }}>
             <DialogHeader
               title={"Pick Station"}
-              onClose={handleClose}
+              onClose={() => {
+                (handleClose(), router.push("/(tabs)"));
+              }}
               subtitle="Pick Your Ride On Station"
             />
           </View>
@@ -420,6 +509,40 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
                       </Marker>
                     ))}
 
+                  {!isFetchObstacleData &&
+                    obstacleData?.map((obstacle: any) => {
+                      const markerColor =
+                        colorForCategory[
+                          obstacle.category?.toUpperCase() as keyof typeof colorForCategory
+                        ] || "#555";
+
+                      return (
+                        <Marker
+                          key={obstacle._id}
+                          coordinate={{
+                            latitude: obstacle.obstacleLatitude,
+                            longitude: obstacle.obstacleLongitude,
+                          }}
+                          onPress={() => {
+                            setSelectedObstacle(obstacle);
+                            setObstacleModalOpen(true);
+                          }}
+                        >
+                          <View
+                            style={[
+                              styles.customMarker,
+                              {
+                                backgroundColor: markerColor,
+                                borderColor: "#fff",
+                              },
+                            ]}
+                          >
+                            <Ionicons name="warning" size={15} color="#fff" />
+                          </View>
+                        </Marker>
+                      );
+                    })}
+
                   {destination && location && (
                     <MapViewDirections
                       origin={location}
@@ -439,9 +562,7 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
                           animated: true,
                         });
                       }}
-                      onError={(errorMessage) => {
-                        console.error("Directions error:", errorMessage);
-                      }}
+                      onError={(errorMessage) => {}}
                     />
                   )}
                 </MapView>
@@ -449,9 +570,7 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
                 <TouchableOpacity
                   style={styles.recenterButton}
                   onPress={() => {
-                    if (location && !selectedStation) {
-                      fitAllStations();
-                    } else if (location) {
+                    if (location) {
                       mapRef.current?.animateToRegion(
                         {
                           latitude: location.latitude,
@@ -474,6 +593,72 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
                   <Ionicons name="expand" size={20} color={THEME_COLOR} />
                   <Text style={styles.fitAllText}>Show All Stations</Text>
                 </TouchableOpacity>
+
+                <View style={styles.categoryContainer}>
+                  {obstacleCategories.map((cat, idx) => {
+                    const selected = obstacleCategory === cat.label;
+                    return (
+                      <TouchableOpacity
+                        key={cat.key}
+                        onPress={() => {setObstacleCategory(cat.label)}}
+                        activeOpacity={0.8}
+                        style={{
+                          marginRight:
+                            idx !== obstacleCategories.length - 1 ? 8 : 0,
+                          flexDirection: "row",
+                        }}
+                      >
+                        <View
+                          style={[
+                            styles.categoryDot,
+                            { backgroundColor: cat.color },
+                            selected && styles.categoryDotSelected,
+                          ]}
+                        >
+                          <Ionicons name="warning" size={15} color="#fff" />
+                        </View>
+                        {selected && (
+                          <View
+                            style={{
+                              flexDirection: "row",
+                              backgroundColor: "gray",
+                              marginLeft: 5,
+                              borderRadius: 999,
+                              paddingVertical: 4,
+                              paddingHorizontal: 8,
+                              justifyContent: "center",
+                              alignItems: "center"
+                            }}
+                          >
+                            <Text
+                              style={{
+                                color: "#fff",
+                              }}
+                            >
+                              {cat.label}
+                            </Text>
+                          </View>
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                  {obstacleCategory && (
+                    <TouchableOpacity
+                      onPress={() => setObstacleCategory("")}
+                      activeOpacity={0.8}
+                    >
+                      <View
+                        style={[
+                          styles.categoryDot,
+                          { backgroundColor: "gray" },
+                          false && styles.categoryDotSelected,
+                        ]}
+                      >
+                        <Ionicons name="close" size={10} color="#fff" />
+                      </View>
+                    </TouchableOpacity>
+                  )}
+                </View>
               </>
             )}
           </View>
@@ -496,7 +681,7 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
                         </View>
                         <Text style={styles.detailLabel}>Available RC</Text>
                       </View>
-                      <Text style={styles.basicChip}>{user?.rc} RC</Text>
+                      <Text style={styles.basicChip}>{(user?.rc)?.toFixed(2)} RC</Text>
                     </View>
                   )}
                   {((!rentedBikeData && navigationSet) || selectedStation) && (
@@ -514,7 +699,7 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
                         <Text style={styles.detailLabel}>RC Fee</Text>
                       </View>
                       <Text style={styles.basicChip}>
-                        {RC_FEE_ROUTE || 0} RC
+                        {RC_FEE_ROUTE.toFixed(2) || 0} RC
                       </Text>
                     </View>
                   )}
@@ -564,6 +749,15 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
                     <Ionicons name="compass" size={18} color="#fff" />
                     <Text style={styles.navigateText}>Stop Navigation</Text>
                   </TouchableOpacity>
+                  {rentedBikeData && (
+                    <TouchableOpacity
+                      style={[styles.navigateButtonWithoutStretch]}
+                      onPress={() => setObstacleModalOpen(true)}
+                    >
+                      <Ionicons name="warning" size={18} color="#fff" />
+                      <Text style={styles.navigateText}>Add Obstacle</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               ) : !isNavigating ? (
                 !user?.rc || user.rc === 0 || shouldShowButton ? (
@@ -609,6 +803,7 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
             </View>
           )}
         </View>
+
         {deleteDialogOpen && (
           <ConfirmationModal
             open={deleteDialogOpen}
@@ -648,6 +843,15 @@ const RentUserBike = ({ visible, onClose, defaultBikeId }: DialogProps) => {
             handleReject={() => {}}
           />
         )}
+
+        <AddOrEditObstacle
+          onClose={() => {
+            (setObstacleModalOpen(null), setSelectedObstacle(null));
+          }}
+          visible={obstacleModalOpen}
+          defaultValues={selectedObstacle}
+          userLocation={location}
+        />
       </SafeAreaView>
     </Modal>
   );
@@ -745,7 +949,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: THEME_COLOR,
-    borderRadius: 8,
+    borderRadius: 999,
     paddingVertical: 10,
     marginTop: 10,
   },
@@ -773,6 +977,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 4,
   },
+  obstacleMarker: {
+    backgroundColor: "#D9534F", // red for warning
+    borderColor: "#A93226",
+  },
+
   stationInfoDetails: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -844,5 +1053,29 @@ const styles = StyleSheet.create({
     color: "red",
     textAlign: "center",
     margin: 16,
+  },
+  categoryContainer: {
+    flexDirection: "column",
+    gap: 10,
+    marginLeft: 16,
+    marginTop: 55,
+    position: "absolute",
+  },
+  categoryDot: {
+    width: 30,
+    height: 30,
+    borderRadius: 999,
+    borderWidth: 2,
+    borderColor: "#ffffff",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.5,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  categoryDotSelected: {
+    transform: [{ scale: 1.15 }],
   },
 });

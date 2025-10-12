@@ -288,6 +288,7 @@ const IncidentManagement = () => {
                       </View>
                     </View>
 
+                  <View style={{ alignItems: "flex-end" }}>
                     <TouchableOpacity
                       style={styles.actionButton}
                       onPress={() => {
@@ -297,6 +298,11 @@ const IncidentManagement = () => {
                     >
                       <Feather name="trash-2" size={18} color="#FF3B30" />
                     </TouchableOpacity>
+
+                    {incident.stopRide && (
+                      <Text style={styles.rideStoppedText}>Ride Stopped</Text>
+                    )}
+                  </View>
                   </View>
 
                   <View style={styles.descriptionContainer}>
@@ -357,7 +363,7 @@ const IncidentManagement = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, marginTop: 20, paddingLeft: 25, paddingRight: 25 },
+  container: { flex: 1, marginTop: 20, paddingLeft: 18, paddingRight: 18 },
   mainBackground: { flex: 1, backgroundColor: "#F0F2F5" },
   header: {
     paddingHorizontal: 25,
@@ -563,6 +569,12 @@ const styles = StyleSheet.create({
     color: "#DC2626",
     textAlign: "center",
     lineHeight: 20,
+  },
+  rideStoppedText: {
+    marginTop: 6,
+    fontSize: 12,
+    color: "#FF3B30",
+    fontWeight: "700",
   },
 });
 

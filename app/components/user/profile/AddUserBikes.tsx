@@ -1,5 +1,4 @@
 import { saveBikeByUser } from "@/api/bike";
-import { addNotification } from "@/utils/notifications";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -173,13 +172,6 @@ const AddUserBikes = () => {
     onSuccess: async (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["user-bikes"] });
       console.log("User bike submission successful:", data);
-
-      // Add a notification for the user about bike submission
-      await addNotification({
-        title: "📝 Bike Submitted for Review",
-        message: "Your bike has been submitted successfully! Our team will review it within 24-48 hours. You'll get notified once it's approved.",
-        type: 'general',
-      });
 
       Alert.alert(
         "Bike Submitted Successfully! 🚴‍♂️",

@@ -14,6 +14,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import ResetOnboardingButton from "../components/ResetOnboardingButton";
 
 type FormData = {
   email: string;
