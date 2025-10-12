@@ -181,10 +181,10 @@ const _layout = () => {
       <Tabs.Screen
         name="reward"
         options={{
-          title: "Reward",
+          title: "reward",
           headerShown: false,
           tabBarIcon: ({ focused }) => (
-            <TabIcon title="Reward" icon="gift-outline" focused={focused} />
+            <TabIcon title="Plans" icon="gift-outline" focused={focused} />
           ),
         }}
       />
