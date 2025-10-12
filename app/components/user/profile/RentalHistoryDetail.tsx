@@ -4,11 +4,11 @@ import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
-    RefreshControl,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View
+  RefreshControl,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Loader from "../../Loader";
@@ -245,9 +245,9 @@ const RentalHistoryDetail = () => {
           <Ionicons name="location" size={16} color="#6B7280" />
           <Text style={{ fontSize: 13, color: "#6B7280", marginLeft: 8, flex: 1 }}>
             <Text style={{ fontWeight: "600", color: "#374151" }}>
-              {item.selectedStationId.stationName}
+              {item.selectedStationId?.stationName}
             </Text>
-            {" • "}{item.selectedStationId.stationLocation}
+            {" • "}{item.selectedStationId?.stationLocation}
           </Text>
         </View>
 
@@ -255,9 +255,9 @@ const RentalHistoryDetail = () => {
           <Ionicons name="bicycle" size={16} color="#6B7280" />
           <Text style={{ fontSize: 13, color: "#6B7280", marginLeft: 8 }}>
             Station ID: <Text style={{ fontWeight: "600", color: "#374151" }}>
-              {item.selectedStationId.stationId}
+              {item.selectedStationId?.stationId}
             </Text>
-            {" • "}{item.selectedStationId.bikeCount} bikes available
+            {" • "}{item.selectedStationId?.bikeCount} bikes available
           </Text>
         </View>
       </View>
