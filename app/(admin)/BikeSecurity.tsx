@@ -363,7 +363,7 @@ const BikeSecurity = () => {
           <View style={styles.userInfo}>
             <Text style={styles.userName}>{item.userId.userName}</Text>
             <Text style={styles.userEmail}>{item.userId.email}</Text>
-            <Text style={styles.bikeId}>Bike: {item.bikeId.bikeId}</Text>
+            <Text style={styles.bikeId}>Bike: {item.bikeId?.bikeId}</Text>
             {isDeviating && (
               <View style={styles.deviationInfo}>
                 <MaterialIcons name="warning" size={12} color={WARNING_COLOR} />
@@ -575,7 +575,7 @@ const BikeSecurity = () => {
                     <View style={styles.calloutInfo}>
                       <View style={styles.calloutInfoRow}>
                         <MaterialIcons name="directions-bike" size={16} color={THEME_COLOR} />
-                        <Text style={styles.calloutText}>Bike: {rental.bikeId.bikeId}</Text>
+                        <Text style={styles.calloutText}>Bike: {rental.bikeId?.bikeId}</Text>
                       </View>
                       <View style={styles.calloutInfoRow}>
                         <MaterialIcons name="phone" size={16} color={THEME_COLOR} />
@@ -1024,7 +1024,7 @@ const BikeSecurity = () => {
                       marginBottom: 8,
                     }}
                   >
-                    Bike: {userToContact.bikeId.bikeId}
+                    Bike: {userToContact.bikeId?.bikeId}
                   </Text>
                   {deviations[userToContact._id] && (
                     <View
