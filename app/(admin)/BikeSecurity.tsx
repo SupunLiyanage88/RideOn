@@ -1736,7 +1736,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: THEME_COLOR,
   },
-  // New enhanced UI styles
   topControlsContainer: {
     position: "absolute",
     top: 50,
