@@ -16,6 +16,7 @@ import {
   Text,
   TextInput,
   View,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PackageCardRider from "../components/user/package/PackageCardRider";
@@ -52,6 +53,7 @@ const Reward = () => {
   const [available, setAvailable] = useState<AvailablePackage[]>([]);
   const [active, setActive] = useState<ActiveUserPackage[]>([]);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
   const [userRc, setUserRc] = useState<number>(0);
 
@@ -59,36 +61,52 @@ const Reward = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [selected, setSelected] = useState<PurchaseConfirmData | null>(null);
 
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      try {
-        const token = await AsyncStorage.getItem("token");
-        if (!token) {
-          setAvailable([]);
-          setActive([]);
-          setUserRc(0);
-          return;
-        }
-        const [allPkgs, activePkgs, rcTotal] = await Promise.all([
-          fetchPackages().catch(() => []),
-          fetchActiveUserPackages().catch(() => []),
-          fetchUserRcTotal().catch(() => 0),
-        ]);
-        setAvailable(Array.isArray(allPkgs) ? allPkgs : []);
-        setActive(Array.isArray(activePkgs) ? activePkgs : []);
-        setUserRc(rcTotal);
-      } catch (err) {
-        console.error("Reward init error:", err);
+  // ----------------------
+  // Data load function
+  // ----------------------
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
         setAvailable([]);
         setActive([]);
         setUserRc(0);
-      } finally {
-        setLoading(false);
+        return;
       }
-    };
-    load();
+      const [allPkgs, activePkgs, rcTotal] = await Promise.all([
+        fetchPackages().catch(() => []),
+        fetchActiveUserPackages().catch(() => []),
+        fetchUserRcTotal().catch(() => 0),
+      ]);
+      setAvailable(Array.isArray(allPkgs) ? allPkgs : []);
+      setActive(Array.isArray(activePkgs) ? activePkgs : []);
+      setUserRc(rcTotal);
+    } catch (err) {
+      console.error("Reward loadData error:", err);
+      setAvailable([]);
+      setActive([]);
+      setUserRc(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ----------------------
+  // Initial load
+  // ----------------------
+  useEffect(() => {
+    loadData();
   }, []);
+
+  // ----------------------
+  // Pull-to-refresh
+  // ----------------------
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  };
 
   const listShown = activeTab === "Available" ? available : active;
 
@@ -193,7 +211,7 @@ const Reward = () => {
             )}
           </View>
 
-          {/* List */}
+          {/* List with pull-to-refresh */}
           <ScrollView
             contentContainerStyle={{
               paddingHorizontal: 16,
@@ -201,6 +219,14 @@ const Reward = () => {
               paddingBottom: 103,
             }}
             showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={["#0F172A"]}
+                tintColor="#0F172A"
+              />
+            }
           >
             {loading ? (
               <View style={styles.centerMessage}>
