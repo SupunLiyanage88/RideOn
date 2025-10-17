@@ -16,6 +16,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import MyRewardsSummary from "./MyRewardsSummary";
 
 type Period = "all" | "month" | "week" | "day";
 
@@ -160,6 +161,7 @@ console.log("Fetching leaderboard for userId:", currentUserId, "period:", period
   const onRefresh = async () => {
     setRefreshing(true);
     await loadLeaderboard(false);
+    setForceRefresh((prev) => prev + 1);
   };
 
 
@@ -171,6 +173,7 @@ console.log("Fetching leaderboard for userId:", currentUserId, "period:", period
 
     // Call loadLeaderboard immediately with new period
     loadLeaderboard(true, selectedPeriod);
+    setForceRefresh((prev) => prev + 1);
   };
 
   const formatRC = (amount: number) => {
@@ -184,7 +187,19 @@ console.log("Fetching leaderboard for userId:", currentUserId, "period:", period
     userRank.totalRCSpent !== undefined;
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={["#3B82F6"]}
+          tintColor="#3B82F6"
+        />
+      }
+    >
       {/* Header with Gradient */}
       <LinearGradient
         colors={["#083A4C", "#0E6B64", "#37A77D"]}
@@ -334,7 +349,7 @@ console.log("Fetching leaderboard for userId:", currentUserId, "period:", period
                 <Text style={styles.userRankLabel}>RC SPENT</Text>
               </View>
             </View>
-            
+
             {/* Decorative elements */}
             <View style={[styles.rankDecor, styles.rankDecor1]} />
             <View style={[styles.rankDecor, styles.rankDecor2]} />
@@ -359,19 +374,9 @@ console.log("Fetching leaderboard for userId:", currentUserId, "period:", period
         </View>
       )}
 
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={["#3B82F6"]}
-            tintColor="#3B82F6"
-          />
-        }
-      >
+      <MyRewardsSummary refreshKey={forceRefresh} />
+
+      <View style={styles.listContainer}>
         {loading ? (
           <View style={styles.centerMessage}>
             <ActivityIndicator size="large" color="#3B82F6" />
@@ -490,8 +495,8 @@ console.log("Fetching leaderboard for userId:", currentUserId, "period:", period
             })}
           </Animated.View>
         )}
-      </ScrollView>
-    </View>
+      </View>
+    </ScrollView>
   );
 };
 
@@ -565,7 +570,7 @@ const styles = StyleSheet.create({
   // Filter Section
   filterContainer: {
     paddingHorizontal: 20,
-    marginTop: -12,
+    marginTop: 16,
     marginBottom: 16,
     zIndex: 10,
   },
@@ -793,13 +798,12 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 
-  // Scroll View
-  scrollView: {
-    flex: 1,
-  },
+  // Scroll View content
   scrollContent: {
+    paddingBottom: 150,
+  },
+  listContainer: {
     paddingHorizontal: 20,
-    paddingBottom: 100,
   },
 
   // Loading & Empty States
