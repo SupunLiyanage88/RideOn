@@ -4,10 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Loader from "../../Loader";
@@ -364,20 +364,20 @@ const RentalDetail = () => {
                 color: "#374151",
                 marginBottom: 4,
               }}>
-                {rental.selectedStationId.stationName}
+                {rental.selectedStationId?.stationName}
               </Text>
               <Text style={{
                 fontSize: 13,
                 color: "#6B7280",
                 marginBottom: 2,
               }}>
-                {rental.selectedStationId.stationLocation}
+                {rental.selectedStationId?.stationLocation}
               </Text>
               <Text style={{
                 fontSize: 12,
                 color: "#9CA3AF",
               }}>
-                Station ID: {rental.selectedStationId.stationId} • {rental.selectedStationId.bikeCount} bikes available
+                Station ID: {rental.selectedStationId?.stationId} • {rental.selectedStationId?.bikeCount} bikes available
               </Text>
             </View>
           </View>

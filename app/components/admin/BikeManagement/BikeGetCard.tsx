@@ -131,7 +131,7 @@ const BikeGetCard: React.FC<BikeCardProps> = ({
                       { color: conditionInfo.color },
                     ]}
                   >
-                    {condition || 0}%
+                    {(condition)?.toFixed(2) || 0}%
                   </Text>
                   <Text
                     style={[
