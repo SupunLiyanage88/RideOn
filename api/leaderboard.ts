@@ -66,21 +66,20 @@ export async function fetchLeaderboard(
   try {
     const headers = await getAuthHeaders();
 
-    if (!params.includeRankFor) {
-      // Always include current userId
-      const userId = await AsyncStorage.getItem("userId");
-      if (userId) {
-        params.includeRankFor = userId;
-      }
-    }
-
+    // Do not automatically populate includeRankFor from local storage here.
+    // If the caller supplies includeRankFor explicitly, include it; otherwise
+    // omit the param and let the server derive the current user from the
+    // Authorization token (req.user) which is more reliable.
     const queryParams: Record<string, any> = {
       period: params.period || "all",
       page: params.page || 1,
       limit: params.limit || 50,
-      includeRankFor: params.includeRankFor, // guaranteed to exist
       _t: params._t || Date.now(),
     };
+
+    if (params.includeRankFor) {
+      queryParams.includeRankFor = params.includeRankFor;
+    }
 
     console.log("Fetching leaderboard with params:", queryParams);
 

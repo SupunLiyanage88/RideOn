@@ -92,8 +92,12 @@ export async function deletePackage(id: string) {
 export async function fetchActiveUserPackages() {
   const headers = await getAuthHeaders();
   const res = await axios.get(`${API}/api/user-package/active`, { headers });
-  // controller returns an array directly (not wrapped)
-  return Array.isArray(res.data) ? res.data : [];
+  // Some backend controllers return the array directly (res.data = [...])
+  // while others wrap it in { success: true, data: [...] }.
+  // Accept both shapes to avoid breaking the UI when the response changes.
+  if (Array.isArray(res.data)) return res.data;
+  if (res.data && Array.isArray(res.data.data)) return res.data.data;
+  return [];
 }
 
 /** POST /api/user-package/activate  { packageId }
