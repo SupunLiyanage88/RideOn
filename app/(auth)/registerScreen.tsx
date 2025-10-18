@@ -3,11 +3,18 @@ import queryClient from "@/state/queryClient";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMutation } from "@tanstack/react-query";
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { ActivityIndicator, Animated, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  Animated,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 const RegisterScreen = () => {
   const {
@@ -22,7 +29,7 @@ const RegisterScreen = () => {
   const [hideConfirmPassword, setHideConfirmPassword] = useState(true);
   const userPassword = watch("password");
   const router = useRouter();
-  
+
   // Focus states for modern input styling
   const [usernameFocused, setUsernameFocused] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
@@ -73,23 +80,18 @@ const RegisterScreen = () => {
     ]).start();
   };
 
-
-
   const getInputAnimationStyle = (delay = 0) => ({
     opacity: fadeAnim,
     transform: [
-      { 
-        translateY: Animated.add(
-          slideAnim,
-          new Animated.Value(delay * 10)
-        )
-      }
-    ]
+      {
+        translateY: Animated.add(slideAnim, new Animated.Value(delay * 10)),
+      },
+    ],
   });
 
   const createFocusAnimation = () => {
     const focusAnim = useRef(new Animated.Value(1)).current;
-    
+
     const animateOnFocus = () => {
       Animated.spring(focusAnim, {
         toValue: 1.02,
@@ -127,7 +129,27 @@ const RegisterScreen = () => {
   });
 
   const handleRegister = (data: User) => {
-    console.log(data);
+    // Additional validation before submitting
+    if (data.password !== data.confirmPassword) {
+      alert("Passwords do not match!");
+      return;
+    }
+
+    // Validate mobile number format
+    const mobileRegex = /^[0-9]{10}$/;
+    if (!mobileRegex.test(data.mobile)) {
+      alert("Please enter a valid 10-digit mobile number");
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(data.email)) {
+      alert("Please enter a valid email address");
+      return;
+    }
+
+    console.log("Registration data:", data);
     registerMutation(data);
   };
 
@@ -149,41 +171,43 @@ const RegisterScreen = () => {
         ])
       );
       pulseAnimation.start();
-      
+
       return () => pulseAnimation.stop();
     }
   }, [isPending]);
 
   return (
-    <Animated.View 
+    <Animated.View
       style={[
         styles.container,
         {
           opacity: fadeAnim,
-          transform: [{ translateY: slideAnim }]
-        }
+          transform: [{ translateY: slideAnim }],
+        },
       ]}
     >
-      <Animated.View 
+      <Animated.View
         style={[
           styles.formContainer,
           {
-            transform: [{ scale: scaleAnim }]
-          }
+            transform: [{ scale: scaleAnim }],
+          },
         ]}
       >
         {/* Welcome Header */}
-        <Animated.View 
+        <Animated.View
           style={[
             styles.headerContainer,
             {
               opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }]
-            }
+              transform: [{ translateY: slideAnim }],
+            },
           ]}
         >
           <Text style={styles.welcomeTitle}>Create Account</Text>
-          <Text style={styles.welcomeSubtitle}>Join us and start your ride journey</Text>
+          <Text style={styles.welcomeSubtitle}>
+            Join us and start your ride journey
+          </Text>
         </Animated.View>
 
         <Controller
@@ -191,23 +215,35 @@ const RegisterScreen = () => {
           name="userName"
           rules={{
             required: "Username is required",
+            minLength: {
+              value: 3,
+              message: "Username must be at least 3 characters long",
+            },
+            maxLength: {
+              value: 20,
+              message: "Username cannot exceed 20 characters",
+            },
+            pattern: {
+              value: /^[a-zA-Z0-9_]+$/,
+              message:
+                "Username can only contain letters, numbers, and underscores",
+            },
           }}
           render={({ field: { onChange, value } }) => (
-            <Animated.View 
-              style={[
-                styles.inputContainer,
-                getInputAnimationStyle(1)
-              ]}
+            <Animated.View
+              style={[styles.inputContainer, getInputAnimationStyle(1)]}
             >
-              <View style={[
-                styles.inputWrapper,
-                usernameFocused && styles.inputWrapperFocused,
-                errors?.userName && styles.inputWrapperError
-              ]}>
-                <Ionicons 
-                  name="person-outline" 
-                  size={20} 
-                  color={usernameFocused ? "#0B4057" : "#9ca3af"} 
+              <View
+                style={[
+                  styles.inputWrapper,
+                  usernameFocused && styles.inputWrapperFocused,
+                  errors?.userName && styles.inputWrapperError,
+                ]}
+              >
+                <Ionicons
+                  name="person-outline"
+                  size={20}
+                  color={usernameFocused ? "#0B4057" : "#9ca3af"}
                   style={styles.inputIcon}
                 />
                 <TextInput
@@ -224,7 +260,9 @@ const RegisterScreen = () => {
               {errors?.userName && (
                 <View style={styles.errorContainer}>
                   <Ionicons name="alert-circle" size={16} color="#ef4444" />
-                  <Text style={styles.errorText}>{errors.userName?.message}</Text>
+                  <Text style={styles.errorText}>
+                    {errors.userName?.message}
+                  </Text>
                 </View>
               )}
             </Animated.View>
@@ -250,15 +288,17 @@ const RegisterScreen = () => {
           }}
           render={({ field: { onChange, value } }) => (
             <View style={styles.inputContainer}>
-              <View style={[
-                styles.inputWrapper,
-                emailFocused && styles.inputWrapperFocused,
-                errors?.email && styles.inputWrapperError
-              ]}>
-                <Ionicons 
-                  name="mail-outline" 
-                  size={20} 
-                  color={emailFocused ? "#0B4057" : "#9ca3af"} 
+              <View
+                style={[
+                  styles.inputWrapper,
+                  emailFocused && styles.inputWrapperFocused,
+                  errors?.email && styles.inputWrapperError,
+                ]}
+              >
+                <Ionicons
+                  name="mail-outline"
+                  size={20}
+                  color={emailFocused ? "#0B4057" : "#9ca3af"}
                   style={styles.inputIcon}
                 />
                 <TextInput
@@ -303,15 +343,17 @@ const RegisterScreen = () => {
           }}
           render={({ field: { onChange, value } }) => (
             <View style={styles.inputContainer}>
-              <View style={[
-                styles.inputWrapper,
-                mobileFocused && styles.inputWrapperFocused,
-                errors?.mobile && styles.inputWrapperError
-              ]}>
-                <Ionicons 
-                  name="call-outline" 
-                  size={20} 
-                  color={mobileFocused ? "#0B4057" : "#9ca3af"} 
+              <View
+                style={[
+                  styles.inputWrapper,
+                  mobileFocused && styles.inputWrapperFocused,
+                  errors?.mobile && styles.inputWrapperError,
+                ]}
+              >
+                <Ionicons
+                  name="call-outline"
+                  size={20}
+                  color={mobileFocused ? "#0B4057" : "#9ca3af"}
                   style={styles.inputIcon}
                 />
                 <TextInput
@@ -320,6 +362,7 @@ const RegisterScreen = () => {
                   onChangeText={onChange}
                   autoCapitalize="none"
                   keyboardType="number-pad"
+                  maxLength={10}
                   style={styles.textInput}
                   placeholderTextColor="#9ca3af"
                   onFocus={() => setMobileFocused(true)}
@@ -341,19 +384,34 @@ const RegisterScreen = () => {
           name="password"
           rules={{
             required: "Password is required",
-            minLength: { value: 6, message: "Min 6 characters" },
+            minLength: {
+              value: 8,
+              message: "Password must be at least 8 characters",
+            },
+            maxLength: {
+              value: 50,
+              message: "Password cannot exceed 50 characters",
+            },
+            pattern: {
+              value:
+                /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
+              message:
+                "Password must contain uppercase, lowercase, number, and special character",
+            },
           }}
           render={({ field: { onChange, value } }) => (
             <View style={styles.inputContainer}>
-              <View style={[
-                styles.inputWrapper,
-                passwordFocused && styles.inputWrapperFocused,
-                errors?.password && styles.inputWrapperError
-              ]}>
-                <Ionicons 
-                  name="lock-closed-outline" 
-                  size={20} 
-                  color={passwordFocused ? "#0B4057" : "#9ca3af"} 
+              <View
+                style={[
+                  styles.inputWrapper,
+                  passwordFocused && styles.inputWrapperFocused,
+                  errors?.password && styles.inputWrapperError,
+                ]}
+              >
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={20}
+                  color={passwordFocused ? "#0B4057" : "#9ca3af"}
                   style={styles.inputIcon}
                 />
                 <TextInput
@@ -366,18 +424,23 @@ const RegisterScreen = () => {
                   onFocus={() => setPasswordFocused(true)}
                   onBlur={() => setPasswordFocused(false)}
                 />
-                <Pressable onPress={() => setHidePassword((v) => !v)} style={styles.eyeIcon}>
-                  <Ionicons 
-                    name={hidePassword ? "eye-outline" : "eye-off-outline"} 
-                    size={20} 
-                    color="#9ca3af" 
+                <Pressable
+                  onPress={() => setHidePassword((v) => !v)}
+                  style={styles.eyeIcon}
+                >
+                  <Ionicons
+                    name={hidePassword ? "eye-outline" : "eye-off-outline"}
+                    size={20}
+                    color="#9ca3af"
                   />
                 </Pressable>
               </View>
               {errors?.password && (
                 <View style={styles.errorContainer}>
                   <Ionicons name="alert-circle" size={16} color="#ef4444" />
-                  <Text style={styles.errorText}>{errors.password?.message}</Text>
+                  <Text style={styles.errorText}>
+                    {errors.password?.message}
+                  </Text>
                 </View>
               )}
             </View>
@@ -388,7 +451,11 @@ const RegisterScreen = () => {
           control={control}
           name="confirmPassword"
           rules={{
-            required: "Confirm Password is required",
+            required: "Please confirm your password",
+            minLength: {
+              value: 8,
+              message: "Password must be at least 8 characters",
+            },
             validate: {
               matchesPreviousPassword: (value) =>
                 value === userPassword || "Passwords do not match",
@@ -396,15 +463,17 @@ const RegisterScreen = () => {
           }}
           render={({ field: { onChange, value } }) => (
             <View style={styles.inputContainer}>
-              <View style={[
-                styles.inputWrapper,
-                confirmPasswordFocused && styles.inputWrapperFocused,
-                errors?.confirmPassword && styles.inputWrapperError
-              ]}>
-                <Ionicons 
-                  name="lock-closed-outline" 
-                  size={20} 
-                  color={confirmPasswordFocused ? "#0B4057" : "#9ca3af"} 
+              <View
+                style={[
+                  styles.inputWrapper,
+                  confirmPasswordFocused && styles.inputWrapperFocused,
+                  errors?.confirmPassword && styles.inputWrapperError,
+                ]}
+              >
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={20}
+                  color={confirmPasswordFocused ? "#0B4057" : "#9ca3af"}
                   style={styles.inputIcon}
                 />
                 <TextInput
@@ -417,31 +486,41 @@ const RegisterScreen = () => {
                   onFocus={() => setConfirmPasswordFocused(true)}
                   onBlur={() => setConfirmPasswordFocused(false)}
                 />
-                <Pressable onPress={() => setHideConfirmPassword((v) => !v)} style={styles.eyeIcon}>
-                  <Ionicons 
-                    name={hideConfirmPassword ? "eye-outline" : "eye-off-outline"} 
-                    size={20} 
-                    color="#9ca3af" 
+                <Pressable
+                  onPress={() => setHideConfirmPassword((v) => !v)}
+                  style={styles.eyeIcon}
+                >
+                  <Ionicons
+                    name={
+                      hideConfirmPassword ? "eye-outline" : "eye-off-outline"
+                    }
+                    size={20}
+                    color="#9ca3af"
                   />
                 </Pressable>
               </View>
               {errors?.confirmPassword && (
                 <View style={styles.errorContainer}>
                   <Ionicons name="alert-circle" size={16} color="#ef4444" />
-                  <Text style={styles.errorText}>{errors.confirmPassword?.message}</Text>
+                  <Text style={styles.errorText}>
+                    {errors.confirmPassword?.message}
+                  </Text>
                 </View>
               )}
             </View>
           )}
         />
 
-        <Animated.View 
+        <Animated.View
           style={[
             styles.submitContainer,
             {
               opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }, { scale: buttonScaleAnim }]
-            }
+              transform: [
+                { translateY: slideAnim },
+                { scale: buttonScaleAnim },
+              ],
+            },
           ]}
         >
           <Pressable
@@ -452,39 +531,34 @@ const RegisterScreen = () => {
             }}
             style={[
               styles.submitButton,
-              isPending && styles.submitButtonDisabled
+              styles.SignInButton,
+              isPending && styles.submitButtonDisabled,
             ]}
           >
-            <LinearGradient
-              colors={isPending ? ['#d4d4d4', '#a3a3a3'] : ['#0B4057', '#0f5a73']}
-              style={styles.gradientButton}
-            >
-              {isPending ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <>
-                  <Text style={styles.submitButtonText}>Create Account</Text>
-                  <Ionicons name="arrow-forward" size={20} color="white" />
-                </>
-              )}
-            </LinearGradient>
+            {isPending ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <>
+                <Text style={styles.submitButtonText}>Create Account</Text>
+                <Ionicons name="arrow-forward" size={20} color="white" />
+              </>
+            )}
           </Pressable>
         </Animated.View>
 
         {/* Terms footer */}
-        <Animated.View 
+        <Animated.View
           style={[
             styles.footerContainer,
             {
               opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }]
-            }
+              transform: [{ translateY: slideAnim }],
+            },
           ]}
         >
           <Text style={styles.footerText}>
-            By creating an account, you agree to our{' '}
-            <Text style={styles.linkText}>Terms of Service</Text>
-            {' '}and{' '}
+            By creating an account, you agree to our{" "}
+            <Text style={styles.linkText}>Terms of Service</Text> and{" "}
             <Text style={styles.linkText}>Privacy Policy</Text>
           </Text>
         </Animated.View>
@@ -496,46 +570,46 @@ const RegisterScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 20,
     paddingHorizontal: 20,
   },
   formContainer: {
-    width: '100%',
+    width: "100%",
     maxWidth: 400,
     borderRadius: 16,
     padding: 8,
   },
   headerContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 24,
   },
   welcomeTitle: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: '#0B4057',
+    fontWeight: "bold",
+    color: "#0B4057",
     marginBottom: 8,
-    textAlign: 'center',
+    textAlign: "center",
   },
   welcomeSubtitle: {
     fontSize: 16,
-    color: '#6b7280',
-    textAlign: 'center',
+    color: "#6b7280",
+    textAlign: "center",
     lineHeight: 22,
   },
   inputContainer: {
     marginBottom: 16,
   },
   inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: '#e5e7eb',
+    borderColor: "#e5e7eb",
     paddingHorizontal: 16,
     paddingVertical: 4,
-    backgroundColor: '#f9fafb',
-    shadowColor: '#000',
+    backgroundColor: "#f9fafb",
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 1,
@@ -545,14 +619,14 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   inputWrapperFocused: {
-    borderColor: '#0B4057',
-    backgroundColor: '#ffffff',
+    borderColor: "#0B4057",
+    backgroundColor: "#ffffff",
     shadowOpacity: 0.1,
     elevation: 3,
   },
   inputWrapperError: {
-    borderColor: '#ef4444',
-    backgroundColor: '#fef2f2',
+    borderColor: "#ef4444",
+    backgroundColor: "#fef2f2",
   },
   inputIcon: {
     marginRight: 12,
@@ -560,26 +634,26 @@ const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     paddingVertical: 14,
-    color: '#1f2937',
+    color: "#1f2937",
     fontSize: 16,
   },
   passwordInput: {
     flex: 1,
     paddingVertical: 14,
-    color: '#1f2937',
+    color: "#1f2937",
     fontSize: 16,
   },
   eyeIcon: {
     padding: 4,
   },
   errorContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 6,
     paddingHorizontal: 4,
   },
   errorText: {
-    color: '#ef4444',
+    color: "#ef4444",
     fontSize: 13,
     marginLeft: 6,
     flex: 1,
@@ -589,10 +663,10 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   submitButton: {
-    width: '100%',
+    width: "100%",
     borderRadius: 16,
-    overflow: 'hidden',
-    shadowColor: '#0B4057',
+    overflow: "hidden",
+    shadowColor: "#0B4057",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -605,34 +679,37 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     elevation: 2,
   },
-  gradientButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+  SignInButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#0B4057",
+    borderRadius: 9999,
     paddingVertical: 18,
     paddingHorizontal: 32,
     gap: 8,
   },
   submitButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     letterSpacing: 0.5,
   },
   footerContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 16,
     paddingHorizontal: 16,
   },
   footerText: {
-    color: '#6b7280',
+    color: "#6b7280",
     fontSize: 12,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 16,
+    paddingBottom: 50,
   },
   linkText: {
-    color: '#0B4057',
-    fontWeight: '500',
+    color: "#0B4057",
+    fontWeight: "500",
   },
 });
 

@@ -3,7 +3,6 @@ import queryClient from "@/state/queryClient";
 import Ionicons from '@expo/vector-icons/Ionicons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMutation } from "@tanstack/react-query";
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -263,20 +262,6 @@ export default function LoginScreen() {
             </Animated.View>
           )}
         />
-        
-        <Animated.View 
-          style={[
-            styles.forgotPasswordContainer,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }]
-            }
-          ]}
-        >
-          <Pressable>
-            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-          </Pressable>
-        </Animated.View>
 
         {/* Submit */}
         <Animated.View 
@@ -296,22 +281,18 @@ export default function LoginScreen() {
             }}
             style={[
               styles.submitButton,
+              styles.SignInButton,
               isPending && styles.submitButtonDisabled
             ]}
           >
-            <LinearGradient
-              colors={isPending ? ['#d4d4d4', '#a3a3a3'] : ['#0B4057', '#0f5a73']}
-              style={styles.gradientButton}
-            >
-              {isPending ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <>
-                  <Text style={styles.submitButtonText}>Sign In</Text>
-                  <Ionicons name="arrow-forward" size={20} color="white" />
-                </>
-              )}
-            </LinearGradient>
+            {isPending ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <>
+                <Text style={styles.submitButtonText}>Sign In</Text>
+                <Ionicons name="arrow-forward" size={20} color="white" />
+              </>
+            )}
           </Pressable>
         </Animated.View>
 
@@ -439,7 +420,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   submitContainer: {
-    marginBottom: 24,
+    marginVertical: 24,
   },
   submitButton: {
     width: '100%',
@@ -458,10 +439,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     elevation: 2,
   },
-  gradientButton: {
+  SignInButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#0B4057',
+    borderRadius: 9999,
     paddingVertical: 18,
     paddingHorizontal: 32,
     gap: 8,
