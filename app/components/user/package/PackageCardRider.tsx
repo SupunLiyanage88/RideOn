@@ -85,12 +85,12 @@ const LightCard: React.FC<Props> = (props) => {
                 <MaterialIcons name="toll" size={12} color="#0891B2" />
                 <Text style={lightStyles.detailText}>{props.rc} RC</Text>
               </View>
-              {props.timePeriod ? (
+              {/* {props.timePeriod ? (
                 <View style={lightStyles.detailBadge}>
                   <MaterialIcons name="schedule" size={12} color="#6366F1" />
                   <Text style={lightStyles.detailText}>{props.timePeriod} days</Text>
                 </View>
-              ) : null}
+              ) : null} */}
             </View>
           </View>
         </View>
@@ -134,7 +134,7 @@ const LightCard: React.FC<Props> = (props) => {
             </TouchableOpacity>
           ) : (
             <View style={lightStyles.activePill}>
-              <LinearGradient
+              {/* <LinearGradient
                 colors={["#DCFCE7", "#A7F3D0"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
@@ -142,7 +142,7 @@ const LightCard: React.FC<Props> = (props) => {
               >
                 <MaterialIcons name="check-circle" size={16} color="#059669" />
                 <Text style={lightStyles.activeText}>{props.daysRemaining} days left</Text>
-              </LinearGradient>
+              </LinearGradient> */}
             </View>
           )}
         </View>
@@ -201,12 +201,12 @@ const DarkCard: React.FC<Props> = (props) => {
                 <MaterialIcons name="toll" size={12} color="#5EEAD4" />
                 <Text style={darkStyles.detailText}>{props.rc} RC</Text>
               </View>
-              {props.timePeriod ? (
+              {/* {props.timePeriod ? (
                 <View style={darkStyles.detailBadge}>
                   <MaterialIcons name="schedule" size={12} color="#A5B4FC" />
                   <Text style={darkStyles.detailText}>{props.timePeriod} days</Text>
                 </View>
-              ) : null}
+              ) : null} */}
             </View>
           </View>
         </View>
@@ -250,7 +250,7 @@ const DarkCard: React.FC<Props> = (props) => {
             </TouchableOpacity>
           ) : (
             <View style={darkStyles.activePill}>
-              <LinearGradient
+              {/* <LinearGradient
                 colors={["#6EE7B7", "#34D399"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
@@ -258,7 +258,7 @@ const DarkCard: React.FC<Props> = (props) => {
               >
                 <MaterialIcons name="check-circle" size={16} color="#064E3B" />
                 <Text style={darkStyles.activeText}>{props.daysRemaining} days left</Text>
-              </LinearGradient>
+              </LinearGradient> */}
             </View>
           )}
         </View>

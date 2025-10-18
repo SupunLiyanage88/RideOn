@@ -11,7 +11,6 @@ import {
   View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import ModernMenuItem from "../components/user/profile/ModernMenuItem";
 import ProfileHeader from "../components/user/profile/ProfileHeader";
 import QuickActionCard from "../components/user/profile/QuickActionCard";
 
@@ -220,56 +219,6 @@ const Me = () => {
             onPress={() => router.push("/components/user/profile/RentalHistoryDetail")}
           />
         </View>
-
-        {/* Account Section */}
-        <Text style={{
-          fontSize: 12,
-          fontWeight: "800",
-          color: "#083A4C",
-          marginBottom: 16,
-          marginLeft: 4,
-          textTransform: "uppercase",
-          letterSpacing: 1.2,
-          opacity: 0.6,
-        }}>
-          ACCOUNT SETTINGS
-        </Text>
-        
-        <ModernMenuItem
-          icon="✏️"
-          title="Edit Profile"
-          subtitle="Update your personal information"
-          onPress={() => console.log("Edit Profile")}
-        />
-        <ModernMenuItem
-          icon="🔒"
-          title="Change Password"
-          subtitle="Update your security credentials"
-          onPress={() => console.log("Change Password")}
-        />
-
-        {/* Support */}
-        <Text style={{
-          fontSize: 12,
-          fontWeight: "800",
-          color: "#083A4C",
-          marginBottom: 16,
-          marginTop: 24,
-          marginLeft: 4,
-          textTransform: "uppercase",
-          letterSpacing: 1.2,
-          opacity: 0.6,
-        }}>
-          SUPPORT
-        </Text>
-        
-        <ModernMenuItem
-          icon="❓"
-          title="Help Center"
-          subtitle="Get help and support"
-          onPress={() => console.log("Help")}
-        />
-
         <View style={{ marginTop: 16 }}>
           <LogoutButton />
         </View>
