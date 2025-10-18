@@ -12,11 +12,14 @@ const EmergencyManagement = () => {
   return (
     <SafeAreaView edges={["left", "right"]} style={{ flex: 1 }}>
       <StatusBar barStyle="light-content" />
-      <View style={{flexGrow: 1}}>
-        <View style={{
-          alignItems: "center",
-          justifyContent: "center"
-        }}>
+      <View style={{ flexGrow: 1 }}>
+        <View
+          style={{
+            alignItems: "center",
+            justifyContent: "center",
+            marginTop: 20 
+          }}
+        >
           <ToggleButton
             leftLabel="Incident"
             rightLabel="Accident"
@@ -28,7 +31,7 @@ const EmergencyManagement = () => {
             }}
           />
         </View>
-        <View style={{flex: 1}}>
+        <View style={{ flex: 1}}>
           {clickedIncident ? <IncidentManagement /> : <AccidentManagement />}
         </View>
       </View>

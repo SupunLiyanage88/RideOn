@@ -16,6 +16,7 @@ const BikeEarningsSummary = ({ bikeId }: BikeEarningsProps) => {
     queryKey: ["all-rental-history"],
     queryFn: fetchUserRentBikeHistory,
   });
+  console.log("All Rental History:", allRentalHistory);
 
   // Calculate earnings for this specific bike
   const bikeEarnings = React.useMemo(() => {
