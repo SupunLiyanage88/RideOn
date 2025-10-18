@@ -1,31 +1,36 @@
 import {
-  activateUserPackage,
   Package as AdminPackage,
   fetchActiveUserPackages,
   fetchPackages,
   fetchUserRcTotal,
 } from "@/api/package";
+import { createPayHereSession, fetchPayHereStatus } from "@/api/payment";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
+  Modal,
+  Platform,
+  RefreshControl,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
-  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { WebView, WebViewMessageEvent } from "react-native-webview";
+import Leaderboard from "../components/user/package/Leaderboard";
 import PackageCardRider from "../components/user/package/PackageCardRider";
-import SegmentedTabs from "../components/user/package/SegmentedTabs";
-import RCBalanceHeader from "../components/user/package/RCBalanceHeader";
 import PurchaseConfirmModal, {
   PurchaseConfirmData,
 } from "../components/user/package/PurchaseConfirmModal";
-import Leaderboard from "../components/user/package/Leaderboard";
+import RCBalanceHeader from "../components/user/package/RCBalanceHeader";
+import SegmentedTabs from "../components/user/package/SegmentedTabs";
 
 type AvailablePackage = AdminPackage & {
   activationCount?: number;
@@ -56,6 +61,19 @@ const Reward = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
   const [userRc, setUserRc] = useState<number>(0);
+  const [actionBusy, setActionBusy] = useState(false);
+
+  const [paySession, setPaySession] = useState<
+    | {
+        endpoint: string;
+        payload: Record<string, string | number | boolean>;
+      }
+    | null
+  >(null);
+  const [paymentVisible, setPaymentVisible] = useState(false);
+  const [paymentOrderId, setPaymentOrderId] = useState<string | null>(null);
+  const [paymentBusy, setPaymentBusy] = useState(false);
+  const [webviewLoading, setWebviewLoading] = useState(false);
 
   // confirm modal state
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -64,7 +82,7 @@ const Reward = () => {
   // ----------------------
   // Data load function
   // ----------------------
-  const loadData = async () => {
+    const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const token = await AsyncStorage.getItem("token");
@@ -90,14 +108,14 @@ const Reward = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // ----------------------
   // Initial load
   // ----------------------
-  useEffect(() => {
-    loadData();
-  }, []);
+    useEffect(() => {
+      loadData();
+    }, [loadData]);
 
   // ----------------------
   // Pull-to-refresh
@@ -137,27 +155,166 @@ const Reward = () => {
   };
 
   // Confirm -> do the purchase then refresh lists
+  const resetPaymentState = () => {
+    setPaySession(null);
+    setPaymentOrderId(null);
+    setPaymentVisible(false);
+    setPaymentBusy(false);
+    setWebviewLoading(false);
+  };
+
+  const buildFormBody = (data: Record<string, string | number | boolean>) =>
+    Object.entries(data)
+      .filter(([, value]) => value !== undefined && value !== null)
+      .map(([key, value]) => {
+        const normalized =
+          typeof value === "boolean" ? (value ? "true" : "false") : String(value);
+        const safe = normalized.startsWith("undefined") ? "" : normalized;
+        return `${encodeURIComponent(key)}=${encodeURIComponent(safe)}`;
+      })
+      .join("&");
+
+  const pollPaymentStatus = useCallback(
+    async (orderId: string) => {
+      setPaymentBusy(true);
+      try {
+        const maxAttempts = 6;
+        for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+          try {
+            const res = await fetchPayHereStatus(orderId);
+            const status = res?.status?.toUpperCase?.() || "";
+
+            if (status === "PAID") {
+              await loadData();
+              setActiveTab("Active");
+              Alert.alert("Success", "Package activated successfully");
+              return;
+            }
+
+            if (["FAILED", "CANCELLED", "ERROR"].includes(status)) {
+              Alert.alert("Payment", "Payment was not completed.");
+              return;
+            }
+          } catch (statusErr: any) {
+            console.error("payhere status error", statusErr?.message);
+          }
+
+          await new Promise((resolve) => setTimeout(resolve, 1500));
+        }
+
+        Alert.alert(
+          "Pending",
+          "Payment confirmation is still pending. Please check your packages shortly."
+        );
+      } finally {
+        setPaymentBusy(false);
+      }
+    },
+    [loadData]
+  );
+
+  const handlePaymentResult = useCallback(
+    async (result: "success" | "cancel") => {
+      const orderId = paymentOrderId;
+
+      if (!orderId) {
+        resetPaymentState();
+        return;
+      }
+
+      if (result === "success") {
+        await pollPaymentStatus(orderId);
+        resetPaymentState();
+      } else {
+        resetPaymentState();
+        Alert.alert("Payment", "Payment was cancelled.");
+      }
+    },
+    [paymentOrderId, pollPaymentStatus]
+  );
+
+  const onWebViewMessage = useCallback(
+    (event: WebViewMessageEvent) => {
+      const msg = (event.nativeEvent.data || "").toLowerCase();
+      if (msg === "success") {
+        handlePaymentResult("success");
+      } else if (msg === "cancel") {
+        handlePaymentResult("cancel");
+      }
+    },
+    [handlePaymentResult]
+  );
+
   const confirmBuy = async (id: string) => {
+    if (Platform.OS !== "android") {
+      Alert.alert(
+        "Unavailable",
+        "PayHere checkout is currently supported on Android only."
+      );
+      return;
+    }
+
+    setActionBusy(true);
     try {
-      setLoading(true);
-      const resp = await activateUserPackage(id);
-      const [activePkgs, rc] = await Promise.all([
-        fetchActiveUserPackages().catch(() => []),
-        fetchUserRcTotal().catch(() => 0),
-      ]);
-      setActive(activePkgs);
-      setUserRc(rc);
-      Alert.alert("Success", resp?.message || "Package activated successfully");
-      setActiveTab("Active");
-    } catch (e: any) {
-      console.error("activate error:", e?.response?.data || e?.message);
-      Alert.alert("Error", e?.response?.data?.message || "Activation failed");
-    } finally {
+      const session = await createPayHereSession(id);
+      if (!session?.success) {
+        throw new Error("Unable to initialise payment");
+      }
+
+      const orderId = String(
+        (session.payload.order_id as string) ||
+          (session.payload.orderId as string) ||
+          ""
+      );
+
+      if (!orderId) {
+        throw new Error("Missing order reference from PayHere");
+      }
+
+      const patchedPayload = {
+        ...session.payload,
+        return_url:
+          (session.payload.return_url as string)?.startsWith("undefined")
+            ? `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/payments/payhere/mobile/return`
+            : session.payload.return_url,
+        cancel_url:
+          (session.payload.cancel_url as string)?.startsWith("undefined")
+            ? `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/payments/payhere/mobile/cancel`
+            : session.payload.cancel_url,
+        notify_url:
+          (session.payload.notify_url as string)?.startsWith("undefined")
+            ? `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/payments/payhere/notify`
+            : session.payload.notify_url,
+      };
+
+      setPaySession({ endpoint: session.endpoint, payload: patchedPayload });
+      setPaymentOrderId(orderId);
+      setPaymentVisible(true);
       setConfirmOpen(false);
       setSelected(null);
-      setLoading(false);
+    } catch (e: any) {
+      console.error(
+        "create payhere session error",
+        {
+          status: e?.response?.status,
+          data: e?.response?.data,
+          message: e?.message,
+          url: e?.config?.url,
+        }
+      );
+      Alert.alert(
+        "Payment",
+        e?.response?.data?.message || e?.message || "Could not start payment"
+      );
+    } finally {
+      setActionBusy(false);
     }
   };
+
+  const cancelPaymentFlow = useCallback(() => {
+    resetPaymentState();
+    Alert.alert("Payment", "Payment flow closed.");
+  }, []);
 
   return (
     <SafeAreaView edges={["left", "right"]} style={styles.safeArea}>
@@ -292,13 +449,61 @@ const Reward = () => {
       <PurchaseConfirmModal
         visible={confirmOpen}
         data={selected}
-        busy={loading}
+        busy={actionBusy}
         onClose={() => {
           setConfirmOpen(false);
           setSelected(null);
         }}
         onConfirm={confirmBuy}
       />
+
+      <Modal
+        visible={paymentVisible && !!paySession}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={cancelPaymentFlow}
+      >
+        <SafeAreaView style={{ flex: 1, backgroundColor: "#0F172A" }}>
+          <View style={styles.payHeader}>
+            <View>
+              <Text style={styles.payTitle}>PayHere Checkout</Text>
+              <Text style={styles.paySubtitle}>Complete the payment to activate</Text>
+            </View>
+            <TouchableOpacity onPress={cancelPaymentFlow} style={styles.closePaymentBtn}>
+              <Ionicons name="close" size={22} color="#111827" />
+            </TouchableOpacity>
+          </View>
+
+          {paySession && (
+            <View style={{ flex: 1 }}>
+              <WebView
+                originWhitelist={["*"]}
+                startInLoadingState
+                javaScriptEnabled
+                onLoadStart={() => setWebviewLoading(true)}
+                onLoadEnd={() => setWebviewLoading(false)}
+                onMessage={onWebViewMessage}
+                source={{
+                  uri: paySession.endpoint,
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                  },
+                  body: buildFormBody(paySession.payload),
+                }}
+              />
+              {(webviewLoading || paymentBusy) && (
+                <View style={styles.webviewOverlay}>
+                  <ActivityIndicator size="large" color="#FFFFFF" />
+                  <Text style={styles.webviewOverlayText}>
+                    {paymentBusy ? "Verifying payment..." : "Loading checkout..."}
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -375,6 +580,46 @@ const styles = StyleSheet.create({
     marginTop: 6,
     textAlign: "center",
     fontWeight: "500",
+  },
+  payHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: "#FFFFFF",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderColor: "#E5E7EB",
+  },
+  payTitle: {
+    color: "#0F172A",
+    fontSize: 18,
+    fontWeight: "800",
+  },
+  paySubtitle: {
+    color: "#6B7280",
+    fontSize: 12,
+    marginTop: 2,
+  },
+  closePaymentBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#F3F4F6",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  webviewOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(15, 23, 42, 0.6)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  webviewOverlayText: {
+    marginTop: 12,
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });
 
