@@ -4,9 +4,10 @@ import { images } from "@/constants/images";
 import UseCurrentUser from "@/hooks/useCurrentUser";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Redirect } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
   Dimensions,
   ImageBackground,
   Platform,
@@ -43,9 +44,22 @@ export default function _layout() {
   const [clickedLogin, setClickedLogin] = useState(true);
   const [clickedRegister, setClickedRegister] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  
+  // Animation for smooth transitions
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const loginOpacity = useRef(new Animated.Value(1)).current;
+  const registerOpacity = useRef(new Animated.Value(0)).current;
+  const backgroundShiftAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     checkOnboardingStatus();
+    
+    // Initialize opacity values based on initial state
+    loginOpacity.setValue(clickedLogin ? 1 : 0);
+    registerOpacity.setValue(clickedRegister ? 1 : 0);
   }, []);
 
   const checkOnboardingStatus = async () => {
@@ -94,37 +108,163 @@ export default function _layout() {
       >
         <View style={styles.imageContainer}>
           <ImageBackground
-            source={images.patternBg}
+            source={images.loginbg}
             resizeMode="cover"
             style={styles.backgroundImage}
           />
         </View>
 
-        <View
+        <Animated.View
           style={[
             styles.contentContainer,
-            { marginTop: clickedLogin ? -56 : -144 },
+            { 
+              marginTop: clickedLogin ? -56 : -144,
+              transform: [
+                { scale: scaleAnim },
+                { translateY: backgroundShiftAnim }
+              ]
+            },
           ]}
         >
-          <View style={styles.toggleContainer}>
+          <Animated.View 
+            style={[
+              styles.toggleContainer,
+              {
+                transform: [{ scale: scaleAnim }]
+              }
+            ]}
+          >
             <ToggleButton
               leftLabel="Login"
               rightLabel="Register"
               click01={clickedLogin}
               click02={clickedRegister}
               onToggle={(left, right) => {
-                setClickedLogin(left);
-                setClickedRegister(right);
+                if (isTransitioning) return; // Prevent multiple transitions
+                
+                setIsTransitioning(true);
+                // Smooth native animations without height conflicts
+
+                // Start native animations (native thread)
+                Animated.parallel([
+                  // Container fade effect
+                  Animated.sequence([
+                    Animated.timing(fadeAnim, {
+                      toValue: 0.9,
+                      duration: 150,
+                      useNativeDriver: true,
+                    }),
+                    Animated.timing(fadeAnim, {
+                      toValue: 1,
+                      duration: 200,
+                      useNativeDriver: true,
+                    }),
+                  ]),
+                  // Fade out current screen
+                  Animated.timing(left ? registerOpacity : loginOpacity, {
+                    toValue: 0,
+                    duration: 250,
+                    useNativeDriver: true,
+                  }),
+                  // Fade in new screen
+                  Animated.timing(left ? loginOpacity : registerOpacity, {
+                    toValue: 1,
+                    duration: 350,
+                    useNativeDriver: true,
+                  }),
+                  // Scale animation
+                  Animated.sequence([
+                    Animated.timing(scaleAnim, {
+                      toValue: 0.98,
+                      duration: 150,
+                      useNativeDriver: true,
+                    }),
+                    Animated.spring(scaleAnim, {
+                      toValue: 1,
+                      tension: 100,
+                      friction: 8,
+                      useNativeDriver: true,
+                    }),
+                  ]),
+                  // Slide animation
+                  Animated.sequence([
+                    Animated.timing(slideAnim, {
+                      toValue: left ? -15 : 15,
+                      duration: 200,
+                      useNativeDriver: true,
+                    }),
+                    Animated.timing(slideAnim, {
+                      toValue: 0,
+                      duration: 250,
+                      useNativeDriver: true,
+                    }),
+                  ]),
+                  // Background parallax effect
+                  Animated.sequence([
+                    Animated.timing(backgroundShiftAnim, {
+                      toValue: left ? -5 : 5,
+                      duration: 300,
+                      useNativeDriver: true,
+                    }),
+                    Animated.timing(backgroundShiftAnim, {
+                      toValue: 0,
+                      duration: 200,
+                      useNativeDriver: true,
+                    }),
+                  ]),
+                ]).start(() => {
+                  setClickedLogin(left);
+                  setClickedRegister(right);
+                  setIsTransitioning(false);
+                });
               }}
             />
-          </View>
+          </Animated.View>
 
-          <View
-            style={[styles.formContainer, { height: clickedLogin ? 250 : 400 }]}
-          >
-            {clickedLogin ? <LoginScreen /> : <RegisterScreen />}
-          </View>
-        </View>
+          <Animated.View style={[
+            styles.formContainer,
+            { 
+              minHeight: clickedLogin ? 350 : 520, // Use static values for smooth height changes
+              overflow: 'hidden', // Prevent content overflow during transitions
+              opacity: fadeAnim, // Add subtle container fade
+            }
+          ]}>
+            {/* Login Screen with individual opacity and transform */}
+            <Animated.View style={[
+              styles.screenContainer,
+              { 
+                opacity: loginOpacity,
+                position: clickedLogin ? 'relative' : 'absolute',
+                width: '100%',
+                zIndex: clickedLogin ? 1 : 0,
+                transform: [
+                  { translateX: slideAnim },
+                  { scale: scaleAnim }
+                ]
+              }
+            ]}>
+              <LoginScreen />
+            </Animated.View>
+
+            {/* Register Screen with individual opacity and transform */}
+            <Animated.View style={[
+              styles.screenContainer,
+              { 
+                opacity: registerOpacity,
+                position: clickedRegister ? 'relative' : 'absolute',
+                width: '100%',
+                top: 0,
+                zIndex: clickedRegister ? 1 : 0,
+                transform: [
+                  { translateX: slideAnim },
+                  { scale: scaleAnim }
+                ]
+              }
+            ]}>
+              <RegisterScreen />
+            </Animated.View>
+          </Animated.View>
+        </Animated.View>
       </ScrollView>
     </KeyboardAwareScrollView>
   );
@@ -177,5 +317,10 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     position: "relative",
+    justifyContent: 'flex-start',
+  },
+  screenContainer: {
+    flex: 1,
+    width: '100%',
   },
 });

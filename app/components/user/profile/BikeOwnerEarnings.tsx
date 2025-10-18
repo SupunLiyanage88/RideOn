@@ -5,11 +5,11 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
-    RefreshControl,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View
+  RefreshControl,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Loader from "../../Loader";
@@ -35,6 +35,8 @@ const BikeOwnerEarnings = () => {
     queryKey: ["all-rental-history"],
     queryFn: fetchUserRentBikeHistory,
   });
+
+  console.log("All Rental History:", allRentalHistory);
 
   const handleRefresh = () => {
     refetchBikes();
