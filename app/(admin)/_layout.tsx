@@ -37,6 +37,10 @@ export default function Layout() {
         options={{ title: "Emergency Management" }}
       />
       <Stack.Screen
+        name="PaymentManagement"
+        options={{ title: "Payment Management" }}
+      />
+      <Stack.Screen
         name="PackageManagement"
         options={{ title: "Package Management" }}
       />      
