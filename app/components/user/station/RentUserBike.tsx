@@ -104,11 +104,14 @@ const RentUserBike = ({
     useMutation({
       mutationFn: stopRent,
       onSuccess: () => {
+        alert("Trip Ended Successfully");
+        queryClient.invalidateQueries({ queryKey: ["current-user"] });
+        queryClient.invalidateQueries({ queryKey: ["station-rented-bike"] });
         console.log("Location Updated");
         setDeleteDialogOpen(false);
       },
       onError: (data) => {
-        alert("Bike Rent failed");
+        alert("Trip Ended Failed");
       },
     });
 
