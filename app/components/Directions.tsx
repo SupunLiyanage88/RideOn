@@ -5,7 +5,13 @@ import { useQuery } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import RentUserBike from "./user/station/RentUserBike";
 
@@ -23,6 +29,7 @@ const Directions = () => {
     queryFn: fetchUserRentBike,
   });
   const station = StationData;
+  console.log("Rented Bike Data:", rentedBikeData);
 
   return (
     <View style={{ padding: 0 }}>
@@ -52,7 +59,7 @@ const Directions = () => {
               fontWeight: "bold",
             }}
           >
-            Nearest Station
+            {rentedBikeData ? `Go To Navigation` : "Select Station"}
           </Text>
           <TouchableOpacity
             onPress={() => router.push("/(tabs)/search")}
@@ -96,9 +103,13 @@ const Directions = () => {
               marginRight: 16,
             }}
           >
-            <MaterialCommunityIcons name="map-marker" size={24} color="#37A77D" />
+            <MaterialCommunityIcons
+              name="map-marker"
+              size={24}
+              color="#37A77D"
+            />
           </View>
-          
+
           <View style={{ flex: 1 }}>
             <Text
               style={{
@@ -108,7 +119,9 @@ const Directions = () => {
                 marginBottom: 4,
               }}
             >
-              {station?.stationName}
+              {rentedBikeData
+                ? rentedBikeData?.selectedStationId?.stationName
+                : `Pickup Nearest Station`}
             </Text>
             <Text
               style={{
@@ -116,7 +129,7 @@ const Directions = () => {
                 fontSize: 14,
               }}
             >
-              {station?.location}
+              {rentedBikeData ? rentedBikeData?.selectedStationId?.stationLocation : `Near 500m`}
             </Text>
           </View>
 
@@ -272,7 +285,11 @@ const Directions = () => {
               marginBottom: 8,
             }}
           >
-            <MaterialCommunityIcons name="motorbike" size={20} color="#37A77D" />
+            <MaterialCommunityIcons
+              name="motorbike"
+              size={20}
+              color="#37A77D"
+            />
           </View>
           <Text
             style={{
