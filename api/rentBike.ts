@@ -123,3 +123,8 @@ export async function updateUserLocation(data: any) {
   const res = await axios.put("/api/rent-bike/me", data);
   return res.data;
 }
+
+export async function stopRent() {
+  const res = await axios.put("/api/rent-bike/trip-end");
+  return res.data;
+}

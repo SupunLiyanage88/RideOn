@@ -3,6 +3,7 @@ import { fetchObstacleData } from "@/api/obstacle";
 import {
   fetchUserRentBike,
   saveRentBike,
+  stopRent,
   updateUserLocation,
 } from "@/api/rentBike";
 import UseCurrentUser from "@/hooks/useCurrentUser";
@@ -90,6 +91,18 @@ const RentUserBike = ({
   const { mutate: updateUserLocationMutation, isPending: updatingMe } =
     useMutation({
       mutationFn: updateUserLocation,
+      onSuccess: () => {
+        console.log("Location Updated");
+        setDeleteDialogOpen(false);
+      },
+      onError: (data) => {
+        alert("Bike Rent failed");
+      },
+    });
+
+    const { mutate: endTripMutation, isPending: endingTrip } =
+    useMutation({
+      mutationFn: stopRent,
       onSuccess: () => {
         console.log("Location Updated");
         setDeleteDialogOpen(false);
@@ -297,6 +310,7 @@ const RentUserBike = ({
   };
 
   const stopNavigation = async () => {
+    endTripMutation();
     setIsNavigating(false);
     if (locationSubscription.current) {
       locationSubscription.current.remove();
