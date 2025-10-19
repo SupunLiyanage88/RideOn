@@ -94,12 +94,12 @@ const Admin = () => {
           color="#083A4C"
           onPress={() => router.push("/(admin)/StationManagement")}
         />
-        {/* <ManagementCard
+        <ManagementCard
           title="Payment Management"
           icon={<MaterialIcons name="payment" size={24} color="white" />}
           color="#348AB8"
           onPress={() => router.push("/(admin)/PaymentManagement")}
-        /> */}
+        />
         <ManagementCard
           title="Package Management"
           icon={<Feather name="package" size={24} color="white" />}
