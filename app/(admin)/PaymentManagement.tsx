@@ -1,19 +1,19 @@
 import {
-	deletePayment,
-	fetchPayments,
-	PaymentRecord,
+    deletePayment,
+    fetchPayments,
+    PaymentRecord,
 } from "@/api/payment";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useMemo, useState } from "react";
 import {
-	Alert,
-	ScrollView,
-	StyleSheet,
-	Text,
-	TextInput,
-	TouchableOpacity,
-	View,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
