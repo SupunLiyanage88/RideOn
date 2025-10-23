@@ -1,8 +1,36 @@
 # RideOn
 
-RideOn is a TypeScript-first project. This README is a ready-to-use, easy-to-edit template designed to be dropped into the repository and customized with project-specific details (features, architecture, env vars, screenshots, etc.).
+Ride Smart, Ride Safe. RideOn.
 
-> NOTE: I don't have full context about the app's exact stack (frontend framework, backend, database). Replace the placeholder sections below with concrete details from the codebase (for example: React, Next.js, Express, NestJS, Node, Postgres, etc.).
+RideOn is a smart mobility app designed to enhance safety and convenience for riders. It helps users navigate efficiently while providing real-time tracking and security alerts. If a rider deviates from their intended path or faces potential danger, the admin can instantly view their route and status — ensuring maximum safety and accountability.
+
+## Key Features
+
+🚗 Smart Navigation: Real-time route tracking with accurate directions.
+
+🛡️ Safety Alerts: Admin gets notified if a user goes off-route or faces a risk.
+
+📍 Live Location Tracking: Monitor rides and locations seamlessly.
+
+👤 Admin Dashboard: Centralized control to manage users and trips.
+
+📊 Ride History: Keep track of past rides and performance insights.
+
+## Novelty
+
+RideOn introduces a unique safety mechanism — if the user takes a wrong path or deviates from their route, the admin is immediately notified with live location updates, enhancing both security and transparency.
+
+## Tech Stack
+
+Frontend: React Native
+
+Backend: Node.js, Express.js
+
+Database: MongoDB Atlas
+
+Hosting: Render / Vercel (adjust if needed)
+
+Version Control: Git & GitHub
 
 ## Table of contents
 
