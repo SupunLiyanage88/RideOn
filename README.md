@@ -54,8 +54,6 @@ Version Control: Git & GitHub
 
 ## About
 
-Short summary (1–2 lines) describing what RideOn does. Example:
-
 RideOn is a TypeScript-based application for connecting riders and drivers, providing booking, realtime updates, and trip management. Replace this paragraph with a quick summary of RideOn's purpose and high-level goals.
 
 ## Features
@@ -67,8 +65,6 @@ RideOn is a TypeScript-based application for connecting riders and drivers, prov
 - Payment integration (placeholder)
 - Admin dashboard (placeholder)
 
-Replace the list above with the actual features implemented in the repository.
-
 ## Tech stack
 
 Primary languages:
@@ -77,13 +73,9 @@ Primary languages:
 - JavaScript
 
 Common technologies to mention (edit to match repo):
-- Frameworks: React / Next.js / Vue / Svelte / Angular / Node.js
-- Backend: Express / NestJS / Fastify
-- Database: PostgreSQL / MongoDB
-- Realtime: Socket.IO / WebSockets / Firebase
-- Testing: Jest / Vitest / Testing Library
-- Bundler: Vite / Webpack
-- Linting: ESLint, Prettier
+- Frameworks: React Native
+- Backend: Express
+- Database: MongoDB
 
 ## Getting started
 
@@ -123,42 +115,25 @@ cp .env.example .env
 Example environment variables (customize for your app):
 
 ```
-PORT=3000
-NODE_ENV=development
 
-# API / Database
-DATABASE_URL=postgres://user:password@localhost:5432/rideon
+# Backend URL
+EXPO_PUBLIC_API_BASE_URL=""
 
-# Auth
-JWT_SECRET=your_jwt_secret
+# Weather API(Optional)
+EXPO_PUBLIC_WEATHER_API_KEY=
 
-# Realtime
-SOCKET_URL=http://localhost:3000
+# Google Map
+EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=
 ```
-
-Update these to match the project's requirements.
 
 ### Development
 
 Run the development server (example):
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
+npx expo start
 ```
 
-Open http://localhost:3000 (or the port your app uses).
-
-### Production build
-
-Build:
-
-```bash
-npm run build
-```
 
 Start (after build):
 
@@ -175,8 +150,8 @@ Below is an example structure — update to reflect the repository:
 ```
 /
 ├─ src/
-│  ├─ client/            # frontend (React/Next)
-│  ├─ server/            # backend (Express/Nest)
+│  ├─ client/            # frontend (ReactNative)
+│  ├─ server/            # backend (Express) This is in another Repo
 │  ├─ shared/            # shared types/utilities
 │  └─ index.ts
 ├─ scripts/
@@ -197,26 +172,6 @@ Common scripts (make sure these match package.json):
 - npm run lint — run linter
 - npm run format — format code
 
-## Testing
-
-If tests exist, run:
-
-```bash
-npm run test
-```
-
-Describe unit, integration, and end-to-end test setups and how to run them. If using Docker or test databases, include instructions.
-
-## Linting & formatting
-
-Run lint and format checks:
-
-```bash
-npm run lint
-npm run format
-```
-
-Add a pre-commit hook with Husky (if the repo uses it) to enforce style.
 
 ## Contributing
 
@@ -237,8 +192,6 @@ Basic workflow:
 
 ## License
 
-Specify the project's license, e.g.
-
 This project is licensed under the MIT License — see the LICENSE file for details.
 
 ## Contact
@@ -251,9 +204,3 @@ Project maintained by @SupunLiyanage88 (update with preferred contact/email).
 - Add links to templates and references used
 
 ---
-
-If you'd like, I can:
-- Inspect the repository and tailor this README to the exact stack, scripts, and environment variables found in code.
-- Create a CONTRIBUTING.md, .env.example, and a short usage guide with screenshots or examples based on the repository contents.
-
-Tell me if you want me to fetch files from the repo and generate a fully specific README (I can update this file in the repo if you want). 
