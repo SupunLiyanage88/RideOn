@@ -199,10 +199,4 @@ This project is licensed under the MIT License — see the LICENSE file for deta
 ## Contact
 
 Project maintained by @SupunLiyanage88 (update with preferred contact/email).
-
-## Acknowledgements
-
-- Thank any libraries, tools, or contributors
-- Add links to templates and references used
-
 ---
